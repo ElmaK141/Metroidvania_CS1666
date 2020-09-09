@@ -1,24 +1,17 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
+#include "Game.h"
 
-int main(int argc, char** argcv) {
 
+int main(int argc, char* argv[]) {
 	SDL_Init(SDL_INIT_EVERYTHING);
+	IMG_Init(IMG_INIT_PNG);
 
-	SDL_Window* window = SDL_CreateWindow("Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 720, 720, 0);
+	Game g(720, 720);
 
-	SDL_Event e;
+	g.runGame();
 
-	while (true) {
-		SDL_Event e;
-		if (SDL_PollEvent(&e)) {
-			if (e.type == SDL_QUIT) {
-				break;
-			}
-		}
-	}
-
-
+	SDL_Quit();
 	return 0;
 }
