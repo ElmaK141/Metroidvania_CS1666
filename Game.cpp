@@ -51,7 +51,7 @@ void Game::render()
 {
 
 	SDL_Texture* image = NULL;
-	SDL_Surface* loadSurface = IMG_Load("pstar.png");
+	SDL_Surface* loadSurface = IMG_Load("");
 	if (loadSurface == NULL) {
 		std::string error = SDL_GetError();
 		std::cout << "Image Load Failed" << std::endl;
