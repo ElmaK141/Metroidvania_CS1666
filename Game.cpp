@@ -1,6 +1,5 @@
 #include <SDL_image.h>
 #include <iostream>
-#include <vector>
 
 #include "Game.h"
 
@@ -18,6 +17,10 @@ Game::Game(int width, int height)
 
 	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
 	running = true;
+}
+
+Game::Game(const Game & obj)
+{
 }
 
 Game::~Game() 
@@ -41,6 +44,7 @@ void Game::runGame()
 
 		update();
 		render();
+		SDL_Delay(2500);
 
 	}
 }
@@ -51,17 +55,27 @@ void Game::update()
 
 void Game::render()
 {
-	SDL_Surface* credits = IMG_Load("credit_pics/greenland.png");
-	std::string error = SDL_GetError();
-	SDL_Texture* image = SDL_CreateTextureFromSurface(gRenderer, credits);
 	SDL_RenderClear(gRenderer);
-	SDL_RenderCopy(gRenderer, image, NULL, NULL);
+	SDL_Texture* temp = rollCredits();
+	SDL_RenderCopy(gRenderer, temp, NULL, NULL);
 	SDL_RenderPresent(gRenderer);
-
 }
 
-void Game::rollCredits()
+SDL_Texture* Game::rollCredits()
 {
-	std::vector<SDL_Texture*> credits;
-	SDL_Surface* load = IMG_LoadTexture(")
+	SDL_Texture* temp;
+	SDL_Surface* image;
+	static int i = 0;
+	std::string itr = creditFiles.at(i);
+
+	SDL_RenderClear(gRenderer);
+	image = IMG_Load(itr.c_str());
+	temp = SDL_CreateTextureFromSurface(gRenderer, image);
+	if (i + 1 < creditFiles.size()) {
+		i++;
+	}
+	else {
+		i = 0;
+	}
+	return temp;
 }
