@@ -1,5 +1,7 @@
 #include <SDL_image.h>
 #include <iostream>
+#include <vector>
+
 #include "Game.h"
 
 
@@ -49,17 +51,17 @@ void Game::update()
 
 void Game::render()
 {
-
-	SDL_Texture* image = NULL;
-	SDL_Surface* loadSurface = IMG_Load("");
-	if (loadSurface == NULL) {
-		std::string error = SDL_GetError();
-		std::cout << "Image Load Failed" << std::endl;
-	}
-
-	image = SDL_CreateTextureFromSurface(gRenderer, loadSurface);
+	SDL_Surface* credits = IMG_Load("credit_pics/greenland.png");
+	std::string error = SDL_GetError();
+	SDL_Texture* image = SDL_CreateTextureFromSurface(gRenderer, credits);
 	SDL_RenderClear(gRenderer);
 	SDL_RenderCopy(gRenderer, image, NULL, NULL);
 	SDL_RenderPresent(gRenderer);
 
+}
+
+void Game::rollCredits()
+{
+	std::vector<SDL_Texture*> credits;
+	SDL_Surface* load = IMG_LoadTexture(")
 }

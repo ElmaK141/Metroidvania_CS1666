@@ -1,6 +1,7 @@
 #ifndef _GAME_H_
 #define _GAME_H_
 #include <SDL.h>
+#include <string>
 
 class Game {
 	public:
@@ -17,7 +18,6 @@ class Game {
 
 		void update();
 		void render();
+		void rollCredits();
 };
-
-
 #endif
