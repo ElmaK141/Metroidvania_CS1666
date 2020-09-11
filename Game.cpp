@@ -1,6 +1,4 @@
-#include <SDL_image.h>
 #include <iostream>
-
 #include "Game.h"
 
 
@@ -70,6 +68,7 @@ SDL_Texture* Game::rollCredits()
 
 	SDL_RenderClear(gRenderer);
 	image = IMG_Load(itr.c_str());
+	std::string err = SDL_GetError();
 	temp = SDL_CreateTextureFromSurface(gRenderer, image);
 	if (i + 1 < creditFiles.size()) {
 		i++;
