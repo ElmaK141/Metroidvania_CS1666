@@ -24,7 +24,8 @@ class Game {
 		int windowWidth;
 		int windowHeight;
 		bool running;
-		std::vector<std::string> creditFiles = { "credit_pics/AdamBuchinskyCredits.png","credit_pics/GiovanniMeiserbeegyosh.png","credit_pics/juliancredits.png","credit_pics/NoahVienneau.jpg","credit_pics/emk113credits.png" };
+		std::vector<std::string> creditFiles = { "credit_pics/AdamBuchinskyCredits.png","credit_pics/GiovanniMeiserbeegyosh.png","credit_pics/juliancredits.png","credit_pics/NoahVienneau.jpg","credit_pics/emk113credits.png"
+													,"credit_pics/hicksCredits.png","credit_pics/JoelValentinoCredits.png","credit_pics/JordanBendercredits.png" };
 
 		void update();
 		void render();
