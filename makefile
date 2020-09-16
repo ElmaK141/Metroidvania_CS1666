@@ -1,6 +1,6 @@
 LIBS = -lSDL2 -lSDL2_image
 
-main: main.cpp game.o
+main: main.cpp game.o game.h
 	g++ -o main main.cpp game.o $(LIBS)
 	
 game.o: game.cpp game.h
