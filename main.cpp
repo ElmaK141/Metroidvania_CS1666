@@ -6,7 +6,7 @@
 #include <SDL_image.h>
 #endif
 
-#include "Game.h"
+#include "game.h"
 
 
 int main(int argc, char* argv[]) {
