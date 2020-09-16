@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Game.h"
+#include "game.h"
 
 
 Game::Game(int width, int height)
