@@ -2,6 +2,11 @@
 #include "game.h"
 
 
+int SCREEN_WIDTH;
+int SCREEN_HEIGHT;
+constexpr int BOX_WIDTH = 20;
+constexpr int BOX_HEIGHT = 20;
+
 Game::Game(int width, int height)
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -10,7 +15,10 @@ Game::Game(int width, int height)
 	windowWidth = width;
 	windowHeight = height;
 
-	gWindow = SDL_CreateWindow("METROIDVANIA", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+	SCREEN_WIDTH = width;
+	SCREEN_HEIGHT = height;
+
+		gWindow = SDL_CreateWindow("METROIDVANIA", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		width, height, 0);
 
 	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
@@ -30,20 +38,67 @@ Game::~Game()
 	SDL_Quit();
 }
 
+
+
 void Game::runGame()
 {
+	//Roll credits
+	for (int credit_image = 0; credit_image < creditFiles.size(); credit_image++) {
+		update();
+		render();
+//		SDL_Delay(2500);
+	}
+
+	// Current position to render the box
+	// Start off with it in the middle
+	int x_pos = SCREEN_WIDTH / 2 - BOX_WIDTH / 2;
+	int y_pos = SCREEN_HEIGHT / 2 - BOX_HEIGHT / 2;
+
+	// Current velocity of the box
+	// Start off at reset
+	int x_vel = 0;
+	int y_vel = 0;
+
+	//Actiual Game
 	SDL_Event e;
 	while (running == true) {
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
 				running = false;
 			}
+			else if (e.type == SDL_KEYDOWN) {
+				switch (e.key.keysym.sym) {
+				case SDLK_w:
+					y_vel -= 1;
+					break;
+
+				case SDLK_a:
+					x_vel -= 1;
+					break;
+
+				case SDLK_s:
+					y_vel += 1;
+					break;
+
+				case SDLK_d:
+					x_vel += 1;
+					break;
+				}
+			}
 		}
+		// Move box
+		x_pos += x_vel;
+		y_pos += y_vel;
 
-		update();
-		render();
-		SDL_Delay(2500);
-
+		// Draw box
+		// Clear black
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF);
+		SDL_RenderClear(gRenderer);
+		// Cyan box
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0xFF, 0xFF);
+		SDL_Rect fillRect = { x_pos, y_pos, BOX_WIDTH, BOX_HEIGHT };
+		SDL_RenderFillRect(gRenderer, &fillRect);
+		SDL_RenderPresent(gRenderer);
 	}
 }
 
@@ -70,11 +125,7 @@ SDL_Texture* Game::rollCredits()
 	image = IMG_Load(itr.c_str());
 	std::string err = SDL_GetError();
 	temp = SDL_CreateTextureFromSurface(gRenderer, image);
-	if (i + 1 < creditFiles.size()) {
-		i++;
-	}
-	else {
-		i = 0;
-	}
+
+	i++;
 	return temp;
 }
