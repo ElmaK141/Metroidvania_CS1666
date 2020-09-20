@@ -16,6 +16,8 @@ class Sprite {
 	public:
 		Sprite(int x, int y, int w, int h, std::string file, SDL_Renderer* renderer);
 		~Sprite();
+
+		void draw(SDL_Renderer* render, int x, int y);
 	private:
 		SDL_Texture* texture;
 		int xLoc;
