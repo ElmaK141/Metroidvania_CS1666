@@ -10,6 +10,9 @@ class Entity{
 	public:
 		Entity(std::vector<Sprite> f);
 		~Entity();
+		
+		void setCurrFrame(int index);
+		Sprite currFrame;
 	private:
 		std::vector<Sprite> frames;
 };

@@ -1,6 +1,10 @@
 #include "sprite.h"
 #include <iostream>
 
+Sprite::Sprite() {
+
+}
+
 Sprite::Sprite(int x, int y, int w, int h, std::string file,
 				SDL_Renderer* renderer) {
 	
@@ -23,6 +27,12 @@ Sprite::~Sprite() {
 void Sprite::draw(SDL_Renderer * render, int x, int y){
 	SDL_Rect loc = { x,y,this->spriteWidth*4,this->spriteHeight*4 };
 	SDL_Rect crop = { this->xLoc,this->yLoc,this->spriteWidth,this->spriteHeight };
+	SDL_RenderCopy(render, this->texture, &crop, &loc);
+}
+
+void Sprite::draw(SDL_Renderer * render, int x, int y, int len){
+	SDL_Rect loc = { x,y,len,this->spriteWidth * 4 };
+	SDL_Rect crop = { this->xLoc, this->yLoc, this->spriteWidth, this->spriteHeight };
 	SDL_RenderCopy(render, this->texture, &crop, &loc);
 }
 

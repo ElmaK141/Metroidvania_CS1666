@@ -8,7 +8,6 @@ class Tile {
 	public:
 		Tile(Sprite* sp);
 		~Tile();
-
 	private:
 		Sprite* tile;
 };
