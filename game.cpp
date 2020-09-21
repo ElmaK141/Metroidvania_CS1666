@@ -42,15 +42,10 @@ Game::~Game()
 
 void Game::runGame()
 {
-<<<<<<< HEAD
 	Sprite base(1, 2, 14, 31, "assets/spritesheet.png", gRenderer);
 	Sprite stick(0, 34, 16, 29, "assets/spritesheet.png", gRenderer);
 	Sprite brick(16, 22, 16, 8, "assets/spritesheet.png", gRenderer);
-=======
-	Sprite stick(1, 1, 14, 31, "assets/spritesheet.png", gRenderer);
-	
->>>>>>> upstream/master
-	
+		
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2;
 
