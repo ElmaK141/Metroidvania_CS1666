@@ -1,11 +1,10 @@
 #include <iostream>
 #include "game.h"
+#include "sprite.h"
 
 
 int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
-constexpr int BOX_WIDTH = 20;
-constexpr int BOX_HEIGHT = 20;
 
 Game::Game(int width, int height)
 {
@@ -18,14 +17,14 @@ Game::Game(int width, int height)
 	SCREEN_WIDTH = width;
 	SCREEN_HEIGHT = height;
 
-		gWindow = SDL_CreateWindow("METROIDVANIA", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		width, height, 0);
+	gWindow = SDL_CreateWindow("METROIDVANIA", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+	width, height, 0);
 
 	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
 	running = true;
 }
 
-Game::Game(const Game & obj)
+Game::Game(const Game &obj)
 {
 }
 
@@ -42,24 +41,17 @@ Game::~Game()
 
 void Game::runGame()
 {
-	//Roll credits
-	for (int credit_image = 0; credit_image < creditFiles.size(); credit_image++) {
-		update();
-		render();
-//		SDL_Delay(2500);
-	}
+	Sprite stick(1, 1, 14, 31, "assets/spritesheet.png", gRenderer);
+	
+	
+	int x_pos = SCREEN_WIDTH / 2;
+	int y_pos = SCREEN_HEIGHT / 2;
 
-	// Current position to render the box
-	// Start off with it in the middle
-	int x_pos = SCREEN_WIDTH / 2 - BOX_WIDTH / 2;
-	int y_pos = SCREEN_HEIGHT / 2 - BOX_HEIGHT / 2;
-
-	// Current velocity of the box
-	// Start off at reset
 	int x_vel = 0;
 	int y_vel = 0;
+	
+	int max_speed = 3;	//max velocity, prevents weird speed issues
 
-	//Actiual Game
 	SDL_Event e;
 	while (running == true) {
 		while (SDL_PollEvent(&e) != 0) {
@@ -69,35 +61,66 @@ void Game::runGame()
 			else if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
 				case SDLK_w:
-					y_vel -= 1;
+					if(y_vel > -max_speed)	//as long as we don't exceed max speed, change velocity
+						y_vel -= 1;
 					break;
 
 				case SDLK_a:
-					x_vel -= 1;
+					if (x_vel > -max_speed) //as long as we don't exceed max speed, change velocity
+						x_vel -= 1;
 					break;
 
 				case SDLK_s:
-					y_vel += 1;
+					if (y_vel < max_speed) //as long as we don't exceed max speed, change velocity
+						y_vel += 1;
 					break;
 
 				case SDLK_d:
-					x_vel += 1;
+					if (x_vel < max_speed) //as long as we don't exceed max speed, change velocity
+						x_vel += 1;
+					break;
+				}
+			}
+			else if (e.type == SDL_KEYUP) {
+				switch (e.key.keysym.sym) {
+				case SDLK_w:
+					while(y_vel < 0)	//drift to 0 speed
+						y_vel += 1;
+					break;
+
+				case SDLK_a:
+					while(x_vel < 0)	//drift to 0 speed
+						x_vel += 1;
+					break;
+
+				case SDLK_s:
+					while(y_vel > 0)	//drift to 0 speed
+						y_vel -= 1;
+					break;
+
+				case SDLK_d:
+					while(x_vel > 0)	//drift to 0 speed
+						x_vel -= 1;
 					break;
 				}
 			}
 		}
 		// Move box
 		x_pos += x_vel;
-		y_pos += y_vel;
+		if (x_pos < 0)
+			x_pos = 0;
+		else if (x_pos + stick.getWidth() > SCREEN_WIDTH)	//if right edge of sprite hits screen edge
+			x_pos = SCREEN_WIDTH - stick.getWidth();		//stop
 
-		// Draw box
-		// Clear black
-		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF);
+		y_pos += y_vel;
+		if (y_pos < 0)
+			y_pos = 0;
+		else if (y_pos + stick.getHeight() > SCREEN_HEIGHT)	//if bottom edge of sprite hits screen edge,
+			y_pos = SCREEN_HEIGHT - stick.getHeight();		//stop
+
 		SDL_RenderClear(gRenderer);
-		// Cyan box
-		SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0xFF, 0xFF);
-		SDL_Rect fillRect = { x_pos, y_pos, BOX_WIDTH, BOX_HEIGHT };
-		SDL_RenderFillRect(gRenderer, &fillRect);
+		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+		stick.draw(gRenderer, x_pos, y_pos);
 		SDL_RenderPresent(gRenderer);
 	}
 }
@@ -109,8 +132,6 @@ void Game::update()
 void Game::render()
 {
 	SDL_RenderClear(gRenderer);
-	SDL_Texture* temp = rollCredits();
-	SDL_RenderCopy(gRenderer, temp, NULL, NULL);
 	SDL_RenderPresent(gRenderer);
 }
 
