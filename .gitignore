@@ -1,0 +1,17 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+
+#Linux gitignore
+*.o
+main
+/Debug
+/x64/Debug
+/libjpeg-9.dll
+*.dll
+/Metroidvania.sln
+/Metroidvania.vcxproj
+/Metroidvania.vcxproj.filters
+/Metroidvania.vcxproj.user
