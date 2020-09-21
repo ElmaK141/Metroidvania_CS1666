@@ -1,7 +1,8 @@
 #include <iostream>
 #include "game.h"
 #include "sprite.h"
-
+#include "entity.h"
+#include <cmath>
 
 int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
@@ -41,9 +42,10 @@ Game::~Game()
 
 void Game::runGame()
 {
-	Sprite stick(1, 1, 14, 31, "assets/spritesheet.png", gRenderer);
-	
-	
+	Sprite base(1, 2, 14, 31, "assets/spritesheet.png", gRenderer);
+	Sprite stick(0, 34, 16, 29, "assets/spritesheet.png", gRenderer);
+	Sprite brick(16, 22, 16, 8, "assets/spritesheet.png", gRenderer);
+		
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2;
 
@@ -53,6 +55,9 @@ void Game::runGame()
 	int max_speed = 3;	//max velocity, prevents weird speed issues
 
 	SDL_Event e;
+	Sprite temp;
+	temp = base;
+	int index = 0;
 	while (running == true) {
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
@@ -102,7 +107,17 @@ void Game::runGame()
 					while(x_vel > 0)	//drift to 0 speed
 						x_vel -= 1;
 					break;
+
+				case SDLK_e:
+					temp = stick;
+					break;
+
+				case SDLK_r:
+					temp = base;
+					break;
+					
 				}
+
 			}
 		}
 		// Move box
@@ -120,8 +135,12 @@ void Game::runGame()
 
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-		stick.draw(gRenderer, x_pos, y_pos);
+		temp.draw(gRenderer, x_pos, y_pos);
+		for (int i = 0; i < 75; i++) {
+			brick.draw(gRenderer,i*16,334);
+		}
 		SDL_RenderPresent(gRenderer);
+		
 	}
 }
 
@@ -131,8 +150,6 @@ void Game::update()
 
 void Game::render()
 {
-	SDL_RenderClear(gRenderer);
-	SDL_RenderPresent(gRenderer);
 }
 
 SDL_Texture* Game::rollCredits()
