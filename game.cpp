@@ -41,7 +41,7 @@ Game::~Game()
 
 void Game::runGame()
 {
-	Sprite stick(9, 1, 14, 31, "assets/spritesheet.png", gRenderer);
+	Sprite stick(1, 1, 14, 31, "assets/spritesheet.png", gRenderer);
 	
 	
 	int x_pos = SCREEN_WIDTH / 2;
@@ -49,6 +49,8 @@ void Game::runGame()
 
 	int x_vel = 0;
 	int y_vel = 0;
+	
+	int max_speed = 3;	//max velocity, prevents weird speed issues
 
 	SDL_Event e;
 	while (running == true) {
@@ -59,29 +61,65 @@ void Game::runGame()
 			else if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
 				case SDLK_w:
-					y_vel -= 1;
+					if(y_vel > -max_speed)	//as long as we don't exceed max speed, change velocity
+						y_vel -= 1;
 					break;
 
 				case SDLK_a:
-					x_vel -= 1;
+					if (x_vel > -max_speed) //as long as we don't exceed max speed, change velocity
+						x_vel -= 1;
 					break;
 
 				case SDLK_s:
-					y_vel += 1;
+					if (y_vel < max_speed) //as long as we don't exceed max speed, change velocity
+						y_vel += 1;
 					break;
 
 				case SDLK_d:
-					x_vel += 1;
+					if (x_vel < max_speed) //as long as we don't exceed max speed, change velocity
+						x_vel += 1;
+					break;
+				}
+			}
+			else if (e.type == SDL_KEYUP) {
+				switch (e.key.keysym.sym) {
+				case SDLK_w:
+					while(y_vel < 0)	//drift to 0 speed
+						y_vel += 1;
+					break;
+
+				case SDLK_a:
+					while(x_vel < 0)	//drift to 0 speed
+						x_vel += 1;
+					break;
+
+				case SDLK_s:
+					while(y_vel > 0)	//drift to 0 speed
+						y_vel -= 1;
+					break;
+
+				case SDLK_d:
+					while(x_vel > 0)	//drift to 0 speed
+						x_vel -= 1;
 					break;
 				}
 			}
 		}
 		// Move box
 		x_pos += x_vel;
+		if (x_pos < 0)
+			x_pos = 0;
+		else if (x_pos + stick.getWidth() > SCREEN_WIDTH)	//if right edge of sprite hits screen edge
+			x_pos = SCREEN_WIDTH - stick.getWidth();		//stop
+
 		y_pos += y_vel;
+		if (y_pos < 0)
+			y_pos = 0;
+		else if (y_pos + stick.getHeight() > SCREEN_HEIGHT)	//if bottom edge of sprite hits screen edge,
+			y_pos = SCREEN_HEIGHT - stick.getHeight();		//stop
 
 		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF);
+		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 		stick.draw(gRenderer, x_pos, y_pos);
 		SDL_RenderPresent(gRenderer);
 	}
