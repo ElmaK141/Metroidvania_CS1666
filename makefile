@@ -4,7 +4,7 @@ LIBS = -lSDL2 -lSDL2_image
 main: main.cpp game.o game.h sprite.o
 	$(CC) -o main main.cpp game.o sprite.o $(LIBS)
 	
-game.o: game.cpp sprite.h sprite.o
+game.o: game.cpp sprite.h sprite.o entity.h
 	$(CC) -c game.cpp sprite.o $(LIBS)
 	
 entity.o: entity.cpp entity.h
