@@ -67,8 +67,14 @@ void Game::runGame()
 			else if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
 				case SDLK_w:
+					/*
 					if(y_vel > -max_speed)	//as long as we don't exceed max speed, change velocity
 						y_vel -= 1;
+					*/
+					//jump
+					if(SCREEN_HEIGHT - temp.getHeight() == y_pos){
+						y_vel = -25;
+					}
 					break;
 
 				case SDLK_a:
@@ -77,8 +83,10 @@ void Game::runGame()
 					break;
 
 				case SDLK_s:
+					/*
 					if (y_vel < max_speed) //as long as we don't exceed max speed, change velocity
 						y_vel += 1;
+					*/
 					break;
 
 				case SDLK_d:
@@ -90,8 +98,10 @@ void Game::runGame()
 			else if (e.type == SDL_KEYUP) {
 				switch (e.key.keysym.sym) {
 				case SDLK_w:
+					/*
 					while(y_vel < 0)	//drift to 0 speed
 						y_vel += 1;
+					*/
 					break;
 
 				case SDLK_a:
@@ -100,8 +110,10 @@ void Game::runGame()
 					break;
 
 				case SDLK_s:
+					/*
 					while(y_vel > 0)	//drift to 0 speed
 						y_vel -= 1;
+					*/
 					break;
 
 				case SDLK_d:
@@ -121,6 +133,10 @@ void Game::runGame()
 
 			}
 		}
+		
+		//apply gravity
+		y_vel += 1;
+		
 		// Move player
 		x_pos += x_vel;
 		if (x_pos < 0)
