@@ -42,6 +42,7 @@ Game::~Game()
 
 void Game::runGame()
 {
+
 	Sprite base(1, 2, 14, 30, "assets/spritesheet.png", gRenderer);
 	Sprite anim(0, 34, 16, 29, "assets/spritesheet.png", gRenderer);
 	Sprite brick(16, 24, 16, 8, "assets/spritesheet.png", gRenderer);
@@ -66,7 +67,8 @@ void Game::runGame()
 			}
 			else if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
-				case SDLK_w:
+		
+          case SDLK_w:
 					/*
 					if(y_vel > -max_speed)	//as long as we don't exceed max speed, change velocity
 						y_vel -= 1;
@@ -75,6 +77,7 @@ void Game::runGame()
 					if(SCREEN_HEIGHT - temp.getHeight() == y_pos){
 						y_vel = -25;
 					}
+
 					break;
 
 				case SDLK_a:
@@ -141,12 +144,14 @@ void Game::runGame()
 		x_pos += x_vel;
 		if (x_pos < 0)
 			x_pos = 0;
+
 		else if (x_pos + temp.getWidth() > SCREEN_WIDTH)	//if right edge of sprite hits screen edge
 			x_pos = SCREEN_WIDTH - temp.getWidth();		//stop
 
 		y_pos += y_vel;
 		if (y_pos < 0)
 			y_pos = 0;
+
 		else if (y_pos + temp.getHeight() > SCREEN_HEIGHT)	//if bottom edge of sprite hits screen edge,
 			y_pos = SCREEN_HEIGHT - temp.getHeight();		//stop
 
@@ -157,6 +162,7 @@ void Game::runGame()
 			brick.draw(gRenderer,i*64,334);
 		}
 		enemy.draw(gRenderer, 800, 274);
+
 		SDL_RenderPresent(gRenderer);
 		
 	}
