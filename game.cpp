@@ -47,6 +47,10 @@ void Game::runGame()
 	Sprite brick(16, 24, 16, 8, "assets/spritesheet.png", gRenderer);
 	Sprite enemy(36, 17, 24, 15, "assets/spritesheet.png", gRenderer);
 		
+
+	
+	Entity player("player.dat",gRenderer);
+
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
 
@@ -75,6 +79,7 @@ void Game::runGame()
 					if(SCREEN_HEIGHT - temp.getHeight() == y_pos){
 						y_vel = -25;
 					}
+					player.setCurrFrame(1);
 					break;
 
 				case SDLK_a:
@@ -122,11 +127,9 @@ void Game::runGame()
 					break;
 
 				case SDLK_e:
-					temp = anim;
 					break;
 
 				case SDLK_r:
-					temp = base;
 					break;
 					
 				}
@@ -152,13 +155,14 @@ void Game::runGame()
 
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-		temp.draw(gRenderer, x_pos, y_pos);
+		player.getCurrFrame().draw(gRenderer, x_pos, y_pos);
+		//temp.draw(gRenderer, x_pos, y_pos);
 		for (int i = 0; i < 75; i++) {
 			brick.draw(gRenderer,i*64,334);
 		}
 		enemy.draw(gRenderer, 800, 274);
 		SDL_RenderPresent(gRenderer);
-		
+		player.setCurrFrame(0);
 	}
 }
 

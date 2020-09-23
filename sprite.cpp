@@ -14,14 +14,14 @@ Sprite::Sprite(int x, int y, int w, int h, std::string file,
 	this->spriteHeight = h;
 
 	SDL_Surface* load = IMG_Load(file.c_str());
-	
+	SDL_GetError();
+
 	SDL_SetColorKey(load, SDL_TRUE, SDL_MapRGB(load->format, 255, 255, 255));
 	this->texture = SDL_CreateTextureFromSurface(renderer, load);
 	SDL_FreeSurface(load);
 }
 
 Sprite::~Sprite() {
-	SDL_DestroyTexture(this->texture);
 }
 
 void Sprite::draw(SDL_Renderer * render, int x, int y){
