@@ -42,8 +42,8 @@ Game::~Game()
 
 void Game::runGame()
 {
-	Sprite mmTitle(0, 0, 796, 125, 1, "assets/mainmenuTitle.png", gRenderer);
-	Sprite mmPressAny(0, 0, 485, 56, 1, "assets/pressAny.png", gRenderer);
+	Sprite mmTitle(0, 0, 796, 125, 1, "assets/main_menu/mainmenuTitle.png", gRenderer);
+	Sprite mmPressAny(0, 0, 485, 56, 1, "assets/main_menu/pressAny.png", gRenderer);
 
 	SDL_Event e;
 	while (true) {	//main menu
@@ -65,10 +65,10 @@ void Game::runGame()
 		SDL_RenderPresent(gRenderer);
 	}
 
-	Sprite base(1, 2, 14, 30, 4, "assets/spritesheet.png", gRenderer);
-	Sprite anim(0, 34, 16, 29, 4, "assets/spritesheet.png", gRenderer);
-	Sprite brick(16, 24, 16, 8, 4, "assets/spritesheet.png", gRenderer);
-	Sprite enemy(36, 17, 24, 15, 4, "assets/spritesheet.png", gRenderer);
+	Sprite base(1, 2, 14, 30, 4, "assets/sprites/spritesheet.png", gRenderer);
+	Sprite anim(0, 34, 16, 29, 4, "assets/sprites/spritesheet.png", gRenderer);
+	Sprite brick(16, 24, 16, 8, 4, "assets/sprites/spritesheet.png", gRenderer);
+	Sprite enemy(36, 17, 24, 15, 4, "assets/sprites/spritesheet.png", gRenderer);
 		
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
