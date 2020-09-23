@@ -42,11 +42,33 @@ Game::~Game()
 
 void Game::runGame()
 {
+	Sprite mmTitle(0, 0, 796, 125, 1, "assets/mainmenuTitle.png", gRenderer);
+	Sprite mmPressAny(0, 0, 485, 56, 1, "assets/pressAny.png", gRenderer);
 
-	Sprite base(1, 2, 14, 30, "assets/spritesheet.png", gRenderer);
-	Sprite anim(0, 34, 16, 29, "assets/spritesheet.png", gRenderer);
-	Sprite brick(16, 24, 16, 8, "assets/spritesheet.png", gRenderer);
-	Sprite enemy(36, 17, 24, 15, "assets/spritesheet.png", gRenderer);
+	SDL_Event e;
+	while (true) {	//main menu
+
+		SDL_PollEvent(&e);
+		if (e.type == SDL_QUIT) {
+			running = false;
+		}
+		else if (e.type == SDL_KEYDOWN)
+			break;
+
+		SDL_RenderClear(gRenderer);
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
+
+		mmTitle.draw(gRenderer, 240, 120);
+		if(SDL_GetTicks() % 1200 <= 700)	//blinking text
+			mmPressAny.draw(gRenderer, 397, 400);
+
+		SDL_RenderPresent(gRenderer);
+	}
+
+	Sprite base(1, 2, 14, 30, 4, "assets/spritesheet.png", gRenderer);
+	Sprite anim(0, 34, 16, 29, 4, "assets/spritesheet.png", gRenderer);
+	Sprite brick(16, 24, 16, 8, 4, "assets/spritesheet.png", gRenderer);
+	Sprite enemy(36, 17, 24, 15, 4, "assets/spritesheet.png", gRenderer);
 		
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
@@ -56,7 +78,6 @@ void Game::runGame()
 	
 	int max_speed = 3;	//max velocity, prevents weird speed issues
 
-	SDL_Event e;
 	Sprite temp;
 	temp = base;
 	int index = 0;
@@ -68,7 +89,7 @@ void Game::runGame()
 			else if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
 		
-          case SDLK_w:
+				case SDLK_w:
 					/*
 					if(y_vel > -max_speed)	//as long as we don't exceed max speed, change velocity
 						y_vel -= 1;
