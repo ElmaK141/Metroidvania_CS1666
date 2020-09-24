@@ -5,13 +5,15 @@ Sprite::Sprite() {
 
 }
 
-Sprite::Sprite(int x, int y, int w, int h, std::string file,
+Sprite::Sprite(int x, int y, int w, int h, int scalar, std::string file,
 				SDL_Renderer* renderer) {
 	
 	this->xLoc = x;
 	this->yLoc = y;
 	this->spriteWidth = w;
 	this->spriteHeight = h;
+	this->entWidth = w*scalar;
+	this->entHeight = h*scalar;
 
 	SDL_Surface* load = IMG_Load(file.c_str());
 	SDL_GetError();
@@ -25,22 +27,16 @@ Sprite::~Sprite() {
 }
 
 void Sprite::draw(SDL_Renderer * render, int x, int y){
-	SDL_Rect loc = { x,y,this->spriteWidth*4,this->spriteHeight*4 }; //stretch sprite to 4x size
+	SDL_Rect loc = { x,y,this->entWidth,this->entHeight};
 	SDL_Rect crop = { this->xLoc,this->yLoc,this->spriteWidth,this->spriteHeight };
 	SDL_RenderCopy(render, this->texture, &crop, &loc);
 }
 
-void Sprite::draw(SDL_Renderer * render, int x, int y, int len){
-	SDL_Rect loc = { x,y,len,this->spriteWidth * 4 }; //stretch sprite to 4x size
-	SDL_Rect crop = { this->xLoc, this->yLoc, this->spriteWidth, this->spriteHeight };
-	SDL_RenderCopy(render, this->texture, &crop, &loc);
-}
-
 int Sprite::getWidth() {
-	return this->spriteWidth * 4;	//compensate for sprite scaling
+	return this->entWidth;
 }
 
 int Sprite::getHeight() {
-	return this->spriteHeight * 4;	//compensate for sprite scaling
+	return this->entHeight;	
 }
 
