@@ -43,8 +43,6 @@ Game::~Game()
 void Game::runGame()
 {
 
-	Sprite brick(16, 24, 16, 8, "assets/spritesheet.png", gRenderer);
-	Sprite enemy(36, 17, 24, 15, "assets/spritesheet.png", gRenderer);
 	Sprite mmTitle(0, 0, 796, 125, 1, "assets/main_menu/mainmenuTitle.png", gRenderer);
 	Sprite mmPressAny(0, 0, 485, 56, 1, "assets/main_menu/pressAny.png", gRenderer);
 
@@ -75,7 +73,7 @@ void Game::runGame()
 		
 
 	
-	Entity player("player.dat",gRenderer);
+	Entity player("data/player.spr",gRenderer);
 
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
@@ -85,7 +83,6 @@ void Game::runGame()
 	
 	int max_speed = 3;	//max velocity, prevents weird speed issues
 
-	SDL_Event e;
 	
 	Sprite temp;
 	temp = base;

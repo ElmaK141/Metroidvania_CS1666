@@ -40,3 +40,7 @@ int Sprite::getHeight() {
 	return this->entHeight;	
 }
 
+int Sprite::getScale() {
+	return this->scale;
+}
+

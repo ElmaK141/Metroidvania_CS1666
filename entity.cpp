@@ -31,7 +31,7 @@ void Entity::createSprites() {
 	int a, b, c, d;
 
 	while (this->spriteFile >> a >> b >> c >> d ) {
-		Sprite temp(a, b, c, d, line, context);
+		Sprite temp(a, b, c, d, 4, line, context);
 		frames.emplace_back(temp);
 	}
 }
