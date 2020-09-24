@@ -1,17 +1,37 @@
 #include "entity.h"
+#include <sstream>
 
 
+Entity::Entity(std::string spriteData, SDL_Renderer* context) {
 
-Entity::Entity(std::vector<Sprite> f){
-	this->frames = f;
-	this->currFrame = f[0];
+	this->spriteFile = std::ifstream(spriteData);
+	this->context = context;
+	this->createSprites();
+	this->currFrame = frames[0];
 }
 
-Entity::~Entity()
-{
+Entity::~Entity(){
+	
 }
 
 void Entity::setCurrFrame(int index){
-	currFrame = frames[index];
+	this->currFrame = frames[index];
 }
 
+Sprite Entity::getCurrFrame() {
+	return currFrame;
+}
+
+void Entity::createSprites() {
+
+	std::string line;
+	std::getline(this->spriteFile, line);
+	this->assetLoc = line;
+
+	int a, b, c, d;
+
+	while (this->spriteFile >> a >> b >> c >> d ) {
+		Sprite temp(a, b, c, d, 4, line, context);
+		frames.emplace_back(temp);
+	}
+}
