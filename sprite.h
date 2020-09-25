@@ -15,12 +15,13 @@
 class Sprite {
 	public:
 		Sprite();
-		Sprite(int x, int y, int w, int h, int scalar, std::string file, SDL_Renderer* renderer); //coords, size of sprite, multiply sprite size, sprite file
+		Sprite(int x, int y, int w, int h, int scale, std::string file, SDL_Renderer* renderer); //coords, size of sprite, multiply sprite size, sprite file
 		~Sprite();
 
 		void draw(SDL_Renderer* render, int x, int y);
 		int getWidth();
 		int getHeight();
+		int getScale();
 	private:
 		SDL_Texture* texture;
 		int xLoc;
@@ -29,6 +30,7 @@ class Sprite {
 		int spriteHeight;
 		int entWidth;
 		int entHeight;
+		int scale;
 };
 
 
