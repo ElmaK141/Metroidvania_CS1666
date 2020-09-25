@@ -69,6 +69,7 @@ void Game::runGame()
 	Sprite anim(0, 34, 16, 29, 4, "assets/sprites/spritesheet.png", gRenderer);
 	Sprite brick(16, 24, 16, 8, 4, "assets/sprites/spritesheet.png", gRenderer);
 	Sprite enemy(36, 17, 24, 15, 4, "assets/sprites/spritesheet.png", gRenderer);
+	Sprite healthbarBase(0, 0, 267, 197, 1, "assets/health_bar/base.png", gRenderer);
 		
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
@@ -183,6 +184,7 @@ void Game::runGame()
 			brick.draw(gRenderer,i*64,334);
 		}
 		enemy.draw(gRenderer, 800, 274);
+		healthbarBase.draw(gRenderer, 50, 50);
 
 		SDL_RenderPresent(gRenderer);
 		
