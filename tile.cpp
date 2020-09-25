@@ -9,3 +9,7 @@ Tile::~Tile()
 {
 	delete this->tile;
 }
+
+Sprite* Tile::getSprite() {
+	return tile;
+}

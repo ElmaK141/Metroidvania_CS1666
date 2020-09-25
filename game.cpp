@@ -68,18 +68,21 @@ void Game::runGame()
 		SDL_RenderPresent(gRenderer);
 	}
 
-	//Define Sprites
+	//Define Background
 	Sprite sbg(0, 0, 1280, 720, 1, "assets/backgrounds/background1.png", gRenderer);
 	Background bg(&sbg);
 
-	Sprite base(1, 2, 14, 30, 4, "assets/sprites/spritesheet.png", gRenderer);
-	Sprite anim(0, 34, 16, 29, 4, "assets/sprites/spritesheet.png", gRenderer);
-	Sprite brick(16, 24, 16, 8, 4, "assets/sprites/spritesheet.png", gRenderer);
-	Sprite enemy(36, 17, 24, 15, 4, "assets/sprites/spritesheet.png", gRenderer);
-		
+	//Sprite base(1, 2, 14, 30, 4, "assets/sprites/spritesheet.png", gRenderer);
+	//Sprite anim(0, 34, 16, 29, 4, "assets/sprites/spritesheet.png", gRenderer);
 
-	
+	//Define Tiles	
+	Sprite sbrick(16, 24, 16, 8, 4, "assets/sprites/spritesheet.png", gRenderer);
+	Tile brick(&sbrick);
+
+	//Define Entities
 	Entity player("data/player.spr",gRenderer);
+
+	Sprite enemy(36, 17, 24, 15, 4, "assets/sprites/spritesheet.png", gRenderer);
 
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
@@ -90,8 +93,9 @@ void Game::runGame()
 	int max_speed = 3;	//max velocity, prevents weird speed issues
 
 	
-	Sprite temp;
-	temp = base;
+	//Sprite temp;
+	//temp = base;
+
 	int index = 0;
 	while (running == true) {
 		while (SDL_PollEvent(&e) != 0) {
@@ -179,8 +183,8 @@ void Game::runGame()
 		else if (x_pos + player.getCurrFrame().getWidth() > SCREEN_WIDTH)	//if right edge of sprite hits screen edge
 			x_pos = SCREEN_WIDTH - player.getCurrFrame().getWidth();		//stop
 
-		else if (x_pos + temp.getWidth() > SCREEN_WIDTH)	//if right edge of sprite hits screen edge
-			x_pos = SCREEN_WIDTH - temp.getWidth();		//stop
+		else if (x_pos + player.getCurrFrame().getWidth() > SCREEN_WIDTH)	//if right edge of sprite hits screen edge
+			x_pos = SCREEN_WIDTH - player.getCurrFrame().getWidth();		//stop
 
 		y_pos += y_vel;
 		if (y_pos < 0)
@@ -188,21 +192,23 @@ void Game::runGame()
 		else if (y_pos + player.getCurrFrame().getHeight() > SCREEN_HEIGHT)	//if bottom edge of sprite hits screen edge,
 			y_pos = SCREEN_HEIGHT - player.getCurrFrame().getHeight();		//stop
 
-		else if (y_pos + temp.getHeight() > SCREEN_HEIGHT)	//if bottom edge of sprite hits screen edge,
-			y_pos = SCREEN_HEIGHT - temp.getHeight();		//stop
+		else if (y_pos + player.getCurrFrame().getHeight() > SCREEN_HEIGHT)	//if bottom edge of sprite hits screen edge,
+			y_pos = SCREEN_HEIGHT - player.getCurrFrame().getHeight();		//stop
 
 		//Draw to screen
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
 		bg.getSprite()->draw(gRenderer, 0, 0);
-		temp.draw(gRenderer, x_pos, y_pos);
+		
+		//temp.draw(gRenderer, x_pos, y_pos);
 
 		player.getCurrFrame().draw(gRenderer, x_pos, y_pos);
 
 		for (int i = 0; i < 75; i++) {
-			brick.draw(gRenderer,i*64,334);
+			brick.getSprite()->draw(gRenderer,i*64,334);
 		}
+
 		enemy.draw(gRenderer, 800, 274);
 
 		SDL_RenderPresent(gRenderer);
