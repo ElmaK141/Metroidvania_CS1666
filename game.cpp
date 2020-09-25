@@ -1,13 +1,10 @@
 #include <iostream>
+#include <cmath>
 #include "game.h"
 #include "sprite.h"
-<<<<<<< HEAD
-=======
 #include "entity.h"
 #include "tile.h"
 #include "background.h"
->>>>>>> upstream/master
-#include <cmath>
 
 int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
@@ -70,23 +67,18 @@ void Game::runGame()
 
 		SDL_RenderPresent(gRenderer);
 	}
-	
-	//Define Sprites
-	Sprite sbg(0, 0, 1280, 720, 1, "assets/backgrounds/background1.png", gRenderer);
-	Background bg(&sbg);
 
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
-
 	
+	//Define Graphiical Objects
+	Background bg(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
 	Entity player("data/player.spr", x_pos, y_pos, gRenderer);
-
 
 	int x_vel = 0;
 	int y_vel = 0;
 	
 	int max_speed = 3;	//max velocity, prevents weird speed issues
-
 	
 	int index = 0;
 	while (running == true) {
@@ -172,9 +164,9 @@ void Game::runGame()
 		//Draw to screen
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+		bg.getSprite()->draw(gRenderer, 0, 0);
 		player.getCurrFrame().draw(gRenderer, player.getXPosition(), player.getYPosition());
 
-		bg.getSprite()->draw(gRenderer, 0, 0);
 		SDL_RenderPresent(gRenderer);
 	}
 }
