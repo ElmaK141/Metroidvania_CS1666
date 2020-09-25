@@ -134,7 +134,16 @@ void Game::runGame()
 					if (x_vel < max_speed) //as long as we don't exceed max speed, change velocity
 						x_vel += 1;
 					break;
+
+				case SDLK_e:
+					player.setCurrFrame(0);
+					break;
+
+				case SDLK_r:
+					player.setCurrFrame(1);
+					break;
 				}
+
 			}
 			else if (e.type == SDL_KEYUP) {
 				switch (e.key.keysym.sym) {
@@ -212,7 +221,7 @@ void Game::runGame()
 		enemy.draw(gRenderer, 800, 274);
 
 		SDL_RenderPresent(gRenderer);
-		player.setCurrFrame(0);
+		//player.setCurrFrame(0);
 	}
 }
 
