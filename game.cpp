@@ -1,6 +1,12 @@
 #include <iostream>
 #include "game.h"
 #include "sprite.h"
+<<<<<<< HEAD
+=======
+#include "entity.h"
+#include "tile.h"
+#include "background.h"
+>>>>>>> upstream/master
 #include <cmath>
 
 int SCREEN_WIDTH;
@@ -64,9 +70,11 @@ void Game::runGame()
 
 		SDL_RenderPresent(gRenderer);
 	}
-
 	
-		
+	//Define Sprites
+	Sprite sbg(0, 0, 1280, 720, 1, "assets/backgrounds/background1.png", gRenderer);
+	Background bg(&sbg);
+
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
 
@@ -157,30 +165,16 @@ void Game::runGame()
 			}
 		}
 		
-		//apply gravity
-		//y_vel += 1;
-		
-		// Move player
 		player.movePosition(x_vel, y_vel);
-
-		/*if (x_pos < 0)
-			x_pos = 0;
-		else if (x_pos + player.getCurrFrame().getWidth() > SCREEN_WIDTH)	//if right edge of sprite hits screen edge
-			x_pos = SCREEN_WIDTH - player.getCurrFrame().getWidth();		//stop
-
-
-		y_pos += y_vel;
-		if (y_pos < 0)
-			y_pos = 0;
-		else if (y_pos + player.getCurrFrame().getHeight() > SCREEN_HEIGHT)	//if bottom edge of sprite hits screen edge,
-			y_pos = SCREEN_HEIGHT - player.getCurrFrame().getHeight();		//stop
-		*/
 
 		detectCollision(player);
 
+		//Draw to screen
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 		player.getCurrFrame().draw(gRenderer, player.getXPosition(), player.getYPosition());
+
+		bg.getSprite()->draw(gRenderer, 0, 0);
 		SDL_RenderPresent(gRenderer);
 	}
 }
