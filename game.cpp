@@ -16,7 +16,7 @@ Game::Game(int width, int height)
 	
 	windowWidth = width;
 	windowHeight = height;
-
+	
 	SCREEN_WIDTH = width;
 	SCREEN_HEIGHT = height;
 
@@ -47,7 +47,8 @@ void Game::runGame()
 
 	Sprite mmTitle(0, 0, 796, 125, 1, "assets/main_menu/mainmenuTitle.png", gRenderer);
 	Sprite mmPressAny(0, 0, 485, 56, 1, "assets/main_menu/pressAny.png", gRenderer);
-
+	maxHP = 40;
+	playerHP = 40;
 	SDL_Event e;
 	while (true) {	//main menu
 
@@ -67,6 +68,7 @@ void Game::runGame()
 
 		SDL_RenderPresent(gRenderer);
 	}
+
 
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
@@ -88,7 +90,7 @@ void Game::runGame()
 			}
 			else if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
-		
+
 				case SDLK_w:
 					/*
 					if(y_vel > -max_speed)	//as long as we don't exceed max speed, change velocity
@@ -130,7 +132,7 @@ void Game::runGame()
 					break;
 
 				case SDLK_a:
-					while(x_vel < 0)	//drift to 0 speed
+					while (x_vel < 0)	//drift to 0 speed
 						x_vel += 1;
 					break;
 
@@ -142,7 +144,7 @@ void Game::runGame()
 					break;
 
 				case SDLK_d:
-					while(x_vel > 0)	//drift to 0 speed
+					while (x_vel > 0)	//drift to 0 speed
 						x_vel -= 1;
 					break;
 
@@ -151,7 +153,7 @@ void Game::runGame()
 
 				case SDLK_r:
 					break;
-					
+
 				}
 
 			}
@@ -165,11 +167,15 @@ void Game::runGame()
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 		bg.getSprite()->draw(gRenderer, 0, 0);
+
 		player.getCurrFrame().draw(gRenderer, player.getXPosition(), player.getYPosition());
+
+		drawHP();
 
 		SDL_RenderPresent(gRenderer);
 	}
 }
+
 
 void Game::detectCollision(Entity &ent)
 {
@@ -186,7 +192,30 @@ void Game::detectCollision(Entity &ent)
 		ent.setPosition(ent.getXPosition(),SCREEN_HEIGHT - ent.getCurrFrame().getHeight());
 	}
 
+void Game::drawHP()
+{
+  Sprite healthbarBase(0, 0, 59, 48, 4, "assets/health_bar/base.png", gRenderer);
+  healthbarBase.draw(gRenderer, 50, 50);
+	SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0xFF);
+	SDL_Rect* healthLine = new SDL_Rect;
+	healthLine->y = 110;
+	healthLine->w = 4;
+	healthLine->h = 12;
+	for (int h = 0; h < playerHP - 1; h++)
+	{
+		healthLine->x = 94 + 4 * h;
+		SDL_RenderFillRect(gRenderer, healthLine);
+	}
+	if (playerHP == maxHP)
+	{
+		healthLine->x = 90 + 4 * playerHP;
+		healthLine->h = 8;
+		SDL_RenderFillRect(gRenderer, healthLine);
 
+		healthLine->x = 94 + 4 * playerHP;
+		healthLine->h = 4;
+		SDL_RenderFillRect(gRenderer, healthLine);
+	}
 }
 
 void Game::update()
