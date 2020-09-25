@@ -27,15 +27,16 @@ int** Tilemap::getTileArray(std::string filename)
 
 		// Now that we have our max values, we
 		// can initialize our tilemap array
-		int** tileMap = new int* [this->xMax];
-		for (int i = 0; i < this->xMax; i++)
-			tileMap[i] = new int[this->yMax];
+		int** tileMap = new int* [this->yMax];
+		for (int i = 0; i < this->yMax; i++)
+			tileMap[i] = new int[this->xMax];
 
 		// Loop through our tilemap's dimensions
 		// assigning values to each spot in the array
-		for (int i = 0; i < this->xMax; i++)
+		tileFile.get(in);
+		for (int i = 0; i < this->yMax; i++)
 		{
-			for (int j = 0; j < this->yMax; j++)
+			for (int j = 0; j < this->xMax; j++)
 			{
 				tileFile.get(in);
 				tileMap[i][j] = in;
