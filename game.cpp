@@ -1,10 +1,10 @@
 #include <iostream>
+#include <cmath>
 #include "game.h"
 #include "sprite.h"
 #include "entity.h"
 #include "tile.h"
 #include "background.h"
-#include <cmath>
 
 int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
@@ -68,30 +68,18 @@ void Game::runGame()
 		SDL_RenderPresent(gRenderer);
 	}
 
-	//Define Sprites
-	Sprite sbg(0, 0, 1280, 720, 1, "assets/backgrounds/background1.png", gRenderer);
-	Background bg(&sbg);
-
-	Sprite base(1, 2, 14, 30, 4, "assets/sprites/spritesheet.png", gRenderer);
-	Sprite anim(0, 34, 16, 29, 4, "assets/sprites/spritesheet.png", gRenderer);
-	Sprite brick(16, 24, 16, 8, 4, "assets/sprites/spritesheet.png", gRenderer);
-	Sprite enemy(36, 17, 24, 15, 4, "assets/sprites/spritesheet.png", gRenderer);
-		
-
-	
-	Entity player("data/player.spr",gRenderer);
-
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
+	
+	//Define Graphiical Objects
+	Background bg(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
+	Entity player("data/player.spr", x_pos, y_pos, gRenderer);
 
 	int x_vel = 0;
 	int y_vel = 0;
 	
 	int max_speed = 3;	//max velocity, prevents weird speed issues
-
 	
-	Sprite temp;
-	temp = base;
 	int index = 0;
 	while (running == true) {
 		while (SDL_PollEvent(&e) != 0) {
@@ -107,11 +95,11 @@ void Game::runGame()
 						y_vel -= 1;
 					*/
 					//jump
-					if(SCREEN_HEIGHT - player.getCurrFrame().getHeight() == y_pos){
+					/*if(SCREEN_HEIGHT - player.getCurrFrame().getHeight() == y_pos){
 						y_vel = -25;
 					}
 					player.setCurrFrame(1);
-
+					*/
 					break;
 
 				case SDLK_a:
@@ -169,45 +157,36 @@ void Game::runGame()
 			}
 		}
 		
-		//apply gravity
-		y_vel += 1;
-		
-		// Move player
-		x_pos += x_vel;
-		if (x_pos < 0)
-			x_pos = 0;
-		else if (x_pos + player.getCurrFrame().getWidth() > SCREEN_WIDTH)	//if right edge of sprite hits screen edge
-			x_pos = SCREEN_WIDTH - player.getCurrFrame().getWidth();		//stop
+		player.movePosition(x_vel, y_vel);
 
-		else if (x_pos + temp.getWidth() > SCREEN_WIDTH)	//if right edge of sprite hits screen edge
-			x_pos = SCREEN_WIDTH - temp.getWidth();		//stop
-
-		y_pos += y_vel;
-		if (y_pos < 0)
-			y_pos = 0;
-		else if (y_pos + player.getCurrFrame().getHeight() > SCREEN_HEIGHT)	//if bottom edge of sprite hits screen edge,
-			y_pos = SCREEN_HEIGHT - player.getCurrFrame().getHeight();		//stop
-
-		else if (y_pos + temp.getHeight() > SCREEN_HEIGHT)	//if bottom edge of sprite hits screen edge,
-			y_pos = SCREEN_HEIGHT - temp.getHeight();		//stop
+		detectCollision(player);
 
 		//Draw to screen
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-
 		bg.getSprite()->draw(gRenderer, 0, 0);
-		temp.draw(gRenderer, x_pos, y_pos);
-
-		player.getCurrFrame().draw(gRenderer, x_pos, y_pos);
-
-		for (int i = 0; i < 75; i++) {
-			brick.draw(gRenderer,i*64,334);
-		}
-		enemy.draw(gRenderer, 800, 274);
+		player.getCurrFrame().draw(gRenderer, player.getXPosition(), player.getYPosition());
 
 		SDL_RenderPresent(gRenderer);
-		player.setCurrFrame(0);
 	}
+}
+
+void Game::detectCollision(Entity &ent)
+{
+	if (ent.getXPosition() < 0) {
+		ent.setPosition(0,ent.getYPosition());
+	}
+	else if (ent.getYPosition() < 0) {
+		ent.setPosition(ent.getXPosition(), 0);
+	}
+	else if (ent.getXPosition() + ent.getCurrFrame().getWidth() > SCREEN_WIDTH) {
+		ent.setPosition(SCREEN_WIDTH - ent.getCurrFrame().getWidth(), ent.getYPosition());
+	}
+	else if (ent.getYPosition() + ent.getCurrFrame().getHeight() > SCREEN_HEIGHT ) {
+		ent.setPosition(ent.getXPosition(),SCREEN_HEIGHT - ent.getCurrFrame().getHeight());
+	}
+
+
 }
 
 void Game::update()
@@ -233,3 +212,4 @@ SDL_Texture* Game::rollCredits()
 	i++;
 	return temp;
 }
+
