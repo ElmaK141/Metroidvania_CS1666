@@ -2,6 +2,8 @@
 #include "game.h"
 #include "sprite.h"
 #include "entity.h"
+#include "tile.h"
+#include "background.h"
 #include <cmath>
 
 int SCREEN_WIDTH;
@@ -65,6 +67,10 @@ void Game::runGame()
 
 		SDL_RenderPresent(gRenderer);
 	}
+
+	//Define Sprites
+	Sprite sbg(0, 0, 1280, 720, 1, "assets/backgrounds/background1.png", gRenderer);
+	Background bg(&sbg);
 
 	Sprite base(1, 2, 14, 30, 4, "assets/sprites/spritesheet.png", gRenderer);
 	Sprite anim(0, 34, 16, 29, 4, "assets/sprites/spritesheet.png", gRenderer);
@@ -185,9 +191,15 @@ void Game::runGame()
 		else if (y_pos + temp.getHeight() > SCREEN_HEIGHT)	//if bottom edge of sprite hits screen edge,
 			y_pos = SCREEN_HEIGHT - temp.getHeight();		//stop
 
+		//Draw to screen
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+
+		bg.getSprite()->draw(gRenderer, 0, 0);
+		temp.draw(gRenderer, x_pos, y_pos);
+
 		player.getCurrFrame().draw(gRenderer, x_pos, y_pos);
+
 		for (int i = 0; i < 75; i++) {
 			brick.draw(gRenderer,i*64,334);
 		}
