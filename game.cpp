@@ -177,10 +177,10 @@ void Game::runGame()
 }
 
 
-void Game::detectCollision(Entity &ent)
+void Game::detectCollision(Entity& ent)
 {
 	if (ent.getXPosition() < 0) {
-		ent.setPosition(0,ent.getYPosition());
+		ent.setPosition(0, ent.getYPosition());
 	}
 	else if (ent.getYPosition() < 0) {
 		ent.setPosition(ent.getXPosition(), 0);
@@ -188,14 +188,15 @@ void Game::detectCollision(Entity &ent)
 	else if (ent.getXPosition() + ent.getCurrFrame().getWidth() > SCREEN_WIDTH) {
 		ent.setPosition(SCREEN_WIDTH - ent.getCurrFrame().getWidth(), ent.getYPosition());
 	}
-	else if (ent.getYPosition() + ent.getCurrFrame().getHeight() > SCREEN_HEIGHT ) {
-		ent.setPosition(ent.getXPosition(),SCREEN_HEIGHT - ent.getCurrFrame().getHeight());
+	else if (ent.getYPosition() + ent.getCurrFrame().getHeight() > SCREEN_HEIGHT) {
+		ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - ent.getCurrFrame().getHeight());
 	}
+}
 
 void Game::drawHP()
 {
-  Sprite healthbarBase(0, 0, 59, 48, 4, "assets/health_bar/base.png", gRenderer);
-  healthbarBase.draw(gRenderer, 50, 50);
+	Sprite healthbarBase(0, 0, 59, 48, 4, "assets/health_bar/base.png", gRenderer);
+	healthbarBase.draw(gRenderer, 50, 50);
 	SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0xFF);
 	SDL_Rect* healthLine = new SDL_Rect;
 	healthLine->y = 110;
