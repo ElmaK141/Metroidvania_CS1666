@@ -23,11 +23,13 @@ class Game {
 		SDL_Renderer* gRenderer;
 		int windowWidth;
 		int windowHeight;
+		int maxHP;
+		int playerHP;
 		bool running;
 		std::vector<std::string> creditFiles = { "assets/credit_pics/AdamBuchinskyCredits.png","credit_pics/GiovanniMeiserbeegyosh.png","credit_pics/juliancredits.png","assets/credit_pics/NoahVienneau.jpg","assets/credit_pics/emk113_credit_image.png"
 
 													,"assets/credit_pics/hicksCredits.png","assets/credit_pics/JoelValentinoCredits.png","assets/credit_pics/JordanBendercredits.png", "assets/credit_pics/KristoferE.png"};
-
+		void drawHP();
 		void update();
 		void render();
 		SDL_Texture* rollCredits();

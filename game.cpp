@@ -16,7 +16,7 @@ Game::Game(int width, int height)
 	
 	windowWidth = width;
 	windowHeight = height;
-
+	
 	SCREEN_WIDTH = width;
 	SCREEN_HEIGHT = height;
 
@@ -47,7 +47,8 @@ void Game::runGame()
 
 	Sprite mmTitle(0, 0, 796, 125, 1, "assets/main_menu/mainmenuTitle.png", gRenderer);
 	Sprite mmPressAny(0, 0, 485, 56, 1, "assets/main_menu/pressAny.png", gRenderer);
-
+	maxHP = 40;
+	playerHP = 40;
 	SDL_Event e;
 	while (true) {	//main menu
 
@@ -76,7 +77,7 @@ void Game::runGame()
 	Sprite anim(0, 34, 16, 29, 4, "assets/sprites/spritesheet.png", gRenderer);
 	Sprite brick(16, 24, 16, 8, 4, "assets/sprites/spritesheet.png", gRenderer);
 	Sprite enemy(36, 17, 24, 15, 4, "assets/sprites/spritesheet.png", gRenderer);
-	Sprite healthbarBase(0, 0, 267, 197, 1, "assets/health_bar/base.png", gRenderer);
+	Sprite healthbarBase(0, 0, 59, 48, 4, "assets/health_bar/base.png", gRenderer);
 		
 
 	
@@ -101,14 +102,14 @@ void Game::runGame()
 			}
 			else if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
-		
+
 				case SDLK_w:
 					/*
 					if(y_vel > -max_speed)	//as long as we don't exceed max speed, change velocity
 						y_vel -= 1;
 					*/
 					//jump
-					if(SCREEN_HEIGHT - player.getCurrFrame().getHeight() == y_pos){
+					if (SCREEN_HEIGHT - player.getCurrFrame().getHeight() == y_pos) {
 						y_vel = -25;
 					}
 					player.setCurrFrame(1);
@@ -143,7 +144,7 @@ void Game::runGame()
 					break;
 
 				case SDLK_a:
-					while(x_vel < 0)	//drift to 0 speed
+					while (x_vel < 0)	//drift to 0 speed
 						x_vel += 1;
 					break;
 
@@ -155,7 +156,7 @@ void Game::runGame()
 					break;
 
 				case SDLK_d:
-					while(x_vel > 0)	//drift to 0 speed
+					while (x_vel > 0)	//drift to 0 speed
 						x_vel -= 1;
 					break;
 
@@ -164,15 +165,15 @@ void Game::runGame()
 
 				case SDLK_r:
 					break;
-					
+
 				}
 
 			}
 		}
-		
+
 		//apply gravity
 		y_vel += 1;
-		
+
 		// Move player
 		x_pos += x_vel;
 		if (x_pos < 0)
@@ -202,13 +203,39 @@ void Game::runGame()
 		player.getCurrFrame().draw(gRenderer, x_pos, y_pos);
 
 		for (int i = 0; i < 75; i++) {
-			brick.draw(gRenderer,i*64,334);
+			brick.draw(gRenderer, i * 64, 334);
 		}
 		enemy.draw(gRenderer, 800, 274);
+
 		healthbarBase.draw(gRenderer, 50, 50);
+		drawHP();
 
 		SDL_RenderPresent(gRenderer);
 		player.setCurrFrame(0);
+	}
+}
+
+void Game::drawHP()
+{
+	SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0xFF);
+	SDL_Rect* healthLine = new SDL_Rect;
+	healthLine->y = 110;
+	healthLine->w = 4;
+	healthLine->h = 12;
+	for (int h = 0; h < playerHP - 1; h++)
+	{
+		healthLine->x = 94 + 4 * h;
+		SDL_RenderFillRect(gRenderer, healthLine);
+	}
+	if (playerHP == maxHP)
+	{
+		healthLine->x = 90 + 4 * playerHP;
+		healthLine->h = 8;
+		SDL_RenderFillRect(gRenderer, healthLine);
+
+		healthLine->x = 94 + 4 * playerHP;
+		healthLine->h = 4;
+		SDL_RenderFillRect(gRenderer, healthLine);
 	}
 }
 
