@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+#include "entity.h"
+
 class Game {
 	public:
 		Game(int width, int height);
@@ -18,6 +20,7 @@ class Game {
 		~Game();
 		void runGame();
 
+		void detectCollision(Entity &ent);
 	private:
 		SDL_Window* gWindow;
 		SDL_Renderer* gRenderer;
