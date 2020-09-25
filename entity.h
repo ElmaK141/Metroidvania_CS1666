@@ -4,16 +4,25 @@
 #include "sprite.h"
 
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 class Entity{
 	
 	public:
-		Entity(std::vector<Sprite> f);
+		Entity(std::string spriteData, SDL_Renderer* context);
 		~Entity();
 		
 		void setCurrFrame(int index);
-		Sprite currFrame;
+		Sprite getCurrFrame();
 	private:
+
+		void createSprites();
+		
+		Sprite currFrame;
+		SDL_Renderer* context;
+		std::string assetLoc;
+		std::ifstream spriteFile;
 		std::vector<Sprite> frames;
 };
 
