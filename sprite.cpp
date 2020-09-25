@@ -16,14 +16,14 @@ Sprite::Sprite(int x, int y, int w, int h, int scalar, std::string file,
 	this->entHeight = h*scalar;
 
 	SDL_Surface* load = IMG_Load(file.c_str());
-	
+	SDL_GetError();
+
 	SDL_SetColorKey(load, SDL_TRUE, SDL_MapRGB(load->format, 255, 255, 255));
 	this->texture = SDL_CreateTextureFromSurface(renderer, load);
 	SDL_FreeSurface(load);
 }
 
 Sprite::~Sprite() {
-	SDL_DestroyTexture(this->texture);
 }
 
 void Sprite::draw(SDL_Renderer * render, int x, int y){
@@ -38,5 +38,9 @@ int Sprite::getWidth() {
 
 int Sprite::getHeight() {
 	return this->entHeight;	
+}
+
+int Sprite::getScale() {
+	return this->scale;
 }
 
