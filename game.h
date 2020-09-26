@@ -20,7 +20,7 @@ class Game {
 		~Game();
 		void runGame();
 
-		void detectCollision(Entity &ent);
+		bool detectCollision(Entity &ent);
 	private:
 		SDL_Window* gWindow;
 		SDL_Renderer* gRenderer;
