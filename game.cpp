@@ -1,7 +1,10 @@
 #include <iostream>
+#include <cmath>
 #include "game.h"
 #include "sprite.h"
-
+#include "entity.h"
+#include "tile.h"
+#include "background.h"
 
 int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
@@ -13,7 +16,7 @@ Game::Game(int width, int height)
 	
 	windowWidth = width;
 	windowHeight = height;
-
+	
 	SCREEN_WIDTH = width;
 	SCREEN_HEIGHT = height;
 
@@ -41,16 +44,45 @@ Game::~Game()
 
 void Game::runGame()
 {
-	Sprite stick(9, 1, 14, 31, "assets/spritesheet.png", gRenderer);
-	
-	
+
+	Sprite mmTitle(0, 0, 796, 125, 1, "assets/main_menu/mainmenuTitle.png", gRenderer);
+	Sprite mmPressAny(0, 0, 485, 56, 1, "assets/main_menu/pressAny.png", gRenderer);
+	maxHP = 40;
+	playerHP = 40;
+	SDL_Event e;
+	while (true) {	//main menu
+
+		SDL_PollEvent(&e);
+		if (e.type == SDL_QUIT) {
+			running = false;
+		}
+		else if (e.type == SDL_KEYDOWN)
+			break;
+
+		SDL_RenderClear(gRenderer);
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
+
+		mmTitle.draw(gRenderer, 240, 120);
+		if(SDL_GetTicks() % 1200 <= 700)	//blinking text
+			mmPressAny.draw(gRenderer, 397, 400);
+
+		SDL_RenderPresent(gRenderer);
+	}
+
+
 	int x_pos = SCREEN_WIDTH / 2;
-	int y_pos = SCREEN_HEIGHT / 2;
+	int y_pos = SCREEN_HEIGHT / 2 - 145;
+	
+	//Define Graphiical Objects
+	Background bg(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
+	Entity player("data/player.spr", x_pos, y_pos, gRenderer);
 
 	int x_vel = 0;
 	int y_vel = 0;
-
-	SDL_Event e;
+	
+	int max_speed = 3;	//max velocity, prevents weird speed issues
+	
+	int index = 0;
 	while (running == true) {
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
@@ -58,32 +90,132 @@ void Game::runGame()
 			}
 			else if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
+
 				case SDLK_w:
-					y_vel -= 1;
+					/*
+					if(y_vel > -max_speed)	//as long as we don't exceed max speed, change velocity
+						y_vel -= 1;
+					*/
+					//jump
+					/*if(SCREEN_HEIGHT - player.getCurrFrame().getHeight() == y_pos){
+						y_vel = -25;
+					}
+					player.setCurrFrame(1);
+					*/
 					break;
 
 				case SDLK_a:
-					x_vel -= 1;
+					if (x_vel > -max_speed) //as long as we don't exceed max speed, change velocity
+						x_vel -= 1;
 					break;
 
 				case SDLK_s:
-					y_vel += 1;
+					/*
+					if (y_vel < max_speed) //as long as we don't exceed max speed, change velocity
+						y_vel += 1;
+					*/
 					break;
 
 				case SDLK_d:
-					x_vel += 1;
+					if (x_vel < max_speed) //as long as we don't exceed max speed, change velocity
+						x_vel += 1;
 					break;
 				}
 			}
-		}
-		// Move box
-		x_pos += x_vel;
-		y_pos += y_vel;
+			else if (e.type == SDL_KEYUP) {
+				switch (e.key.keysym.sym) {
+				case SDLK_w:
+					/*
+					while(y_vel < 0)	//drift to 0 speed
+						y_vel += 1;
+					*/
+					break;
 
+				case SDLK_a:
+					while (x_vel < 0)	//drift to 0 speed
+						x_vel += 1;
+					break;
+
+				case SDLK_s:
+					/*
+					while(y_vel > 0)	//drift to 0 speed
+						y_vel -= 1;
+					*/
+					break;
+
+				case SDLK_d:
+					while (x_vel > 0)	//drift to 0 speed
+						x_vel -= 1;
+					break;
+
+				case SDLK_e:
+					break;
+
+				case SDLK_r:
+					break;
+
+				}
+
+			}
+		}
+		
+		player.movePosition(x_vel, y_vel);
+
+		detectCollision(player);
+
+		//Draw to screen
 		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF);
-		stick.draw(gRenderer, x_pos, y_pos);
+		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+		bg.getSprite()->draw(gRenderer, 0, 0);
+
+		player.getCurrFrame().draw(gRenderer, player.getXPosition(), player.getYPosition());
+
+		drawHP();
+
 		SDL_RenderPresent(gRenderer);
+	}
+}
+
+
+void Game::detectCollision(Entity& ent)
+{
+	if (ent.getXPosition() < 0) {
+		ent.setPosition(0, ent.getYPosition());
+	}
+	else if (ent.getYPosition() < 0) {
+		ent.setPosition(ent.getXPosition(), 0);
+	}
+	else if (ent.getXPosition() + ent.getCurrFrame().getWidth() > SCREEN_WIDTH) {
+		ent.setPosition(SCREEN_WIDTH - ent.getCurrFrame().getWidth(), ent.getYPosition());
+	}
+	else if (ent.getYPosition() + ent.getCurrFrame().getHeight() > SCREEN_HEIGHT) {
+		ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - ent.getCurrFrame().getHeight());
+	}
+}
+
+void Game::drawHP()
+{
+	Sprite healthbarBase(0, 0, 59, 48, 4, "assets/health_bar/base.png", gRenderer);
+	healthbarBase.draw(gRenderer, 50, 50);
+	SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0xFF);
+	SDL_Rect* healthLine = new SDL_Rect;
+	healthLine->y = 110;
+	healthLine->w = 4;
+	healthLine->h = 12;
+	for (int h = 0; h < playerHP - 1; h++)
+	{
+		healthLine->x = 94 + 4 * h;
+		SDL_RenderFillRect(gRenderer, healthLine);
+	}
+	if (playerHP == maxHP)
+	{
+		healthLine->x = 90 + 4 * playerHP;
+		healthLine->h = 8;
+		SDL_RenderFillRect(gRenderer, healthLine);
+
+		healthLine->x = 94 + 4 * playerHP;
+		healthLine->h = 4;
+		SDL_RenderFillRect(gRenderer, healthLine);
 	}
 }
 
@@ -93,8 +225,6 @@ void Game::update()
 
 void Game::render()
 {
-	SDL_RenderClear(gRenderer);
-	SDL_RenderPresent(gRenderer);
 }
 
 SDL_Texture* Game::rollCredits()
@@ -112,3 +242,4 @@ SDL_Texture* Game::rollCredits()
 	i++;
 	return temp;
 }
+
