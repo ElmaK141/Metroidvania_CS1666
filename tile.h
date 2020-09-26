@@ -8,10 +8,8 @@ class Tile {
 	public:
 		Tile(Sprite* sp);
 		~Tile();
-		Sprite* getSprite();
 	private:
 		Sprite* tile;
 };
-
 
 #endif
