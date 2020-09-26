@@ -12,5 +12,4 @@ class Tile {
 		Sprite* tile;
 };
 
-
 #endif

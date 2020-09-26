@@ -85,6 +85,7 @@ void Game::runGame()
 	int rthird = (2 * SCREEN_WIDTH / 3);
 
 	// determine players starting position (middle of background, on the left side of world)
+
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
 	
@@ -185,6 +186,7 @@ void Game::runGame()
 			player.setCurrFrame(0);
 			y_vel = 0.0;
 		}
+
 
 		// Update scroll if Player moves outside of middle third
 		if (player.getXPosition() > (scroll_offset + rthird))

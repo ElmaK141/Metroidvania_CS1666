@@ -1,6 +1,5 @@
 #include "tile.h"
 
-
 Tile::Tile(Sprite* sp) {
 	this->tile = new Sprite(*sp);
 }
