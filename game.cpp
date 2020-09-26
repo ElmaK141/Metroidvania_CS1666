@@ -8,6 +8,9 @@
 
 int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
+bool in_air = true;
+double gravity = 0.01;
+int jump_strength = 3;
 
 Game::Game(int width, int height)
 {
@@ -77,8 +80,8 @@ void Game::runGame()
 	Background bg(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
 	Entity player("data/player.spr", x_pos, y_pos, gRenderer);
 
-	int x_vel = 0;
-	int y_vel = 0;
+	double x_vel = 0;
+	double y_vel = 0;
 	
 	int max_speed = 3;	//max velocity, prevents weird speed issues
 	
@@ -92,16 +95,11 @@ void Game::runGame()
 				switch (e.key.keysym.sym) {
 
 				case SDLK_w:
-					/*
-					if(y_vel > -max_speed)	//as long as we don't exceed max speed, change velocity
-						y_vel -= 1;
-					*/
-					//jump
-					/*if(SCREEN_HEIGHT - player.getCurrFrame().getHeight() == y_pos){
-						y_vel = -25;
+					if (!in_air)	//only jump from ground
+					{
+						in_air = true;
+						y_vel -= jump_strength;
 					}
-					player.setCurrFrame(1);
-					*/
 					break;
 
 				case SDLK_a:
@@ -158,10 +156,23 @@ void Game::runGame()
 
 			}
 		}
-		
-		player.movePosition(x_vel, y_vel);
 
-		detectCollision(player);
+		player.movePosition((int)x_vel, (int)y_vel);
+		bool on_solid = detectCollision(player);
+		if (!on_solid && max_speed > y_vel) // while in air
+		{
+			y_vel += gravity;
+			player.setCurrFrame(1);
+		}
+		else if (on_solid)
+		{
+			in_air = false;
+		}
+		if (!in_air)
+		{
+			player.setCurrFrame(0);
+			y_vel = 0.0;
+		}
 
 		//Draw to screen
 		SDL_RenderClear(gRenderer);
@@ -177,20 +188,23 @@ void Game::runGame()
 }
 
 
-void Game::detectCollision(Entity& ent)
+bool Game::detectCollision(Entity& ent)
 {
+
 	if (ent.getXPosition() < 0) {
 		ent.setPosition(0, ent.getYPosition());
 	}
-	else if (ent.getYPosition() < 0) {
+	if (ent.getYPosition() < 0) {
 		ent.setPosition(ent.getXPosition(), 0);
 	}
-	else if (ent.getXPosition() + ent.getCurrFrame().getWidth() > SCREEN_WIDTH) {
+	if (ent.getXPosition() + ent.getCurrFrame().getWidth() > SCREEN_WIDTH) {
 		ent.setPosition(SCREEN_WIDTH - ent.getCurrFrame().getWidth(), ent.getYPosition());
 	}
-	else if (ent.getYPosition() + ent.getCurrFrame().getHeight() > SCREEN_HEIGHT) {
+	if (ent.getYPosition() + ent.getCurrFrame().getHeight() > SCREEN_HEIGHT) {
 		ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - ent.getCurrFrame().getHeight());
+		return true;
 	}
+	return false;
 }
 
 void Game::drawHP()
