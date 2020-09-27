@@ -26,6 +26,14 @@ Sprite::Sprite(int x, int y, int w, int h, int scalar, std::string file,
 Sprite::~Sprite() {
 }
 
+
+/**
+ *  \brief Draw this sprite to the screen at given location.
+ *
+ *  \param render:	The renderer which should copy parts of a texture.
+ *  \param x:	X location to draw to.
+ *  \param y:	Y location to draw to.
+ */
 void Sprite::draw(SDL_Renderer * render, int x, int y){
 	SDL_Rect loc = { x,y,this->entWidth,this->entHeight};
 	SDL_Rect crop = { this->xLoc,this->yLoc,this->spriteWidth,this->spriteHeight };

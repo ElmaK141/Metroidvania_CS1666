@@ -10,21 +10,33 @@
 class Entity{
 	
 	public:
-		Entity(std::string spriteData, SDL_Renderer* context);
+		Entity(std::string spriteData, int xPos, int yPos, SDL_Renderer* context);
 		~Entity();
 		
 		void setCurrFrame(int index);
 		Sprite getCurrFrame();
+
+		int getXPosition();	
+		int getYPosition();
+
+		void movePosition(int xf, int yf);
+		void setPosition(int xPos, int yPos);
 	private:
 
 		void createSprites();
 		
+		int x;
+		int y;
+
 		Sprite currFrame;
 		SDL_Renderer* context;
 		std::string assetLoc;
 		std::ifstream spriteFile;
 		std::vector<Sprite> frames;
+
+
 };
+
 
 
 
