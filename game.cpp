@@ -6,6 +6,10 @@
 #include "tile.h"
 #include "background.h"
 
+// for now - define the X length of the gameworld
+constexpr int LEVEL_LEN = 3000;
+
+//size of the Window/Screen and thus the size of the Camera
 int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
 bool in_air = true;
@@ -72,11 +76,20 @@ void Game::runGame()
 		SDL_RenderPresent(gRenderer);
 	}
 
+	// variables for background scrolling
+	int scroll_offset = 0;
+	int rem = 0;
+
+	// Define where the Camera Thirds are for knowing when we should scroll
+	int lthird = (SCREEN_WIDTH / 3);
+	int rthird = (2 * SCREEN_WIDTH / 3);
+
+	// determine players starting position (middle of background, on the left side of world)
 
 	int x_pos = SCREEN_WIDTH / 2;
 	int y_pos = SCREEN_HEIGHT / 2 - 145;
 	
-	//Define Graphiical Objects
+	//Define Graphical Objects
 	Background bg(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
 	Entity player("data/player.spr", x_pos, y_pos, gRenderer);
 
@@ -174,12 +187,30 @@ void Game::runGame()
 			y_vel = 0.0;
 		}
 
+
+		// Update scroll if Player moves outside of middle third
+		if (player.getXPosition() > (scroll_offset + rthird))
+			scroll_offset = player.getXPosition() - rthird;
+		else if (player.getXPosition() < (scroll_offset + lthird))
+			scroll_offset = player.getXPosition() - lthird;
+		
+		//Prevent scroll_offset from placing left side of the Cam outside of gameworld
+		if (scroll_offset < 0)
+			scroll_offset = 0;
+		if (scroll_offset + SCREEN_WIDTH > LEVEL_LEN)
+			scroll_offset = LEVEL_LEN - SCREEN_WIDTH;
+
 		//Draw to screen
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-		bg.getSprite()->draw(gRenderer, 0, 0);
+		
+		// Draw the portion of the background currently inside the camera view
+		rem = scroll_offset % SCREEN_WIDTH;
+		bg.getSprite()->draw(gRenderer, -rem, 0);
+		bg.getSprite()->draw(gRenderer, (-rem + SCREEN_WIDTH), 0);
 
-		player.getCurrFrame().draw(gRenderer, player.getXPosition(), player.getYPosition());
+		//draw the player
+		player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
 
 		drawHP();
 
@@ -188,17 +219,17 @@ void Game::runGame()
 }
 
 
+// Detect collision of Entity with Gameworld (edge of screen)
 bool Game::detectCollision(Entity& ent)
 {
-
 	if (ent.getXPosition() < 0) {
 		ent.setPosition(0, ent.getYPosition());
 	}
 	if (ent.getYPosition() < 0) {
 		ent.setPosition(ent.getXPosition(), 0);
 	}
-	if (ent.getXPosition() + ent.getCurrFrame().getWidth() > SCREEN_WIDTH) {
-		ent.setPosition(SCREEN_WIDTH - ent.getCurrFrame().getWidth(), ent.getYPosition());
+	if (ent.getXPosition() + ent.getCurrFrame().getWidth() > LEVEL_LEN) {
+		ent.setPosition(LEVEL_LEN - ent.getCurrFrame().getWidth(), ent.getYPosition());
 	}
 	if (ent.getYPosition() + ent.getCurrFrame().getHeight() > SCREEN_HEIGHT) {
 		ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - ent.getCurrFrame().getHeight());
