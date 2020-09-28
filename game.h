@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "entity.h"
+#include "tilemap.h"
 
 class Game {
 	public:
@@ -19,8 +20,9 @@ class Game {
 		Game(const Game &obj);
 		~Game();
 		void runGame();
+		void runDebug();
 
-		void detectCollision(Entity &ent);
+		bool detectCollision(Entity &ent);
 	private:
 		SDL_Window* gWindow;
 		SDL_Renderer* gRenderer;
