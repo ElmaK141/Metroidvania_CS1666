@@ -155,7 +155,7 @@ void Game::runGame()
 	
 	//Define Graphical Objects
 	Background bg(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
-	Entity player("data/player.spr", x_pos, y_pos, gRenderer);
+	Entity player("data/player.spr", x_pos, y_pos,4,gRenderer);
 	
 	Sprite wall(98,96,16,16,4,"assets/sprites/tiles.png",gRenderer);
 	Sprite floor(435, 94, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
