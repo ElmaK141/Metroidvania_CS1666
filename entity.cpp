@@ -2,10 +2,11 @@
 #include <sstream>
 
 
-Entity::Entity(std::string spriteData, int xPos, int yPos, SDL_Renderer* context) {
+Entity::Entity(std::string spriteData, int xPos, int yPos, int scale, SDL_Renderer* context) {
 
 	this->spriteFile = std::ifstream(spriteData);
 	this->context = context;
+	this->s = scale;
 	this->createSprites();
 	this->currFrame = frames[0];
 	this->x = xPos;
@@ -55,7 +56,7 @@ void Entity::createSprites() {
 	int a, b, c, d;
 
 	while (this->spriteFile >> a >> b >> c >> d ) {
-		Sprite temp(a, b, c, d, 4, line, context);
+		Sprite temp(a, b, c, d, s, line, context);
 		frames.emplace_back(temp);
 	}
 }
