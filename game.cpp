@@ -144,6 +144,9 @@ void Game::runGame()
 	int scroll_offset = 0;
 	int rem = 0;
 
+	//Flip variable for flipping player sprite
+	SDL_RendererFlip flip = SDL_FLIP_NONE;
+
 	// Define where the Camera Thirds are for knowing when we should scroll
 	int lthird = (SCREEN_WIDTH / 3);
 	int rthird = (2 * SCREEN_WIDTH / 3);
@@ -276,9 +279,7 @@ void Game::runGame()
 		//Draw to screen
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-		
 
-		
 
 		// Draw the portion of the background currently inside the camera view
 		rem = scroll_offset % SCREEN_WIDTH;
@@ -286,7 +287,12 @@ void Game::runGame()
 		bg.getSprite()->draw(gRenderer, (-rem + SCREEN_WIDTH), 0);
 
 		//draw the player
-		player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
+		if (x_vel > 0 && flip == SDL_FLIP_HORIZONTAL)
+			flip = SDL_FLIP_NONE;
+		else if (x_vel < 0 && flip == SDL_FLIP_NONE)
+			flip = SDL_FLIP_HORIZONTAL;
+
+		player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
 
 		drawHP();
 
@@ -382,6 +388,9 @@ void Game::runDebug() {
 	// variables for background scrolling
 	int scroll_offset = 0;
 	int rem = 0;
+
+	//Flip variable for flipping player sprite
+	SDL_RendererFlip flip = SDL_FLIP_NONE;
 
 	// Define where the Camera Thirds are for knowing when we should scroll
 	int lthird = (SCREEN_WIDTH / 3);
@@ -515,7 +524,12 @@ void Game::runDebug() {
 		debugBg.getSprite()->draw(gRenderer, (-rem + SCREEN_WIDTH), 0);
 
 		//draw the player
-		player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
+		if (x_vel > 0 && flip == SDL_FLIP_HORIZONTAL)
+			flip = SDL_FLIP_NONE;
+		else if (x_vel < 0 && flip == SDL_FLIP_NONE)
+			flip = SDL_FLIP_HORIZONTAL;
+
+		player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
 
 		drawHP();
 
