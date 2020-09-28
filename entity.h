@@ -10,7 +10,7 @@
 class Entity{
 	
 	public:
-		Entity(std::string spriteData, int xPos, int yPos, SDL_Renderer* context);
+		Entity(std::string spriteData, int xPos, int yPos, int scale, SDL_Renderer* context);
 		~Entity();
 		
 		void setCurrFrame(int index);
@@ -27,6 +27,7 @@ class Entity{
 		
 		int x;
 		int y;
+		int s;
 
 		Sprite currFrame;
 		SDL_Renderer* context;

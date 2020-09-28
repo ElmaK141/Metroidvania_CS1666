@@ -19,6 +19,7 @@ class Game {
 		Game(const Game &obj);
 		~Game();
 		void runGame();
+		void runDebug();
 
 		bool detectCollision(Entity &ent);
 	private:

@@ -14,6 +14,9 @@ Sprite::Sprite(int x, int y, int w, int h, int scalar, std::string file,
 	this->spriteHeight = h;
 	this->entWidth = w*scalar;
 	this->entHeight = h*scalar;
+	this->scale = scalar;
+	this->screenX = x;
+	this->screenY = y;
 
 	SDL_Surface* load = IMG_Load(file.c_str());
 	SDL_GetError();
@@ -38,6 +41,8 @@ void Sprite::draw(SDL_Renderer * render, int x, int y){
 	SDL_Rect loc = { x,y,this->entWidth,this->entHeight};
 	SDL_Rect crop = { this->xLoc,this->yLoc,this->spriteWidth,this->spriteHeight };
 	SDL_RenderCopy(render, this->texture, &crop, &loc);
+	this->screenX = x;
+	this->screenY = y;
 }
 
 int Sprite::getWidth() {
@@ -52,3 +57,10 @@ int Sprite::getScale() {
 	return this->scale;
 }
 
+int Sprite::getX() {
+	return this->screenX;
+}
+
+int Sprite::getY() {
+	return this->screenY;
+}

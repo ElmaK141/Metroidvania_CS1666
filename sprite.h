@@ -22,6 +22,8 @@ class Sprite {
 		int getWidth();
 		int getHeight();
 		int getScale();
+		int getX();
+		int getY();
 	private:
 		SDL_Texture* texture;
 		int xLoc;
@@ -31,6 +33,8 @@ class Sprite {
 		int entWidth;
 		int entHeight;
 		int scale;
+		int screenX;
+		int screenY;
 };
 
 
