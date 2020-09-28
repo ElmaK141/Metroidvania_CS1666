@@ -14,8 +14,8 @@ constexpr int LEVEL_LEN = 3000;
 int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
 bool in_air = true;
-double gravity = 0.01;
-int jump_strength = 3;
+double gravity = 0.09;
+int jump_strength = 5;
 
 Game::Game(int width, int height)
 {
@@ -55,8 +55,7 @@ void Game::runGame()
 
 	Sprite mmTitle(0, 0, 796, 125, 1, "assets/main_menu/mainmenuTitle.png", gRenderer);
 	Sprite mmPressAny(0, 0, 485, 56, 1, "assets/main_menu/pressAny.png", gRenderer);
-	maxHP = 40;
-	playerHP = 40;
+
 	SDL_Event e;
 	while (running == true) {	//Start screen
 
@@ -156,13 +155,22 @@ void Game::runGame()
 	
 	//Define Graphical Objects
 	Background bg(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
-	Entity player("data/player.spr", x_pos, y_pos, 3, gRenderer);
+	Entity player("data/player.spr", x_pos, y_pos,4,gRenderer);
+	
+	Sprite wall(98,96,16,16,4,"assets/sprites/tiles.png",gRenderer);
+	Sprite floor(435, 94, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
+
+	std::vector<Sprite> tiles;
+	tiles.push_back(wall);
+	tiles.push_back(floor);
 
 	double x_vel = 0;
 	double y_vel = 0;
 	
 	int max_speed = 3;	//max velocity, prevents weird speed issues
 	
+	Tilemap t("data/tilemap.txt", gRenderer,tiles);
+
 	int index = 0;
 	while (running == true) {
 		while (SDL_PollEvent(&e) != 0) {
@@ -269,6 +277,9 @@ void Game::runGame()
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 		
+
+		
+
 		// Draw the portion of the background currently inside the camera view
 		rem = scroll_offset % SCREEN_WIDTH;
 		bg.getSprite()->draw(gRenderer, -rem, 0);
