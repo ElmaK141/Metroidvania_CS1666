@@ -172,7 +172,7 @@ void Game::runGame()
 			else if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
 
-				case SDLK_w:
+				case SDLK_SPACE:
 					if (!in_air)	//only jump from ground
 					{
 						in_air = true;
@@ -200,7 +200,7 @@ void Game::runGame()
 			}
 			else if (e.type == SDL_KEYUP) {
 				switch (e.key.keysym.sym) {
-				case SDLK_w:
+				case SDLK_SPACE:
 					/*
 					while(y_vel < 0)	//drift to 0 speed
 						y_vel += 1;
