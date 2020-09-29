@@ -169,7 +169,7 @@ void Game::runGame()
 	
 	//Define Graphical Objects
 	Background bg(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
-	Entity player("data/player.spr", (int)x_pos, (int)y_pos,4,gRenderer);
+	Entity player("data/player.spr", (int)x_pos, (int)y_pos, 3, gRenderer);
 	
 	Sprite wall(98,96,16,16,4,"assets/sprites/tiles.png",gRenderer);
 	Sprite floor(435, 94, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
@@ -204,17 +204,19 @@ void Game::runGame()
 		
 		//Holding A
 		if (keystate[SDL_SCANCODE_A]){
+			player.setCurrFrame(1);
 			if (x_vel > -max_x_speed) //as long as we don't exceed max speed, change velocity
 				x_vel = fmin(x_vel - acceleration, -max_x_speed);
 		}
 		
 		//Holding S
 		if (keystate[SDL_SCANCODE_S]){
-			
+			player.setCurrFrame(0);
 		}
 		
 		//Holding D
 		if (keystate[SDL_SCANCODE_D]){
+			player.setCurrFrame(1);
 			if (x_vel < max_x_speed) //as long as we don't exceed max speed, change velocity
 				x_vel = fmax(x_vel + acceleration, max_x_speed);
 		}
@@ -259,7 +261,7 @@ void Game::runGame()
 		}
 		if (!in_air)
 		{
-			player.setCurrFrame(0);
+			//player.setCurrFrame(0);
 			y_vel = 0.0;
 		}
 
@@ -292,7 +294,10 @@ void Game::runGame()
 		else if (x_vel < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
-		player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+		if (player.getFrameIndex() == 1)
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+		else
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
 
 		drawHP();
 
@@ -423,17 +428,19 @@ void Game::runDebug() {
 
 		//Holding A
 		if (keystate[SDL_SCANCODE_A]) {
+			player.setCurrFrame(1);
 			if (x_vel > -max_x_speed) //as long as we don't exceed max speed, change velocity
 				x_vel = fmin(x_vel - acceleration, -max_x_speed);
 		}
 
 		//Holding S
 		if (keystate[SDL_SCANCODE_S]) {
-
+			player.setCurrFrame(0);
 		}
 
 		//Holding D
 		if (keystate[SDL_SCANCODE_D]) {
+			player.setCurrFrame(1);
 			if (x_vel < max_x_speed) //as long as we don't exceed max speed, change velocity
 				x_vel = fmax(x_vel + acceleration, max_x_speed);
 		}
@@ -476,7 +483,7 @@ void Game::runDebug() {
 		}
 		if (!in_air)
 		{
-			player.setCurrFrame(0);
+			//player.setCurrFrame(0);
 			y_vel = 0.0;
 		}
 
@@ -508,7 +515,10 @@ void Game::runDebug() {
 		else if (x_vel < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
-		player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+		if(player.getFrameIndex() == 1)
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+		else
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
 
 		drawHP();
 

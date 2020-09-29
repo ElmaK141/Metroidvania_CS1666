@@ -15,6 +15,7 @@ class Entity{
 		
 		void setCurrFrame(int index);
 		Sprite getCurrFrame();
+		int getFrameIndex();
 
 		double getXPosition();	
 		double getYPosition();
@@ -28,6 +29,7 @@ class Entity{
 		double x;
 		double y;
 		int s;
+		int index;
 
 		Sprite currFrame;
 		SDL_Renderer* context;
