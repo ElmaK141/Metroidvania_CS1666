@@ -54,6 +54,15 @@ void Sprite::draw(SDL_Renderer * render, int x, int y){
 	this->screenY = y;
 }
 
+//draw with flip
+void Sprite::draw(SDL_Renderer* render, int x, int y, SDL_RendererFlip flip) {
+	SDL_Rect loc = { x,y,this->entWidth,this->entHeight };
+	SDL_Rect crop = { this->xLoc,this->yLoc,this->spriteWidth,this->spriteHeight };
+	SDL_RenderCopyEx(render, this->texture, &crop, &loc, 0.0, nullptr, flip);
+	this->screenX = x;
+	this->screenY = y;
+}
+
 int Sprite::getWidth() {
 	return this->entWidth;
 }

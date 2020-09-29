@@ -19,6 +19,7 @@ class Sprite {
 		~Sprite();
 
 		void draw(SDL_Renderer* render, int x, int y);
+		void draw(SDL_Renderer* render, int x, int y, SDL_RendererFlip flip);
 		int getWidth();
 		int getHeight();
 		int getScale();

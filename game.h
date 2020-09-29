@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "entity.h"
+#include "tilemap.h"
 
 class Game {
 	public:
