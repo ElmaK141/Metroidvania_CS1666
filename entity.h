@@ -16,17 +16,17 @@ class Entity{
 		void setCurrFrame(int index);
 		Sprite getCurrFrame();
 
-		int getXPosition();	
-		int getYPosition();
+		double getXPosition();	
+		double getYPosition();
 
-		void movePosition(int xf, int yf);
-		void setPosition(int xPos, int yPos);
+		void movePosition(double xf, double yf);
+		void setPosition(double xPos, double yPos);
 	private:
 
 		void createSprites();
 		
-		int x;
-		int y;
+		double x;
+		double y;
 		int s;
 
 		Sprite currFrame;
