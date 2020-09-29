@@ -28,6 +28,9 @@ Game::Game(int width, int height)
 	SCREEN_WIDTH = width;
 	SCREEN_HEIGHT = height;
 
+	maxHP = 40;
+	playerHP = 40;
+
 	gWindow = SDL_CreateWindow("METROIDVANIA", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 	width, height, 0);
 
@@ -35,9 +38,9 @@ Game::Game(int width, int height)
 	running = true;
 }
 
-Game::Game(const Game &obj)
+/*Game::Game(const Game &obj)
 {
-}
+}*/
 
 Game::~Game() 
 {
