@@ -176,75 +176,58 @@ void Game::runGame()
 
 	int index = 0;
 	while (running == true) {
+		
+		//User input
+		const Uint8* keystate = SDL_GetKeyboardState(nullptr);
+		
+		//Holding W
+		if (keystate[SDL_SCANCODE_W]){
+			
+		}
+		
+		//Holding A
+		if (keystate[SDL_SCANCODE_A]){
+			if (x_vel > -max_speed) //as long as we don't exceed max speed, change velocity
+				x_vel -= 1;
+		}
+		
+		//Holding S
+		if (keystate[SDL_SCANCODE_S]){
+			
+		}
+		
+		//Holding D
+		if (keystate[SDL_SCANCODE_D]){
+			if (x_vel < max_speed) //as long as we don't exceed max speed, change velocity
+				x_vel += 1;
+		}
+		
+		//Holding Spacebar
+		if (keystate[SDL_SCANCODE_SPACE]){
+			if (!in_air)	//only jump from ground
+			{
+				in_air = true;
+				y_vel -= jump_strength;
+			}
+		}
+		
+		//Not holding side buttons
+		if(!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])){
+			if(x_vel > 0){
+				x_vel = fmax(0, x_vel - 1);
+			}
+			else if(x_vel < 0){
+				x_vel = fmin(0, x_vel + 1);
+			}
+		}
+		
+		//Quit game
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
 				running = false;
 			}
-			else if (e.type == SDL_KEYDOWN) {
-				switch (e.key.keysym.sym) {
-
-				case SDLK_SPACE:
-					if (!in_air)	//only jump from ground
-					{
-						in_air = true;
-						y_vel -= jump_strength;
-					}
-					break;
-
-				case SDLK_a:
-					if (x_vel > -max_speed) //as long as we don't exceed max speed, change velocity
-						x_vel -= 1;
-					break;
-
-				case SDLK_s:
-					/*
-					if (y_vel < max_speed) //as long as we don't exceed max speed, change velocity
-						y_vel += 1;
-					*/
-					break;
-
-				case SDLK_d:
-					if (x_vel < max_speed) //as long as we don't exceed max speed, change velocity
-						x_vel += 1;
-					break;
-				}
-			}
-			else if (e.type == SDL_KEYUP) {
-				switch (e.key.keysym.sym) {
-				case SDLK_SPACE:
-					/*
-					while(y_vel < 0)	//drift to 0 speed
-						y_vel += 1;
-					*/
-					break;
-
-				case SDLK_a:
-					while (x_vel < 0)	//drift to 0 speed
-						x_vel += 1;
-					break;
-
-				case SDLK_s:
-					/*
-					while(y_vel > 0)	//drift to 0 speed
-						y_vel -= 1;
-					*/
-					break;
-
-				case SDLK_d:
-					while (x_vel > 0)	//drift to 0 speed
-						x_vel -= 1;
-					break;
-
-				case SDLK_e:
-					break;
-
-				case SDLK_r:
-					break;
-
-				}
-
-			}
 		}
+		
 
 		player.movePosition((int)x_vel, (int)y_vel);
 		bool on_solid = detectCollision(player);
