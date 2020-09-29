@@ -17,6 +17,7 @@ bool in_air = true;
 double gravity = 0.09;
 int jump_strength = 5;
 
+
 Game::Game(int width, int height)
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -143,6 +144,10 @@ void Game::runGame()
 	// variables for background scrolling
 	int scroll_offset = 0;
 	int rem = 0;
+
+	//player hp values
+	maxHP = 40;
+	playerHP = 40;
 
 	//Flip variable for flipping player sprite
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
