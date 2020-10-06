@@ -42,7 +42,9 @@ Game::Game(int width, int height)
 	gWindow = SDL_CreateWindow("METROIDVANIA", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 	width, height, 0);
 
-	gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_ACCELERATED);
+
+	gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+
 	running = true;
 }
 
@@ -150,6 +152,8 @@ void Game::runGame()
 		running = false;
 	}
 
+	// Start Game
+
 	// variables for background scrolling
 	int scroll_offset = 0;
 	int rem = 0;
@@ -167,7 +171,7 @@ void Game::runGame()
 	double y_pos = SCREEN_HEIGHT / 2 - 145.0;
 	
 	//Define Graphical Objects
-	Background bg(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
+	Background bg(0, 0, 1280, 720, "assets/backgrounds/background2.png", gRenderer);
 	Entity player("data/player.spr", (int)x_pos, (int)y_pos, 3, gRenderer);
 	
 	Sprite wall(98,96,16,16,4,"assets/sprites/tiles.png",gRenderer);
@@ -184,6 +188,8 @@ void Game::runGame()
 
 	int index = 0;
 
+	// 1 -> Door is at right edge, -1 -> Door is at left edge
+	int roomNum = 1;
 	
 	
 	while (running == true) {
@@ -271,21 +277,42 @@ void Game::runGame()
 		else if (player.getXPosition() < (scroll_offset + lthird))
 			scroll_offset = player.getXPosition() - lthird;
 		
-		//Prevent scroll_offset from placing left side of the Cam outside of gameworld
+		//Prevent scroll_offset from placing Camera outside of gameworld
 		if (scroll_offset < 0)
 			scroll_offset = 0;
 		if (scroll_offset + SCREEN_WIDTH > LEVEL_LEN)
 			scroll_offset = LEVEL_LEN - SCREEN_WIDTH;
 
+		// Check to see if we are at door
+		if (checkDoor(roomNum, x_vel, player)) {
+			roomNum *= -1; //flip room
+
+			// change all details for the room we are rendering
+			
+			if(roomNum == 1){ //new room is 1
+				//set offset and player position accordingly
+				scroll_offset = LEVEL_LEN - SCREEN_WIDTH;
+				player.setPosition(LEVEL_LEN - player.getCurrFrame().getWidth(), player.getYPosition());
+				//std::cout << roomNum << " " << scroll_offset << " " << player.getXPosition() << std::endl;
+			}
+			else { //new room is -1
+				//set offset and player position accordingly
+				scroll_offset = 0;
+				player.setPosition(0, player.getYPosition());
+				//std::cout << roomNum << " " << scroll_offset << " " << player.getXPosition() << std::endl;
+			}
+		}
+		
 		//Draw to screen
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
-
+		
 		// Draw the portion of the background currently inside the camera view
 		rem = scroll_offset % SCREEN_WIDTH;
 		bg.getSprite()->draw(gRenderer, -rem, 0);
 		bg.getSprite()->draw(gRenderer, (-rem + SCREEN_WIDTH), 0);
+
 
 		//draw the player
 		if (x_vel > 0 && flip == SDL_FLIP_HORIZONTAL)
@@ -320,6 +347,22 @@ bool Game::detectCollision(Entity& ent)
 	if (ent.getYPosition() + ent.getCurrFrame().getHeight() > SCREEN_HEIGHT) {
 		ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - ent.getCurrFrame().getHeight());
 		return true;
+	}
+	return false;
+}
+
+bool Game::checkDoor(int room, double vel, Entity& ent) {
+	if (room == 1) { //room 1 has door at LEVEL_LEN
+		if (ent.getXPosition() == LEVEL_LEN - ent.getCurrFrame().getWidth() && vel > 0) {
+			//we are moving into right door
+			return true;
+		}
+	}
+	else { // room -1 has door at 0
+		if (ent.getXPosition() == 0 && vel < 0) {
+			//we are moving into left door
+			return true;
+		}
 	}
 	return false;
 }
