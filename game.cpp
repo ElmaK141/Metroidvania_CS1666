@@ -7,16 +7,18 @@
 #include "background.h"
 #include "button.h"
 
-// for now - define the X length of the gameworld
-constexpr int LEVEL_LEN = 3000;
-
 //size of the Window/Screen and thus the size of the Camera
 int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
+
+// for now - define the X length of the gameworld
+constexpr int LEVEL_LEN = 3000;
+
+
 bool in_air = true;
-double gravity = 0.01 * 3600;
-double jump_strength = 3000;
-double max_x_speed = 750;	//max velocity, prevents weird speed issues
+double gravity = 0.03 * 3600;
+double jump_strength = 1500;
+double max_x_speed = 500;	//max velocity, prevents weird speed issues
 double max_y_speed = 1000;	//Higher in y directions to give more weight to player
 double acceleration = 250; //Player acceleration
 
@@ -156,7 +158,8 @@ void Game::runGame()
 
 	// variables for background scrolling
 	int scroll_offset = 0;
-	int rem = 0;
+	int rem_bg = 0;
+	int rem_tile = 0;
 
 	//Flip variable for flipping player sprite
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
@@ -171,7 +174,8 @@ void Game::runGame()
 	double y_pos = SCREEN_HEIGHT / 2 - 145.0;
 	
 	//Define Graphical Objects
-	Background bg(0, 0, 1280, 720, "assets/backgrounds/background2.png", gRenderer);
+	Background bg1(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
+	Background bg2(0, 0, 1280, 720, "assets/backgrounds/background2.png", gRenderer);
 	Entity player("data/player.spr", (int)x_pos, (int)y_pos, 3, gRenderer);
 	
 	Sprite wall(98,96,16,16,4,"assets/sprites/tiles.png",gRenderer);
@@ -180,6 +184,10 @@ void Game::runGame()
 	std::vector<Sprite> tiles;
 	tiles.push_back(wall);
 	tiles.push_back(floor);
+
+	//Create temporary standalone tile
+	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
+	Tile platformTile(&platform);
 
 	double x_vel = 0;
 	double y_vel = 0;
@@ -309,9 +317,48 @@ void Game::runGame()
 
 		
 		// Draw the portion of the background currently inside the camera view
-		rem = scroll_offset % SCREEN_WIDTH;
-		bg.getSprite()->draw(gRenderer, -rem, 0);
-		bg.getSprite()->draw(gRenderer, (-rem + SCREEN_WIDTH), 0);
+		rem_bg = scroll_offset % SCREEN_WIDTH;
+		rem_tile = scroll_offset % LEVEL_LEN;
+		if (roomNum == 1) {
+			bg1.getSprite()->draw(gRenderer, -rem_bg, 0);
+			bg1.getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
+
+			//Temporarily manually draw platforms
+
+			//Platform 1
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 400, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 416, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 432, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 448, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 464, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 480, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 496, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 512, 480);
+
+			//Platform 2
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 736, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 752, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 768, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 784, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 800, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 816, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 832, 480);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 848, 480);
+
+			//Platform 3
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 568, 390);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 584, 390);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 600, 390);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 616, 390);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 632, 390);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 648, 390);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 664, 390);
+			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 680, 390);
+		}
+		else if (roomNum == -1) {
+			bg2.getSprite()->draw(gRenderer, -rem_bg, 0);
+			bg2.getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
+		}
 
 
 		//draw the player
@@ -430,7 +477,8 @@ void Game::runDebug() {
 
 	// variables for background scrolling
 	int scroll_offset = 0;
-	int rem = 0;
+	int rem_bg = 0;
+	int rem_tile = 0;
 
 	//Flip variable for flipping player sprite
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
@@ -447,6 +495,17 @@ void Game::runDebug() {
 	//Define Graphical Objects
 	Background debugBg(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
 	Entity player("data/player.spr", x_pos, y_pos, 3, gRenderer);
+	
+	Sprite groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
+	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
+	std::vector<Sprite> tiles;
+	tiles.push_back(groundTile);
+	tiles.push_back(platform);
+
+	Tilemap tilemap("data/tilemap.txt", gRenderer, tiles);
+
+	//Create temporary standalone tile
+	Tile platformTile(&platform);
 
 	//Initialize velocity
 	double x_vel = 0;
@@ -547,9 +606,47 @@ void Game::runDebug() {
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
 		// Draw the portion of the background currently inside the camera view
-		rem = scroll_offset % SCREEN_WIDTH;
-		debugBg.getSprite()->draw(gRenderer, -rem, 0);
-		debugBg.getSprite()->draw(gRenderer, (-rem + SCREEN_WIDTH), 0);
+		rem_bg = scroll_offset % SCREEN_WIDTH;
+		rem_tile = scroll_offset % LEVEL_LEN;
+		debugBg.getSprite()->draw(gRenderer, -rem_bg, 0);
+		debugBg.getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
+
+		//Draw tilemap
+		//tilemap.drawTileMap();
+
+		//Temporarily manually draw platforms
+
+		//Platform 1
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 400, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 416, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 432, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 448, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 464, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 480, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 496, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 512, 480);
+
+		//Platform 2
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 736, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 752, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 768, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 784, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 800, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 816, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 832, 480);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 848, 480);
+
+		//Platform 3
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 568, 390);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 584, 390);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 600, 390);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 616, 390);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 632, 390);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 648, 390);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 664, 390);
+		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 680, 390);
+	
+
 
 		//draw the player
 		if (x_vel > 0 && flip == SDL_FLIP_HORIZONTAL)
