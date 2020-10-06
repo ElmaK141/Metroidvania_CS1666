@@ -7,6 +7,7 @@ Tilemap::Tilemap(std::string tilemap, SDL_Renderer* r, std::vector<Sprite> tiles
 	this->tiles = tiles;
 	this->xMax = 0;
 	this->yMax = 0;
+	this->gRenderer = r;
 	this->loadTileMap(tilemap, r);
 	this->assignSprites();
 }
@@ -18,7 +19,6 @@ void Tilemap::loadTileMap(std::string filename, SDL_Renderer* r)
 	std::ifstream tileFile;
 	tileFile.open(filename.c_str());
 
-	//Tile** tileMap;
 
 	// NOTE: We assume our text file representing our
 	// tilemap object has AT LEAST the first two lines
@@ -38,8 +38,15 @@ void Tilemap::loadTileMap(std::string filename, SDL_Renderer* r)
 		for (int i = 0; i < this->yMax; i++) {
 			this->tileMap[i] = new Tile[this->xMax];
 		}
+		
+		/*for (int i = 0; i < this->yMax; i++)
+		{
+			for (int j = 0; j < this->xMax; j++)
+			{
+				tileMap[i][j] = *(new Tile());
+			}
+		*/
 
-		int i = 0;
 		// Loop through our tilemap's dimensions
 		// assigning values to each spot in the array
 
@@ -86,11 +93,13 @@ int Tilemap::getMaxHeight()
 void Tilemap::assignSprites() {
 	for (int i = 0; i < this->yMax; i++) {
 		for (int j = 0; j < this->xMax; j++) {
-			if (tileMap[i][j].getTileFlag() == 'w') {
-				tileMap[i][j].setTileSprite(&this->tiles.at(1));
-			}
-			else {
+			if (tileMap[i][j].getTileFlag() == '1') {
 				tileMap[i][j].setTileSprite(&this->tiles.at(0));
+				tileMap[i][j].getTileSprite()->draw(gRenderer, i * 16, j * 16);
+			}
+			else if (tileMap[i][j].getTileFlag() == '2') {
+				tileMap[i][j].setTileSprite(&this->tiles.at(1));
+				tileMap[i][j].getTileSprite()->draw(gRenderer, i * 16, j * 16);
 			}
 		}
 	}
@@ -98,4 +107,14 @@ void Tilemap::assignSprites() {
 
 Tilemap::~Tilemap() {
 	delete this->tileMap;
+}
+
+void Tilemap::drawTileMap() {
+	/*for (int i = 0; i < this->yMax; i++) {
+		for (int j = 0; j < this->xMax; j++) {
+			if (tileMap[i][j].getTileFlag() != '0') {
+				tileMap[i][j].getTileSprite()->draw(gRenderer, i * 16, j * 16);
+			}
+		}
+	}*/
 }

@@ -405,6 +405,14 @@ void Game::runDebug() {
 	//Define Graphical Objects
 	Background debugBg(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
 	Entity player("data/player.spr", x_pos, y_pos, 3, gRenderer);
+	
+	Sprite groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
+	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
+	std::vector<Sprite> tiles;
+	tiles.push_back(groundTile);
+	tiles.push_back(platform);
+
+	Tilemap tilemap("data/tilemap.txt", gRenderer, tiles);
 
 	//Initialize velocity
 	double x_vel = 0;
@@ -508,6 +516,9 @@ void Game::runDebug() {
 		rem = scroll_offset % SCREEN_WIDTH;
 		debugBg.getSprite()->draw(gRenderer, -rem, 0);
 		debugBg.getSprite()->draw(gRenderer, (-rem + SCREEN_WIDTH), 0);
+
+		//Draw tilemap
+		//tilemap.drawTileMap();
 
 		//draw the player
 		if (x_vel > 0 && flip == SDL_FLIP_HORIZONTAL)
