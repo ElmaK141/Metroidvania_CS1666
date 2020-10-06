@@ -60,7 +60,6 @@ Game::~Game()
 
 void Game::runGame()
 {
- http://www.pitt.edu/~syd/wc2.html
 	Sprite mmTitle(0, 0, 796, 125, 1, "assets/main_menu/mainmenuTitle.png", gRenderer);
 	Sprite mmPressAny(0, 0, 485, 56, 1, "assets/main_menu/pressAny.png", gRenderer);
 
