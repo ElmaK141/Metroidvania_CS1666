@@ -17,7 +17,7 @@
 class Game {
 	public:
 		Game(int width, int height);
-		Game(const Game &obj);
+		//Game(const Game &obj);
 		~Game();
 		void runGame();
 		void runDebug();

@@ -15,9 +15,9 @@ int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
 bool in_air = true;
 double gravity = 0.01 * 3600;
-double jump_strength = 1125;
-double max_x_speed = 500;	//max velocity, prevents weird speed issues
-double max_y_speed = 500;
+double jump_strength = 3000;
+double max_x_speed = 750;	//max velocity, prevents weird speed issues
+double max_y_speed = 1000;	//Higher in y directions to give more weight to player
 double acceleration = 250; //Player acceleration
 
 //Init Stuff for delta_time
@@ -36,6 +36,9 @@ Game::Game(int width, int height)
 	SCREEN_WIDTH = width;
 	SCREEN_HEIGHT = height;
 
+	maxHP = 40;
+	playerHP = 40;
+
 	gWindow = SDL_CreateWindow("METROIDVANIA", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 	width, height, 0);
 
@@ -43,9 +46,9 @@ Game::Game(int width, int height)
 	running = true;
 }
 
-Game::Game(const Game &obj)
+/*Game::Game(const Game &obj)
 {
-}
+}*/
 
 Game::~Game() 
 {
@@ -161,11 +164,11 @@ void Game::runGame()
 	// determine players starting position (middle of background, on the left side of world)
 
 	double x_pos = SCREEN_WIDTH / 2;
-	double y_pos = SCREEN_HEIGHT / 2 - 145;
+	double y_pos = SCREEN_HEIGHT / 2 - 145.0;
 	
 	//Define Graphical Objects
 	Background bg(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
-	Entity player("data/player.spr", (int)x_pos, (int)y_pos,4,gRenderer);
+	Entity player("data/player.spr", (int)x_pos, (int)y_pos, 3, gRenderer);
 	
 	Sprite wall(98,96,16,16,4,"assets/sprites/tiles.png",gRenderer);
 	Sprite floor(435, 94, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
@@ -200,17 +203,19 @@ void Game::runGame()
 		
 		//Holding A
 		if (keystate[SDL_SCANCODE_A]){
+			player.setCurrFrame(1);
 			if (x_vel > -max_x_speed) //as long as we don't exceed max speed, change velocity
 				x_vel = fmin(x_vel - acceleration, -max_x_speed);
 		}
 		
 		//Holding S
 		if (keystate[SDL_SCANCODE_S]){
-			
+			player.setCurrFrame(0);
 		}
 		
 		//Holding D
 		if (keystate[SDL_SCANCODE_D]){
+			player.setCurrFrame(1);
 			if (x_vel < max_x_speed) //as long as we don't exceed max speed, change velocity
 				x_vel = fmax(x_vel + acceleration, max_x_speed);
 		}
@@ -255,7 +260,7 @@ void Game::runGame()
 		}
 		if (!in_air)
 		{
-			player.setCurrFrame(0);
+			//player.setCurrFrame(0);
 			y_vel = 0.0;
 		}
 
@@ -288,7 +293,10 @@ void Game::runGame()
 		else if (x_vel < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
-		player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+		if (player.getFrameIndex() == 1)
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+		else
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
 
 		drawHP();
 
@@ -377,10 +385,6 @@ void Game::runDebug() {
 	// Define event variable
 	SDL_Event e;
 
-	// Variables for player health
-	maxHP = 40;
-	playerHP = 40;
-
 	// variables for background scrolling
 	int scroll_offset = 0;
 	int rem = 0;
@@ -394,8 +398,8 @@ void Game::runDebug() {
 
 	// determine players starting position (middle of background, on the left side of world)
 
-	int x_pos = SCREEN_WIDTH / 2;
-	int y_pos = SCREEN_HEIGHT / 2 - 145;
+	double x_pos = SCREEN_WIDTH / 2;
+	double y_pos = SCREEN_HEIGHT / 2 - 145.0;
 
 	//Define Graphical Objects
 	Background debugBg(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
@@ -405,84 +409,69 @@ void Game::runDebug() {
 	double x_vel = 0;
 	double y_vel = 0;
 
-	int max_x_speed = 3;	//max velocity, prevents weird speed issues
-
 	//Main loop
 	int index = 0;
 	while (running == true) {
+		//Delta time calculation
+		curTick = SDL_GetTicks();
+		delta_time = (curTick - lastTick) / 1000.0;
+		lastTick = curTick;
+
+		//User input
+		const Uint8* keystate = SDL_GetKeyboardState(nullptr);
+
+		//Holding W
+		if (keystate[SDL_SCANCODE_W]) {
+
+		}
+
+		//Holding A
+		if (keystate[SDL_SCANCODE_A]) {
+			player.setCurrFrame(1);
+			if (x_vel > -max_x_speed) //as long as we don't exceed max speed, change velocity
+				x_vel = fmin(x_vel - acceleration, -max_x_speed);
+		}
+
+		//Holding S
+		if (keystate[SDL_SCANCODE_S]) {
+			player.setCurrFrame(0);
+		}
+
+		//Holding D
+		if (keystate[SDL_SCANCODE_D]) {
+			player.setCurrFrame(1);
+			if (x_vel < max_x_speed) //as long as we don't exceed max speed, change velocity
+				x_vel = fmax(x_vel + acceleration, max_x_speed);
+		}
+
+		//Holding Spacebar
+		if (keystate[SDL_SCANCODE_SPACE]) {
+			if (!in_air)	//only jump from ground
+			{
+				in_air = true;
+				y_vel -= jump_strength;
+			}
+		}
+
+		//Not holding side buttons
+		if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
+			if (x_vel > 0) {
+				x_vel = fmax(0, x_vel - acceleration);
+			}
+			else if (x_vel < 0) {
+				x_vel = fmin(0, x_vel + acceleration);
+			}
+		}
+
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
 				running = false;
 			}
-			else if (e.type == SDL_KEYDOWN) {
-				switch (e.key.keysym.sym) {
-
-				case SDLK_SPACE:
-					if (!in_air)	//only jump from ground
-					{
-						in_air = true;
-						y_vel -= jump_strength;
-					}
-					break;
-
-				case SDLK_a:
-					if (x_vel > -max_x_speed) //as long as we don't exceed max speed, change velocity
-						x_vel -= 1;
-					break;
-
-				case SDLK_s:
-					/*
-					if (y_vel < max_x_speed) //as long as we don't exceed max speed, change velocity
-						y_vel += 1;
-					*/
-					break;
-
-				case SDLK_d:
-					if (x_vel < max_x_speed) //as long as we don't exceed max speed, change velocity
-						x_vel += 1;
-					break;
-				}
-			}
-			else if (e.type == SDL_KEYUP) {
-				switch (e.key.keysym.sym) {
-				case SDLK_SPACE:
-					/*
-					while(y_vel < 0)	//drift to 0 speed
-						y_vel += 1;
-					*/
-					break;
-
-				case SDLK_a:
-					while (x_vel < 0)	//drift to 0 speed
-						x_vel += 1;
-					break;
-
-				case SDLK_s:
-					/*
-					while(y_vel > 0)	//drift to 0 speed
-						y_vel -= 1;
-					*/
-					break;
-
-				case SDLK_d:
-					while (x_vel > 0)	//drift to 0 speed
-						x_vel -= 1;
-					break;
-
-				case SDLK_e:
-					break;
-
-				case SDLK_r:
-					break;
-
-				}
-
-			}
 		}
 
-		player.movePosition((int)x_vel, (int)y_vel);
+		player.movePosition((int)(x_vel * delta_time), (int)(y_vel * delta_time));
 		bool on_solid = detectCollision(player);
-		if (!on_solid && max_x_speed > y_vel) // while in air
+		if (!on_solid && max_y_speed > y_vel) // while in air
 		{
 			y_vel += gravity;
 			//player.setCurrFrame(1);
@@ -493,7 +482,7 @@ void Game::runDebug() {
 		}
 		if (!in_air)
 		{
-			player.setCurrFrame(0);
+			//player.setCurrFrame(0);
 			y_vel = 0.0;
 		}
 
@@ -525,7 +514,10 @@ void Game::runDebug() {
 		else if (x_vel < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
-		player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+		if(player.getFrameIndex() == 1)
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+		else
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
 
 		drawHP();
 

@@ -2,7 +2,16 @@
 #include <iostream>
 
 Sprite::Sprite() {
-
+	this->xLoc = 0;
+	this->yLoc = 0;
+	this->spriteWidth = 1;
+	this->spriteHeight = 1;
+	this->entWidth = 1;
+	this->entHeight = 1;
+	this->scale = 1;
+	this->screenX = 0;
+	this->screenY = 0;
+	this->texture = nullptr;
 }
 
 Sprite::Sprite(int x, int y, int w, int h, int scalar, std::string file,

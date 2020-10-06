@@ -11,6 +11,7 @@ Entity::Entity(std::string spriteData, int xPos, int yPos, int scale, SDL_Render
 	this->currFrame = frames[0];
 	this->x = xPos;
 	this->y = yPos;
+	this->index = 0;
 
 }
 
@@ -20,10 +21,15 @@ Entity::~Entity(){
 
 void Entity::setCurrFrame(int index){
 	this->currFrame = frames[index];
+	this->index = index;
 }
 
 Sprite Entity::getCurrFrame() {
 	return currFrame;
+}
+
+int Entity::getFrameIndex() {
+	return index;
 }
 
 double Entity::getXPosition()
