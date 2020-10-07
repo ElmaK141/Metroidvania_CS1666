@@ -13,7 +13,7 @@
 // within the  tilemap.
 // TO-DO: Automatic detection and passing of the relevant tiles
 //		  pertinent to our tileArray vector? (Proc Gen do you hear me???)
-Tilemap::Tilemap(std::string tilemap, std::vector<Tile> tiles)
+Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles)
 {
 	// Assign values
 	this->xMax = 0;			// Default placeholder
@@ -81,7 +81,7 @@ void Tilemap::generateTilemap(std::string mapPath)
 				// Get input and 
 				// add to the array
 				tileFile.get(readIn);
-				this->tileMap[i][j] = readIn - 48;
+				this->tileMap[i][j] = (readIn - 48);
 				std::cout << tileMap[i][j] << " ";
 			}
 			// Drop our trailing newline
@@ -120,7 +120,7 @@ int** Tilemap::getTileMap()
 // WARNING: DON'T GO OUT OF BOUNDS ON THE INDEX PLSS
 Tile* Tilemap::getTile(int index)
 {
-	return &(this->tileArray.at(index));
+	return this->tileArray.at(index);
 }
 /////////////////
 // Destructor  //
