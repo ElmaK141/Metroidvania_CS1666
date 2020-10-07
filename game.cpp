@@ -179,23 +179,26 @@ void Game::runGame()
 	double y_pos = SCREEN_HEIGHT / 2 - 145.0;
 	
 	//Define Graphical Objects
-	Background bg1(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
+	Background bg1(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
 	Background bg2(0, 0, 1280, 720, "assets/backgrounds/background2.png", gRenderer);
 	Entity player("data/player.spr", (int)x_pos, (int)y_pos, 3, gRenderer);
 	
 	Sprite wall(98,96,16,16,4,"assets/sprites/tiles.png",gRenderer);
 	Sprite floor(435, 94, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
 
-	std::vector<Tile> tiles;
+	double x_vel = 0;
+	double y_vel = 0;
 
 	//Create temporary standalone tile
 	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 	Tile platformTile(&platform);
+		
+	// Create Tile vector for tilemap contruction and push our temporary tile
+	std::vector<Tile*> tiles;
+	tiles.push_back(&(platformTile));
 
-	double x_vel = 0;
-	double y_vel = 0;
-	
 	Tilemap t("data/tilemap.txt", tiles);
+	int** tileArray = t.getTileMap();
 
 	int index = 0;
 
@@ -362,6 +365,22 @@ void Game::runGame()
 			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 648, 390);
 			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 664, 390);
 			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 680, 390);
+
+			// Temporary: Render the tilemap using the stored tile vector
+			// NOTE: Do not even try to read 0's right now to avoid having
+			// 		 the tilemap.txt at this point in time - JTP
+			// NOTE: Temporary build: Need to fix implementation of tile vector
+			//		 in tilemap implementation.
+			for (int i = 0; i < t.getMaxHeight(); i++)
+			{
+				for (int j = 0; j < t.getMaxWidth(); j++)
+				{
+					if (tileArray[i][j] == 1)
+					{
+						platformTile.getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
+					}
+				}
+			}
 		}
 		else if (roomNum == -1) {
 			bg2.getSprite()->draw(gRenderer, -rem_bg, 0);
@@ -561,7 +580,7 @@ void Game::runDebug() {
 	
 	Sprite groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
-	std::vector<Tile> tiles;
+	std::vector<Tile*> tiles;
 
 	Tilemap tilemap("data/tilemap.txt", tiles);
 
