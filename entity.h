@@ -10,23 +10,26 @@
 class Entity{
 	
 	public:
-		Entity(std::string spriteData, int xPos, int yPos, SDL_Renderer* context);
+		Entity(std::string spriteData, int xPos, int yPos, int scale, SDL_Renderer* context);
 		~Entity();
 		
 		void setCurrFrame(int index);
 		Sprite getCurrFrame();
+		int getFrameIndex();
 
-		int getXPosition();	
-		int getYPosition();
+		double getXPosition();	
+		double getYPosition();
 
-		void movePosition(int xf, int yf);
-		void setPosition(int xPos, int yPos);
+		void movePosition(double xf, double yf);
+		void setPosition(double xPos, double yPos);
 	private:
 
 		void createSprites();
 		
-		int x;
-		int y;
+		double x;
+		double y;
+		int s;
+		int index;
 
 		Sprite currFrame;
 		SDL_Renderer* context;

@@ -12,15 +12,18 @@
 #include <vector>
 
 #include "entity.h"
+#include "tilemap.h"
 
 class Game {
 	public:
 		Game(int width, int height);
-		Game(const Game &obj);
+		//Game(const Game &obj);
 		~Game();
 		void runGame();
+		void runDebug();
 
 		bool detectCollision(Entity &ent);
+		bool checkDoor(int room, double vel, Entity& ent);
 	private:
 		SDL_Window* gWindow;
 		SDL_Renderer* gRenderer;

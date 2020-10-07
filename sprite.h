@@ -19,9 +19,12 @@ class Sprite {
 		~Sprite();
 
 		void draw(SDL_Renderer* render, int x, int y);
+		void draw(SDL_Renderer* render, int x, int y, SDL_RendererFlip flip);
 		int getWidth();
 		int getHeight();
 		int getScale();
+		int getX();
+		int getY();
 	private:
 		SDL_Texture* texture;
 		int xLoc;
@@ -31,6 +34,8 @@ class Sprite {
 		int entWidth;
 		int entHeight;
 		int scale;
+		int screenX;
+		int screenY;
 };
 
 

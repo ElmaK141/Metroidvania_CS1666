@@ -2,17 +2,23 @@
 #include <iostream>
 #include <fstream>
 
-Tilemap::Tilemap()
-{
-	this->yMax = 0;
+
+Tilemap::Tilemap(std::string tilemap, SDL_Renderer* r, std::vector<Sprite> tiles) {
+	this->tiles = tiles;
 	this->xMax = 0;
+	this->yMax = 0;
+	this->gRenderer = r;
+	this->loadTileMap(tilemap, r);
+	this->assignSprites();
 }
 
-int** Tilemap::getTileArray(std::string filename)
+
+void Tilemap::loadTileMap(std::string filename, SDL_Renderer* r)
 {
 	// First open our file and read in our array dimensions
 	std::ifstream tileFile;
 	tileFile.open(filename.c_str());
+
 
 	// NOTE: We assume our text file representing our
 	// tilemap object has AT LEAST the first two lines
@@ -27,19 +33,30 @@ int** Tilemap::getTileArray(std::string filename)
 
 		// Now that we have our max values, we
 		// can initialize our tilemap array
-		int** tileMap = new int* [this->yMax];
-		for (int i = 0; i < this->yMax; i++)
-			tileMap[i] = new int[this->xMax];
+
+		this->tileMap = new Tile* [this->yMax];
+		for (int i = 0; i < this->yMax; i++) {
+			this->tileMap[i] = new Tile[this->xMax];
+		}
+		
+		/*for (int i = 0; i < this->yMax; i++)
+		{
+			for (int j = 0; j < this->xMax; j++)
+			{
+				tileMap[i][j] = *(new Tile());
+			}
+		*/
 
 		// Loop through our tilemap's dimensions
 		// assigning values to each spot in the array
-		tileFile.get(in);
+
 		for (int i = 0; i < this->yMax; i++)
 		{
 			for (int j = 0; j < this->xMax; j++)
 			{
 				tileFile.get(in);
-				tileMap[i][j] = in;
+				this->tileMap[i][j].setTilePos(i,j);
+				this->tileMap[i][j].setTileFlag(in);
 			}
 			// read and discard '\n'
 			tileFile.get(in);
@@ -49,11 +66,18 @@ int** Tilemap::getTileArray(std::string filename)
 		// we can return our generated array
 		// to be used for rendering
 		tileFile.close();
-		return tileMap;
 	}
 	else
 		std::cout << "Error opening  tilemap file";
 
+}
+
+Tile** Tilemap::getTileMap() {
+	return this->tileMap;
+}
+
+Tile* Tilemap::getTile(int x, int y) {
+	return &(tileMap[x][y]);
 }
 
 int Tilemap::getMaxWidth()
@@ -66,8 +90,31 @@ int Tilemap::getMaxHeight()
 	return this->yMax;
 }
 
-Tilemap::~Tilemap()
-{
-	// N/A?
+void Tilemap::assignSprites() {
+	for (int i = 0; i < this->yMax; i++) {
+		for (int j = 0; j < this->xMax; j++) {
+			if (tileMap[i][j].getTileFlag() == '1') {
+				tileMap[i][j].setTileSprite(&this->tiles.at(0));
+				tileMap[i][j].getTileSprite()->draw(gRenderer, i * 16, j * 16);
+			}
+			else if (tileMap[i][j].getTileFlag() == '2') {
+				tileMap[i][j].setTileSprite(&this->tiles.at(1));
+				tileMap[i][j].getTileSprite()->draw(gRenderer, i * 16, j * 16);
+			}
+		}
+	}
 }
 
+Tilemap::~Tilemap() {
+	delete this->tileMap;
+}
+
+void Tilemap::drawTileMap() {
+	/*for (int i = 0; i < this->yMax; i++) {
+		for (int j = 0; j < this->xMax; j++) {
+			if (tileMap[i][j].getTileFlag() != '0') {
+				tileMap[i][j].getTileSprite()->draw(gRenderer, i * 16, j * 16);
+			}
+		}
+	}*/
+}
