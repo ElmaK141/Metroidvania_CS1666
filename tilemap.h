@@ -3,7 +3,9 @@
 #endif
 
 #include <string>
-
+#include <vector>
+#include "tile.h"
+#include "sprite.h"
 
 // Suggested Modification:
 //		- Include tile object and use for the tilemap
@@ -11,13 +13,24 @@
 class Tilemap
 {
 		public:
-			Tilemap();
-			int** getTileArray(std::string filename);
+			Tilemap(std::string filename, SDL_Renderer* r, std::vector<Sprite> tiles);
+			
+			
 			int getMaxWidth();
 			int getMaxHeight();
+			
+			Tile** getTileMap();
+			Tile* getTile(int x, int y);
+			void drawTileMap();
+
 			~Tilemap();
 		private:
+
+			void assignSprites();
+			void loadTileMap(std::string filename, SDL_Renderer* r);
+			Tile** tileMap;
 			int yMax;
 			int xMax;
-
+			SDL_Renderer* gRenderer;
+			std::vector<Sprite> tiles;
 };
