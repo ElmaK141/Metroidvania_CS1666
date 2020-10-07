@@ -12,7 +12,7 @@ int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
 
 // for now - define the X length of the gameworld
-constexpr int LEVEL_LEN = 3000;
+constexpr int LEVEL_LEN = 3360;
 
 
 bool in_air = true;
@@ -186,9 +186,7 @@ void Game::runGame()
 	Sprite wall(98,96,16,16,4,"assets/sprites/tiles.png",gRenderer);
 	Sprite floor(435, 94, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
 
-	std::vector<Sprite> tiles;
-	tiles.push_back(wall);
-	tiles.push_back(floor);
+	std::vector<Tile> tiles;
 
 	//Create temporary standalone tile
 	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
@@ -197,13 +195,13 @@ void Game::runGame()
 	double x_vel = 0;
 	double y_vel = 0;
 	
-	Tilemap t("data/tilemap.txt", gRenderer,tiles);
+	Tilemap t("data/tilemap.txt", tiles);
 
 	int index = 0;
 
 	// 1 -> Door is at right edge, -1 -> Door is at left edge
 	int roomNum = 1;
-	
+	bool jumpLag = false;
 	
 	while (running == true) {
 		
@@ -240,13 +238,18 @@ void Game::runGame()
 		}
 		
 		//Holding Spacebar
-		if (keystate[SDL_SCANCODE_SPACE]){
-			if (!in_air)	//only jump from ground
+		if (keystate[SDL_SCANCODE_SPACE]) {
+			if (!in_air && !jumpLag)    //only jump from ground
 			{
+				jumpLag = true;
 				in_air = true;
 				y_vel -= jump_strength;
 			}
 		}
+
+		if (!keystate[SDL_SCANCODE_SPACE])
+			jumpLag = false;
+
 		
 		//Not holding side buttons
 		if(!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])){
@@ -265,12 +268,12 @@ void Game::runGame()
 			}
 		}
 		
-
-		player.movePosition((int)(x_vel * delta_time), (int)(y_vel * delta_time));
-		bool on_solid = detectCollision(player);
+		bool on_solid = detectCollision(player, t.getTileMap(), x_vel*delta_time, y_vel*delta_time);
+		bool falling = false;
 		if (!on_solid && max_y_speed > y_vel) // while in air
 		{
 			y_vel += gravity;
+			in_air = true;
 			//player.setCurrFrame(1);
 		}
 		else if (on_solid)
@@ -385,33 +388,88 @@ void Game::runGame()
 
 
 // Detect collision of Entity with Gameworld (edge of screen)
-bool Game::detectCollision(Entity& ent)
+bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_vel)
 {
-	if (ent.getXPosition() < 0) {
+	double pPosY = ent.getYPosition();
+	double pPosX = ent.getXPosition();
+	int pHeight = ent.getCurrFrame().getHeight();
+	int pWidth = ent.getCurrFrame().getWidth();
+
+	int yBlockD = (int)(floor((pPosY + pHeight) / 16)) + 1;
+	int yBlockU = (int)(floor(pPosY / 16)) - 1;
+	int xBlockL = (int)(floor(pPosX / 16)) - 1;
+	int xBlockR = (int)(floor((pPosX + pWidth) / 16)) + 1;
+	bool land = false;
+	
+	ent.setPosition(ent.getXPosition() + x_vel, ent.getYPosition() + y_vel);
+	
+
+	if (y_vel > 0) {
+		for (int xAdjust = 1; xAdjust <= xBlockR - xBlockL; xAdjust++)
+		{
+			if (yBlockD <= 44)
+			{
+				if (pPosY + pHeight + y_vel >= yBlockD * 16 - 1 && tilemap[yBlockD][xBlockR - xAdjust] != 0)
+				{
+					ent.setPosition(ent.getXPosition(), yBlockD * 16 - pHeight - 1);
+					land = true;
+				}
+			}
+		}
+	}
+
+	if (y_vel < 0) {
+		for (int xAdjust = 1; xAdjust <= xBlockR - xBlockL; xAdjust++)
+		{
+			if (pPosY + y_vel <= yBlockU * 16 + 16 && tilemap[yBlockU][xBlockR - xAdjust] != 0)
+				ent.setPosition(ent.getXPosition(), yBlockU * 16 + 17);
+		}
+	}
+
+	if (x_vel > 0) {
+		for (int yAdjust = 1; yAdjust <= yBlockD - yBlockU; yAdjust++)
+		{
+			if (pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && tilemap[yBlockD - yAdjust][xBlockR] != 0)
+				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
+		}
+	}
+
+	if (x_vel < 0) {
+		for (int yAdjust = 1; yAdjust <= yBlockD - yBlockU; yAdjust++)
+		{
+			if (pPosX + x_vel <= xBlockL * 16 + 16 && tilemap[yBlockD - yAdjust][xBlockL] != 0)
+				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
+		}
+	}
+
+	
+
+	/*
+	if (ent.getXPosition() + x_vel < 0) {
 		ent.setPosition(0, ent.getYPosition());
 	}
-	if (ent.getYPosition() < 0) {
+	if (ent.getYPosition() + y_vel < 0) {
 		ent.setPosition(ent.getXPosition(), 0);
 	}
-	if (ent.getXPosition() + ent.getCurrFrame().getWidth() > LEVEL_LEN) {
+	if (ent.getXPosition() + ent.getCurrFrame().getWidth() + x_vel > LEVEL_LEN) {
 		ent.setPosition(LEVEL_LEN - ent.getCurrFrame().getWidth(), ent.getYPosition());
 	}
-	if (ent.getYPosition() + ent.getCurrFrame().getHeight() > SCREEN_HEIGHT) {
+	if (ent.getYPosition() + ent.getCurrFrame().getHeight() + y_vel > SCREEN_HEIGHT) {
 		ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - ent.getCurrFrame().getHeight());
 		return true;
-	}
-	return false;
+	}*/
+	return land;
 }
 
 bool Game::checkDoor(int room, double vel, Entity& ent) {
 	if (room == 1) { //room 1 has door at LEVEL_LEN
-		if (ent.getXPosition() == LEVEL_LEN - ent.getCurrFrame().getWidth() && vel > 0) {
+		if (ent.getXPosition() >= LEVEL_LEN - ent.getCurrFrame().getWidth() - 1) {
 			//we are moving into right door
 			return true;
 		}
 	}
 	else { // room -1 has door at 0
-		if (ent.getXPosition() == 0 && vel < 0) {
+		if (ent.getXPosition() <= 0 && vel < 0) {
 			//we are moving into left door
 			return true;
 		}
@@ -503,11 +561,9 @@ void Game::runDebug() {
 	
 	Sprite groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
-	std::vector<Sprite> tiles;
-	tiles.push_back(groundTile);
-	tiles.push_back(platform);
+	std::vector<Tile> tiles;
 
-	Tilemap tilemap("data/tilemap.txt", gRenderer, tiles);
+	Tilemap tilemap("data/tilemap.txt", tiles);
 
 	//Create temporary standalone tile
 	Tile platformTile(&platform);
@@ -576,8 +632,8 @@ void Game::runDebug() {
 			}
 		}
 
+		bool on_solid = detectCollision(player, tilemap.getTileMap(), x_vel, y_vel);
 		player.movePosition((int)(x_vel * delta_time), (int)(y_vel * delta_time));
-		bool on_solid = detectCollision(player);
 		if (!on_solid && max_y_speed > y_vel) // while in air
 		{
 			y_vel += gravity;
