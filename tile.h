@@ -7,6 +7,7 @@ class Tile {
 
 	public:
 		Tile(Sprite* sp);
+		Tile(int x, int y, int w, int h, int s, std::string file, SDL_Renderer* gRender);
 		Tile();
 		~Tile();
 

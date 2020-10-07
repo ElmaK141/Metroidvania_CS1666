@@ -5,6 +5,11 @@ Tile::Tile(Sprite* sp) {
 	this->tile = new Sprite(*sp);
 }
 
+Tile::Tile(int x, int y, int w, int h, int s, std::string file, SDL_Renderer* gRender) {
+
+	this->tile = new Sprite(x, y, w, h, s, file, gRender);
+}
+
 Tile::Tile()
 {
 

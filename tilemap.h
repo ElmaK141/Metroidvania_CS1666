@@ -21,6 +21,7 @@ class Tilemap
 			
 			Tile** getTileMap();
 			Tile* getTile(int x, int y);
+			void drawTileMap();
 
 			~Tilemap();
 		private:
@@ -30,5 +31,6 @@ class Tilemap
 			Tile** tileMap;
 			int yMax;
 			int xMax;
+			SDL_Renderer* gRenderer;
 			std::vector<Sprite> tiles;
 };
