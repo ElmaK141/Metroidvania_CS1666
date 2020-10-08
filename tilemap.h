@@ -17,7 +17,7 @@ class Tilemap
 {
 		public:
 		// Public Constructor:
-			Tilemap(std::string filename, std::vector<Tile> tiles);
+			Tilemap(std::string filename, std::vector<Tile*> tiles);
 		// Public Getters and Setters:			
 			int getMaxWidth();
 			int getMaxHeight();
@@ -32,5 +32,5 @@ class Tilemap
 			int** tileMap;				// An int array representing the flags at every spot in our tilemap
 			int yMax;					// The height dimension of the tilemap
 			int xMax;					// The width dimension of the tilemap
-			std::vector<Tile> tileArray;// Stores references to every tile type encountered in the tilemap
+			std::vector<Tile*> tileArray;// Stores references to every tile type encountered in the tilemap
 };
