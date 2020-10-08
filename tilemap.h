@@ -34,3 +34,4 @@ class Tilemap
 			int xMax;					// The width dimension of the tilemap
 			std::vector<Tile*> tileArray;// Stores references to every tile type encountered in the tilemap
 };
+

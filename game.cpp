@@ -192,7 +192,7 @@ void Game::runGame()
 	//Create temporary standalone tile
 	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 	Tile platformTile(&platform);
-
+		
 	// Create Tile vector for tilemap contruction and push our temporary tile
 	std::vector<Tile*> tiles;
 	tiles.push_back(&(platformTile));
@@ -333,8 +333,6 @@ void Game::runGame()
 		if (roomNum == 1) {
 			bg1.getSprite()->draw(gRenderer, -rem_bg, 0);
 			bg1.getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
-
-		
 
 			// Temporary: Render the tilemap using the stored tile vector
 			// NOTE: Do not even try to read 0's right now to avoid having
