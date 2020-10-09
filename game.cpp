@@ -210,7 +210,7 @@ void Game::runGame() {
 				{
 					if (tileArray[i][j] == 1)
 					{
-						platformTile.getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
+						t.getTile(0)->getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
 					}
 				}
 			}
