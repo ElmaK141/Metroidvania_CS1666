@@ -14,7 +14,7 @@ int SCREEN_HEIGHT;
 // for now - define the X length of the gameworld
 constexpr int LEVEL_LEN = 3360;
 
-
+//Physics variables
 bool in_air = true;
 double gravity = 0.03 * 3600;
 double jump_strength = 1500;
@@ -27,7 +27,14 @@ Uint32 lastTick = 0;
 Uint32 curTick;
 double delta_time;
 
+//Event pointer
+SDL_Event e;
 
+//Game State Tracker
+//0 = main menu, 1 = game, 2 = pause menu, 3 = debug
+int gameState;
+
+//Constructor
 Game::Game(int width, int height)
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -55,6 +62,7 @@ Game::Game(int width, int height)
 {
 }*/
 
+//Destructor
 Game::~Game()
 {
 	running = false;
@@ -66,128 +74,51 @@ Game::~Game()
 
 
 
-void Game::runGame()
+//This function will serve as the main loop of the game - various game states and game logic will be called from here
+
+void Game::gameLoop()
 {
-	Sprite mmTitle(0, 0, 796, 125, 1, "assets/main_menu/mainmenuTitle.png", gRenderer);
-	Sprite mmPressAny(0, 0, 485, 56, 1, "assets/main_menu/pressAny.png", gRenderer);
+	//Load into the start screen of the game
+	loadStartScreen();
 
-	SDL_Event e;
-	while (running == true) {	//Start screen
+	while (running && gameState == 0) {
+		//Load main menu
+		loadMainMenu();
 
-		SDL_PollEvent(&e);
-		if (e.type == SDL_QUIT) {
-			running = false;
+		//Start normal game
+		if (gameState == 1) {
+			runGame();
 		}
-		else if (e.type == SDL_KEYDOWN)
-			break;
-
-		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
-
-		mmTitle.draw(gRenderer, 240, 120);
-		if (SDL_GetTicks() % 1200 <= 700)	//blinking text
-			mmPressAny.draw(gRenderer, 397, 400);
-
-		SDL_RenderPresent(gRenderer);
-	}
-
-	//Main Menu State Variable and button variables
-	int state = 0;
-	int mouseX = 0, mouseY = 0;
-	int unlockDebug = 0;
-	Button startGame(0, 0, 452, 68, 1, "assets/main_menu/startGame.png", gRenderer);
-	Button debug(0, 0, 294, 68, 1, "assets/main_menu/debug.png", gRenderer);
-
-	while (running == true) {	//Main Menu
-
-		SDL_PollEvent(&e);
-		if (e.type == SDL_QUIT) {
-			running = false;
+		//Debug
+		else if (gameState == 3) {
+			runDebug();
 		}
-		else if (e.type == SDL_MOUSEBUTTONDOWN) {
-			if (e.button.button == SDL_BUTTON_LEFT) {
-				//Get mouse positon
-				mouseX = e.button.x;
-				mouseY = e.button.y;
-
-				//Start Game
-				if ((mouseX > startGame.getSprite()->getX()) && (mouseX < startGame.getSprite()->getX() + startGame.getSprite()->getWidth()) && (mouseY > startGame.getSprite()->getY()) && (mouseY < startGame.getSprite()->getY() + startGame.getSprite()->getHeight())) {
-					state = 1;		//Start into main game
-					break;
-				}
-				//Debug
-				else if (unlockDebug && (mouseX > debug.getSprite()->getX()) && (mouseX < debug.getSprite()->getX() + debug.getSprite()->getWidth()) && (mouseY > debug.getSprite()->getY()) && (mouseY < debug.getSprite()->getY() + debug.getSprite()->getHeight())) {
-					state = 2;		//Start into debug
-					break;
-				}
-			}
-
-		}
-		else if (e.type == SDL_KEYDOWN) {
-			switch (e.key.keysym.sym) {
-
-			case SDLK_d:
-				unlockDebug = 1;
-				break;
-			}
-		}
-
-		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
-
-		mmTitle.draw(gRenderer, 240, 120);
-		startGame.getSprite()->draw(gRenderer, 397, 400);
-
-		if (unlockDebug == 1)
-			debug.getSprite()->draw(gRenderer, 397, 500);
-
-		SDL_RenderPresent(gRenderer);
-
 	}
+}
 
-	//Start normal game
-	if (state == 1) {
-		//Do nothing for now
-	}
-	//Debug
-	else if (state == 2) {
-		runDebug();
-		running = false;
-	}
-
-	// Start Game
-
-	// variables for background scrolling
+//Run the main game code
+void Game::runGame() {
+	//Camera-related variables
 	int scroll_offset = 0;
 	int rem_bg = 0;
 	int rem_tile = 0;
-
-	//player hp values
-	maxHP = 40;
-	playerHP = 40;
+	int lthird = (SCREEN_WIDTH / 3);
+	int rthird = (2 * SCREEN_WIDTH / 3);
 
 	//Flip variable for flipping player sprite
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
 
-	// Define where the Camera Thirds are for knowing when we should scroll
-	int lthird = (SCREEN_WIDTH / 3);
-	int rthird = (2 * SCREEN_WIDTH / 3);
-
-	// determine players starting position (middle of background, on the left side of world)
-
-	double x_pos = SCREEN_WIDTH / 2;
-	double y_pos = SCREEN_HEIGHT / 2 - 145.0;
+	//Determine players starting position (middle of background, on the left side of world)
+	double x_pos = SCREEN_WIDTH / 2.0;
+	double y_pos = SCREEN_HEIGHT / 2.0 - 145.0;
 
 	//Define Graphical Objects
-	Background bg1(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
+	Background bg1(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
 	Background bg2(0, 0, 1280, 720, "assets/backgrounds/background2.png", gRenderer);
-	Entity player("data/player.spr", (int)x_pos, (int)y_pos, 3, gRenderer);
+	Entity player("data/player.spr", x_pos, y_pos, 3, 0, gRenderer);		//0 is flag for player entity
 
-	Sprite wall(98, 96, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
-	Sprite floor(435, 94, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
-
-	double x_vel = 0;
-	double y_vel = 0;
+	//Sprite wall(98, 96, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
+	//Sprite floor(435, 94, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
 
 	//Create temporary standalone tile
 	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
@@ -195,74 +126,21 @@ void Game::runGame()
 		
 	// Create Tile vector for tilemap contruction and push our temporary tile
 	std::vector<Tile*> tiles;
-	tiles.push_back(&(platformTile));
+	tiles.push_back(&platformTile);
 
+	//Initialize tilemap
 	Tilemap t("data/tilemap.txt", tiles);
 	int** tileArray = t.getTileMap();
 
-	int index = 0;
-
-	// 1 -> Door is at right edge, -1 -> Door is at left edge
+	//1 -> Door is at right edge, -1 -> Door is at left edge
 	int roomNum = 1;
-	bool jumpLag = false;
 
-	while (running == true) {
-
+	//Run the Game
+	while (running) {
 		//Delta time calculation
 		curTick = SDL_GetTicks();
 		delta_time = (curTick - lastTick) / 1000.0;
 		lastTick = curTick;
-
-		//User input
-		const Uint8* keystate = SDL_GetKeyboardState(nullptr);
-
-		//Holding W
-		if (keystate[SDL_SCANCODE_W]) {
-
-		}
-
-		//Holding A
-		if (keystate[SDL_SCANCODE_A]) {
-			player.setCurrFrame(1);
-			if (x_vel > -max_x_speed) //as long as we don't exceed max speed, change velocity
-				x_vel = fmin(x_vel - acceleration, -max_x_speed);
-		}
-
-		//Holding S
-		if (keystate[SDL_SCANCODE_S]) {
-			player.setCurrFrame(0);
-		}
-
-		//Holding D
-		if (keystate[SDL_SCANCODE_D]) {
-			player.setCurrFrame(1);
-			if (x_vel < max_x_speed) //as long as we don't exceed max speed, change velocity
-				x_vel = fmax(x_vel + acceleration, max_x_speed);
-		}
-
-		//Holding Spacebar
-		if (keystate[SDL_SCANCODE_SPACE]) {
-			if (!in_air && !jumpLag)    //only jump from ground
-			{
-				jumpLag = true;
-				in_air = true;
-				y_vel -= jump_strength;
-			}
-		}
-
-		if (!keystate[SDL_SCANCODE_SPACE]) //only jump if you've landed and pressed space again
-			jumpLag = false;
-
-
-		//Not holding side buttons
-		if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
-			if (x_vel > 0) {
-				x_vel = fmax(0, x_vel - acceleration);
-			}
-			else if (x_vel < 0) {
-				x_vel = fmin(0, x_vel + acceleration);
-			}
-		}
 
 		//Quit game
 		while (SDL_PollEvent(&e) != 0) {
@@ -271,24 +149,11 @@ void Game::runGame()
 			}
 		}
 
-		bool on_solid = detectCollision(player, t.getTileMap(), x_vel * delta_time, y_vel * delta_time);
-		bool falling = false;
-		if (!on_solid && max_y_speed > y_vel) // while in air
-		{
-			y_vel += gravity;
-			in_air = true;
-			//player.setCurrFrame(1);
-		}
-		else if (on_solid)
-		{
-			in_air = false;
-		}
-		if (!in_air)
-		{
-			//player.setCurrFrame(0);
-			y_vel = 0.0;
-		}
+		//Get Input
+		getUserInput(&player);	
 
+		//Handle in-air and on-ground collision
+		handleCollision(&player, &t);
 
 		// Update scroll if Player moves outside of middle third
 		if (player.getXPosition() > (scroll_offset + rthird))
@@ -303,7 +168,7 @@ void Game::runGame()
 			scroll_offset = LEVEL_LEN - SCREEN_WIDTH;
 
 		// Check to see if we are at door
-		if (checkDoor(roomNum, x_vel, player)) {
+		if (checkDoor(roomNum, player.getXVel(), player)) {
 			roomNum *= -1; //flip room
 
 			// change all details for the room we are rendering
@@ -357,9 +222,9 @@ void Game::runGame()
 
 
 		//draw the player
-		if (x_vel > 0 && flip == SDL_FLIP_HORIZONTAL)
+		if (player.getXVel() > 0 && flip == SDL_FLIP_HORIZONTAL)
 			flip = SDL_FLIP_NONE;
-		else if (x_vel < 0 && flip == SDL_FLIP_NONE)
+		else if (player.getXVel() < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
 		if (player.getFrameIndex() == 1)
@@ -367,12 +232,185 @@ void Game::runGame()
 		else
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
 
+		//Draw the player's hp
 		drawHP();
 
 		SDL_RenderPresent(gRenderer);
 	}
 }
 
+//Handle the user input
+void Game::getUserInput(Entity* player) {
+	//User input
+	const Uint8* keystate = SDL_GetKeyboardState(nullptr);
+
+	//Holding W
+	if (keystate[SDL_SCANCODE_W]) {
+
+	}
+
+	//Holding A
+	if (keystate[SDL_SCANCODE_A]) {
+		player->setCurrFrame(1);
+		if (player->getXVel() > -max_x_speed) //as long as we don't exceed max speed, change velocity
+			player->setXVel(fmin(player->getXVel() - acceleration, -max_x_speed));
+	}
+
+	//Holding S
+	if (keystate[SDL_SCANCODE_S]) {
+		player->setCurrFrame(0);
+	}
+
+	//Holding D
+	if (keystate[SDL_SCANCODE_D]) {
+		player->setCurrFrame(1);
+		if (player->getXVel() < max_x_speed) //as long as we don't exceed max speed, change velocity
+			player->setXVel(fmax(player->getXVel() + acceleration, max_x_speed));
+	}
+
+	//Holding Spacebar
+	if (keystate[SDL_SCANCODE_SPACE]) {
+		if (!in_air && player->getJump())    //only jump from ground
+		{
+			player->setJump(false);
+			in_air = true;
+			player->setYVel(player->getYVel() - jump_strength);
+		}
+	}
+
+	if (!keystate[SDL_SCANCODE_SPACE]) //only jump if you've landed and pressed space again
+		player->setJump(true);
+
+
+	//Not holding side buttons
+	if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
+		if (player->getXVel() > 0) {
+			player->setXVel(fmax(0, player->getXVel() - acceleration));
+		}
+		else if (player->getXVel() < 0) {
+			player->setXVel(fmin(0, player->getXVel() + acceleration));
+		}
+	}
+}
+
+//Handle the Collision
+void Game::handleCollision(Entity* player, Tilemap* t) {
+	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time);
+	bool falling = false;
+	if (!on_solid && max_y_speed > player->getYVel()) // while in air
+	{
+		player->setYVel(player->getYVel() + gravity);
+		in_air = true;
+		//player.setCurrFrame(1);
+	}
+	else if (on_solid)
+	{
+		in_air = false;
+	}
+	if (!in_air)
+	{
+		//player.setCurrFrame(0);
+		player->setYVel(0.0);
+	}
+}
+
+
+//Load the start screen/main menu of the game
+void Game::loadStartScreen() {
+	//Declare Start Screen Sprites
+	Sprite mmTitle(0, 0, 796, 125, 1, "assets/main_menu/mainmenuTitle.png", gRenderer);
+	Sprite mmPressAny(0, 0, 485, 56, 1, "assets/main_menu/pressAny.png", gRenderer);
+
+	//Start Screen loop
+	while (running) {
+		//Check for button input to go to main menu
+		SDL_PollEvent(&e);
+		if (e.type == SDL_QUIT) {
+			running = false;
+			return;
+		}
+		else if (e.type == SDL_KEYDOWN)
+			break;
+
+		SDL_RenderClear(gRenderer);
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
+
+		//Draw sprites
+		mmTitle.draw(gRenderer, 240, 120);
+		if (SDL_GetTicks() % 1200 <= 700)	//blinking text
+			mmPressAny.draw(gRenderer, 397, 400);
+
+		SDL_RenderPresent(gRenderer);
+	}
+
+	//Set game state to 0 (Main Menu)
+	gameState = 0;
+}
+
+void Game::loadMainMenu() {
+	//Mouse Coordinate Variables
+	int mouseX = 0, mouseY = 0;
+
+	//Unlock debug Option
+	bool unlockDebug = false;
+
+	//Main Menu Buttons/Sprites
+	Sprite mmTitle(0, 0, 796, 125, 1, "assets/main_menu/mainmenuTitle.png", gRenderer);
+	Button startGame(0, 0, 452, 68, 1, "assets/main_menu/startGame.png", gRenderer);
+	Button debug(0, 0, 294, 68, 1, "assets/main_menu/debug.png", gRenderer);
+
+	//Main Menu Loop
+	while (running) {
+
+		SDL_PollEvent(&e);
+		if (e.type == SDL_QUIT) {
+			running = false;
+			return;
+		}
+		else if (e.type == SDL_MOUSEBUTTONDOWN) {
+			if (e.button.button == SDL_BUTTON_LEFT) {
+				//Get mouse positon
+				mouseX = e.button.x;
+				mouseY = e.button.y;
+
+				//Start Game
+				if ((mouseX > startGame.getSprite()->getX()) && (mouseX < startGame.getSprite()->getX() + startGame.getSprite()->getWidth()) && (mouseY > startGame.getSprite()->getY()) && (mouseY < startGame.getSprite()->getY() + startGame.getSprite()->getHeight())) {
+					//Set gameState to start into normal game
+					gameState = 1;		
+					break;
+				}
+				//Debug
+				else if (unlockDebug && (mouseX > debug.getSprite()->getX()) && (mouseX < debug.getSprite()->getX() + debug.getSprite()->getWidth()) && (mouseY > debug.getSprite()->getY()) && (mouseY < debug.getSprite()->getY() + debug.getSprite()->getHeight())) {
+					//Set gameState to start into debug
+					gameState = 3;
+					break;
+				}
+			}
+
+		}
+		else if (e.type == SDL_KEYDOWN) {
+			switch (e.key.keysym.sym) {
+		
+			case SDLK_d:
+				//Unlock the debug menu button
+				unlockDebug = true;
+				break;
+			}
+		}
+
+		SDL_RenderClear(gRenderer);
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
+
+		//Draw to screen
+		mmTitle.draw(gRenderer, 240, 120);
+		startGame.getSprite()->draw(gRenderer, 397, 400);
+
+		if (unlockDebug)
+			debug.getSprite()->draw(gRenderer, 397, 500);
+
+		SDL_RenderPresent(gRenderer);
+	}
+}
 
 // Detect collision of Entity with Gameworld (edge of screen)
 bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_vel)
@@ -519,124 +557,56 @@ SDL_Texture* Game::rollCredits()
 }
 
 void Game::runDebug() {
-	//For now this method is just a copy of the game code with changes to make it more useful for debug---should later change it so they use
-	//same code but this one simply runs it in a debug environment. This requires splitting universal functions and logic up from game design
-	//Code and putting them in separate methods
-
-	// Define event variable
-	SDL_Event e;
+	//For now this method is still very similar to game code - this will change as well continue developing the game, but we should still
+	//work on putting drawing functions and scrolling functions into separate functions
 
 	// variables for background scrolling
 	int scroll_offset = 0;
 	int rem_bg = 0;
 	int rem_tile = 0;
+	int lthird = (SCREEN_WIDTH / 3);
+	int rthird = (2 * SCREEN_WIDTH / 3);
 
 	//Flip variable for flipping player sprite
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
 
-	// Define where the Camera Thirds are for knowing when we should scroll
-	int lthird = (SCREEN_WIDTH / 3);
-	int rthird = (2 * SCREEN_WIDTH / 3);
-
 	// determine players starting position (middle of background, on the left side of world)
-
 	double x_pos = SCREEN_WIDTH / 2;
 	double y_pos = SCREEN_HEIGHT / 2 - 145.0;
 
 	//Define Graphical Objects
 	Background debugBg(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
-	Entity player("data/player.spr", x_pos, y_pos, 3, gRenderer);
+	Entity player("data/player.spr", x_pos, y_pos, 3, 0, gRenderer);
 
-	Sprite groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
+	//Sprite groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 	std::vector<Tile*> tiles;
 
-	Tilemap tilemap("data/tilemap.txt", tiles);
-
 	//Create temporary standalone tile
 	Tile platformTile(&platform);
+	tiles.push_back(&platformTile);
 
-	//Initialize velocity
-	double x_vel = 0;
-	double y_vel = 0;
+	//Create tilemap
+	Tilemap t("data/tilemap.txt", tiles);
+	int** tileArray = t.getTileMap();
 
 	//Main loop
-	int index = 0;
-	while (running == true) {
+	while (running) {
 		//Delta time calculation
 		curTick = SDL_GetTicks();
 		delta_time = (curTick - lastTick) / 1000.0;
 		lastTick = curTick;
 
-		//User input
-		const Uint8* keystate = SDL_GetKeyboardState(nullptr);
-
-		//Holding W
-		if (keystate[SDL_SCANCODE_W]) {
-
-		}
-
-		//Holding A
-		if (keystate[SDL_SCANCODE_A]) {
-			player.setCurrFrame(1);
-			if (x_vel > -max_x_speed) //as long as we don't exceed max speed, change velocity
-				x_vel = fmin(x_vel - acceleration, -max_x_speed);
-		}
-
-		//Holding S
-		if (keystate[SDL_SCANCODE_S]) {
-			player.setCurrFrame(0);
-		}
-
-		//Holding D
-		if (keystate[SDL_SCANCODE_D]) {
-			player.setCurrFrame(1);
-			if (x_vel < max_x_speed) //as long as we don't exceed max speed, change velocity
-				x_vel = fmax(x_vel + acceleration, max_x_speed);
-		}
-
-		//Holding Spacebar
-		if (keystate[SDL_SCANCODE_SPACE]) {
-			if (!in_air)	//only jump from ground
-			{
-				in_air = true;
-				y_vel -= jump_strength;
-			}
-		}
-
-		//Not holding side buttons
-		if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
-			if (x_vel > 0) {
-				x_vel = fmax(0, x_vel - acceleration);
-			}
-			else if (x_vel < 0) {
-				x_vel = fmin(0, x_vel + acceleration);
-			}
-		}
-
+		//Quit game
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
 				running = false;
 			}
 		}
 
-		bool on_solid = detectCollision(player, tilemap.getTileMap(), x_vel, y_vel);
-		player.movePosition((int)(x_vel * delta_time), (int)(y_vel * delta_time));
-		if (!on_solid && max_y_speed > y_vel) // while in air
-		{
-			y_vel += gravity;
-			//player.setCurrFrame(1);
-		}
-		else if (on_solid)
-		{
-			in_air = false;
-		}
-		if (!in_air)
-		{
-			//player.setCurrFrame(0);
-			y_vel = 0.0;
-		}
-
+		getUserInput(&player);
+		
+		handleCollision(&player, &t);
 
 		// Update scroll if Player moves outside of middle third
 		if (player.getXPosition() > (scroll_offset + rthird))
@@ -660,15 +630,26 @@ void Game::runDebug() {
 		debugBg.getSprite()->draw(gRenderer, -rem_bg, 0);
 		debugBg.getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
 
-		//Draw tilemap
-		//tilemap.drawTileMap();
-
-
+		// Temporary: Render the tilemap using the stored tile vector
+			// NOTE: Do not even try to read 0's right now to avoid having
+			// 		 the tilemap.txt at this point in time - JTP
+			// NOTE: Temporary build: Need to fix implementation of tile vector
+			//		 in tilemap implementation.
+		for (int i = 0; i < t.getMaxHeight(); i++)
+		{
+			for (int j = 0; j < t.getMaxWidth(); j++)
+			{
+				if (tileArray[i][j] == 1)
+				{
+					platformTile.getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
+				}
+			}
+		}
 
 		//draw the player
-		if (x_vel > 0 && flip == SDL_FLIP_HORIZONTAL)
+		if (player.getXVel() > 0 && flip == SDL_FLIP_HORIZONTAL)
 			flip = SDL_FLIP_NONE;
-		else if (x_vel < 0 && flip == SDL_FLIP_NONE)
+		else if (player.getXVel() < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
 		if (player.getFrameIndex() == 1)
@@ -680,5 +661,4 @@ void Game::runDebug() {
 
 		SDL_RenderPresent(gRenderer);
 	}
-
 }
