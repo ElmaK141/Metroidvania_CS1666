@@ -2,7 +2,7 @@
 #include <sstream>
 
 
-Entity::Entity(std::string spriteData, int xPos, int yPos, int scale, SDL_Renderer* context) {
+Entity::Entity(std::string spriteData, double xPos, double yPos, int scale, int f, SDL_Renderer* context) {
 
 	this->spriteFile = std::ifstream(spriteData);
 	this->context = context;
@@ -12,7 +12,17 @@ Entity::Entity(std::string spriteData, int xPos, int yPos, int scale, SDL_Render
 	this->x = xPos;
 	this->y = yPos;
 	this->index = 0;
+	this->flag = f;
+	
+	//Player
+	if (this->flag == 0) {
+		//Initialize Velocity
+		this->xVel = 0.0;
+		this->yVel - 0.0;
 
+		//Can jump initially
+		this->canJump = true;
+	}
 }
 
 Entity::~Entity(){
@@ -65,4 +75,32 @@ void Entity::createSprites() {
 		Sprite temp(a, b, c, d, s, line, context);
 		frames.emplace_back(temp);
 	}
+}
+
+int Entity::getFlag() {
+	return this->flag;
+}
+
+void Entity::setXVel(double xVelo) {
+	this->xVel = xVelo;
+}
+
+void Entity::setYVel(double yVelo) {
+	this->yVel = yVelo;
+}
+
+double Entity::getXVel() {
+	return this->xVel;
+}
+
+double Entity::getYVel() {
+	return this->yVel;
+}
+
+void Entity::setJump(bool jump) {
+	this->canJump = jump;
+}
+
+bool Entity::getJump() {
+	return this->canJump;
 }

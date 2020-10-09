@@ -19,8 +19,7 @@ class Game {
 		Game(int width, int height);
 		//Game(const Game &obj);
 		~Game();
-		void runGame();
-		void runDebug();
+		void gameLoop();
 
 		bool detectCollision(Entity &ent, int** t, double x_vel, double y_vel);
 		bool checkDoor(int room, double vel, Entity& ent);
@@ -39,5 +38,11 @@ class Game {
 		void update();
 		void render();
 		SDL_Texture* rollCredits();
+		void loadStartScreen();	//Loads the start screen
+		void loadMainMenu();	//Loads the main menu
+		void runGame();			//Run the game
+		void runDebug();		//Run debug
+		void getUserInput(Entity* player);		//Handle input from the user
+		void handleCollision(Entity* player, Tilemap* t);	//Handles collision events of the player
 };
 #endif
