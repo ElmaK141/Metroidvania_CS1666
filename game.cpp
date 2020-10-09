@@ -12,7 +12,7 @@ int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
 
 // for now - define the X length of the gameworld
-constexpr int LEVEL_LEN = 3000;
+constexpr int LEVEL_LEN = 3360;
 
 
 bool in_air = true;
@@ -27,14 +27,15 @@ Uint32 lastTick = 0;
 Uint32 curTick;
 double delta_time;
 
+
 Game::Game(int width, int height)
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	IMG_Init(IMG_INIT_PNG);
-	
+
 	windowWidth = width;
 	windowHeight = height;
-	
+
 	SCREEN_WIDTH = width;
 	SCREEN_HEIGHT = height;
 
@@ -42,7 +43,7 @@ Game::Game(int width, int height)
 	playerHP = 40;
 
 	gWindow = SDL_CreateWindow("METROIDVANIA", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-	width, height, 0);
+		width, height, 0);
 
 
 	gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
@@ -54,7 +55,7 @@ Game::Game(int width, int height)
 {
 }*/
 
-Game::~Game() 
+Game::~Game()
 {
 	running = false;
 	SDL_DestroyRenderer(gRenderer);
@@ -120,7 +121,7 @@ void Game::runGame()
 					break;
 				}
 			}
-			
+
 		}
 		else if (e.type == SDL_KEYDOWN) {
 			switch (e.key.keysym.sym) {
@@ -161,6 +162,10 @@ void Game::runGame()
 	int rem_bg = 0;
 	int rem_tile = 0;
 
+	//player hp values
+	maxHP = 40;
+	playerHP = 40;
+
 	//Flip variable for flipping player sprite
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
 
@@ -172,100 +177,106 @@ void Game::runGame()
 
 	double x_pos = SCREEN_WIDTH / 2;
 	double y_pos = SCREEN_HEIGHT / 2 - 145.0;
-	
+
 	//Define Graphical Objects
-	Background bg1(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
+	Background bg1(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
 	Background bg2(0, 0, 1280, 720, "assets/backgrounds/background2.png", gRenderer);
 	Entity player("data/player.spr", (int)x_pos, (int)y_pos, 3, gRenderer);
-	
-	Sprite wall(98,96,16,16,4,"assets/sprites/tiles.png",gRenderer);
+
+	Sprite wall(98, 96, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
 	Sprite floor(435, 94, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
 
-	std::vector<Sprite> tiles;
-	tiles.push_back(wall);
-	tiles.push_back(floor);
+	double x_vel = 0;
+	double y_vel = 0;
 
 	//Create temporary standalone tile
 	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 	Tile platformTile(&platform);
+		
+	// Create Tile vector for tilemap contruction and push our temporary tile
+	std::vector<Tile*> tiles;
+	tiles.push_back(&(platformTile));
 
-	double x_vel = 0;
-	double y_vel = 0;
-	
-	Tilemap t("data/tilemap.txt", gRenderer,tiles);
+	Tilemap t("data/tilemap.txt", tiles);
+	int** tileArray = t.getTileMap();
 
 	int index = 0;
 
 	// 1 -> Door is at right edge, -1 -> Door is at left edge
 	int roomNum = 1;
-	
-	
+	bool jumpLag = false;
+
 	while (running == true) {
-		
+
 		//Delta time calculation
 		curTick = SDL_GetTicks();
 		delta_time = (curTick - lastTick) / 1000.0;
 		lastTick = curTick;
-		
+
 		//User input
 		const Uint8* keystate = SDL_GetKeyboardState(nullptr);
-		
+
 		//Holding W
-		if (keystate[SDL_SCANCODE_W]){
-			
+		if (keystate[SDL_SCANCODE_W]) {
+
 		}
-		
+
 		//Holding A
-		if (keystate[SDL_SCANCODE_A]){
+		if (keystate[SDL_SCANCODE_A]) {
 			player.setCurrFrame(1);
 			if (x_vel > -max_x_speed) //as long as we don't exceed max speed, change velocity
 				x_vel = fmin(x_vel - acceleration, -max_x_speed);
 		}
-		
+
 		//Holding S
-		if (keystate[SDL_SCANCODE_S]){
+		if (keystate[SDL_SCANCODE_S]) {
 			player.setCurrFrame(0);
 		}
-		
+
 		//Holding D
-		if (keystate[SDL_SCANCODE_D]){
+		if (keystate[SDL_SCANCODE_D]) {
 			player.setCurrFrame(1);
 			if (x_vel < max_x_speed) //as long as we don't exceed max speed, change velocity
 				x_vel = fmax(x_vel + acceleration, max_x_speed);
 		}
-		
+
 		//Holding Spacebar
-		if (keystate[SDL_SCANCODE_SPACE]){
-			if (!in_air)	//only jump from ground
+		if (keystate[SDL_SCANCODE_SPACE]) {
+			if (!in_air && !jumpLag)    //only jump from ground
 			{
+				jumpLag = true;
 				in_air = true;
 				y_vel -= jump_strength;
 			}
 		}
-		
+
+		if (!keystate[SDL_SCANCODE_SPACE]) //only jump if you've landed and pressed space again
+			jumpLag = false;
+
+
 		//Not holding side buttons
-		if(!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])){
-			if(x_vel > 0){
+		if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
+			if (x_vel > 0) {
 				x_vel = fmax(0, x_vel - acceleration);
 			}
-			else if(x_vel < 0){
+			else if (x_vel < 0) {
 				x_vel = fmin(0, x_vel + acceleration);
 			}
 		}
-		
+
 		//Quit game
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
 				running = false;
 			}
 		}
-		
 
-		player.movePosition((int)(x_vel * delta_time), (int)(y_vel * delta_time));
-		bool on_solid = detectCollision(player);
+		bool on_solid = detectCollision(player, t.getTileMap(), x_vel * delta_time, y_vel * delta_time);
+		bool falling = false;
 		if (!on_solid && max_y_speed > y_vel) // while in air
 		{
 			y_vel += gravity;
+			in_air = true;
 			//player.setCurrFrame(1);
 		}
 		else if (on_solid)
@@ -284,7 +295,7 @@ void Game::runGame()
 			scroll_offset = player.getXPosition() - rthird;
 		else if (player.getXPosition() < (scroll_offset + lthird))
 			scroll_offset = player.getXPosition() - lthird;
-		
+
 		//Prevent scroll_offset from placing Camera outside of gameworld
 		if (scroll_offset < 0)
 			scroll_offset = 0;
@@ -296,8 +307,8 @@ void Game::runGame()
 			roomNum *= -1; //flip room
 
 			// change all details for the room we are rendering
-			
-			if(roomNum == 1){ //new room is 1
+
+			if (roomNum == 1) { //new room is 1
 				//set offset and player position accordingly
 				scroll_offset = LEVEL_LEN - SCREEN_WIDTH;
 				player.setPosition(LEVEL_LEN - player.getCurrFrame().getWidth(), player.getYPosition());
@@ -310,12 +321,12 @@ void Game::runGame()
 				//std::cout << roomNum << " " << scroll_offset << " " << player.getXPosition() << std::endl;
 			}
 		}
-		
+
 		//Draw to screen
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
-		
+
 		// Draw the portion of the background currently inside the camera view
 		rem_bg = scroll_offset % SCREEN_WIDTH;
 		rem_tile = scroll_offset % LEVEL_LEN;
@@ -323,37 +334,21 @@ void Game::runGame()
 			bg1.getSprite()->draw(gRenderer, -rem_bg, 0);
 			bg1.getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
 
-			//Temporarily manually draw platforms
-
-			//Platform 1
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 400, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 416, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 432, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 448, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 464, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 480, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 496, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 512, 480);
-
-			//Platform 2
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 736, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 752, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 768, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 784, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 800, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 816, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 832, 480);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 848, 480);
-
-			//Platform 3
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 568, 390);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 584, 390);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 600, 390);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 616, 390);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 632, 390);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 648, 390);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 664, 390);
-			platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 680, 390);
+			// Temporary: Render the tilemap using the stored tile vector
+			// NOTE: Do not even try to read 0's right now to avoid having
+			// 		 the tilemap.txt at this point in time - JTP
+			// NOTE: Temporary build: Need to fix implementation of tile vector
+			//		 in tilemap implementation.
+			for (int i = 0; i < t.getMaxHeight(); i++)
+			{
+				for (int j = 0; j < t.getMaxWidth(); j++)
+				{
+					if (tileArray[i][j] == 1)
+					{
+						platformTile.getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
+					}
+				}
+			}
 		}
 		else if (roomNum == -1) {
 			bg2.getSprite()->draw(gRenderer, -rem_bg, 0);
@@ -380,33 +375,89 @@ void Game::runGame()
 
 
 // Detect collision of Entity with Gameworld (edge of screen)
-bool Game::detectCollision(Entity& ent)
+bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_vel)
 {
-	if (ent.getXPosition() < 0) {
+	double pPosY = ent.getYPosition();
+	double pPosX = ent.getXPosition();
+	int pHeight = ent.getCurrFrame().getHeight();
+	int pWidth = ent.getCurrFrame().getWidth();		//get player height, width, & positions
+
+	int yBlockD = (int)(floor((pPosY + pHeight) / 16)) + 1;
+	int yBlockU = (int)(floor(pPosY / 16)) - 1;
+	int xBlockL = (int)(floor(pPosX / 16)) - 1;					//gather adjacent block locations
+	int xBlockR = (int)(floor((pPosX + pWidth) / 16)) + 1;		//including left, right, up, down
+	bool land = false;			//determines if you've landed on something			
+
+	ent.setPosition(ent.getXPosition() + x_vel, ent.getYPosition() + y_vel);	//set position
+
+	if (y_vel > 0) {
+		for (int xAdjust = 1; xAdjust <= xBlockR - xBlockL; xAdjust++)
+		{	//for every block under the player's width
+			if (yBlockD <= 44)
+			{	//if you'd pass a solid block
+				if (pPosY + pHeight + y_vel >= yBlockD * 16 - 1 && tilemap[yBlockD][xBlockR - xAdjust] != 0) 
+				{	//set position to above the block
+					ent.setPosition(ent.getXPosition(), yBlockD * 16 - pHeight - 1);
+					land = true;
+				}
+			}
+			else //if you're trying to fall through the bottom of the screen
+				ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - pHeight - 17);
+		}
+	}
+
+	if (y_vel < 0) {
+		for (int xAdjust = 1; xAdjust <= xBlockR - xBlockL; xAdjust++)
+		{	//bonk head on blocks above
+			if (pPosY + y_vel <= yBlockU * 16 + 16 && tilemap[yBlockU][xBlockR - xAdjust] != 0)
+				ent.setPosition(ent.getXPosition(), yBlockU * 16 + 17);
+		}
+	}
+
+	if (x_vel > 0) {
+		for (int yAdjust = 1; yAdjust <= yBlockD - yBlockU; yAdjust++)
+		{	//hit blocks to your right accounting for player height
+			if (pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && tilemap[yBlockD - yAdjust][xBlockR] != 0)
+				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
+		}
+	}
+
+	if (x_vel < 0) {
+		for (int yAdjust = 1; yAdjust <= yBlockD - yBlockU; yAdjust++)
+		{	//hit blocks to your left accounting for player height
+			if (pPosX + x_vel <= xBlockL * 16 + 16 && tilemap[yBlockD - yAdjust][xBlockL] != 0)
+				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
+		}
+	}
+
+
+
+	/*
+	if (ent.getXPosition() + x_vel < 0) {
 		ent.setPosition(0, ent.getYPosition());
 	}
-	if (ent.getYPosition() < 0) {
+	if (ent.getYPosition() + y_vel < 0) {
 		ent.setPosition(ent.getXPosition(), 0);
 	}
-	if (ent.getXPosition() + ent.getCurrFrame().getWidth() > LEVEL_LEN) {
+	if (ent.getXPosition() + ent.getCurrFrame().getWidth() + x_vel > LEVEL_LEN) {
 		ent.setPosition(LEVEL_LEN - ent.getCurrFrame().getWidth(), ent.getYPosition());
 	}
-	if (ent.getYPosition() + ent.getCurrFrame().getHeight() > SCREEN_HEIGHT) {
+	if (ent.getYPosition() + ent.getCurrFrame().getHeight() + y_vel > SCREEN_HEIGHT) {
 		ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - ent.getCurrFrame().getHeight());
 		return true;
-	}
-	return false;
+	}*/
+	return land;
 }
 
 bool Game::checkDoor(int room, double vel, Entity& ent) {
 	if (room == 1) { //room 1 has door at LEVEL_LEN
-		if (ent.getXPosition() == LEVEL_LEN - ent.getCurrFrame().getWidth() && vel > 0) {
+		if (ent.getXPosition() >= LEVEL_LEN - ent.getCurrFrame().getWidth() - 1) {
 			//we are moving into right door
 			return true;
 		}
 	}
 	else { // room -1 has door at 0
-		if (ent.getXPosition() == 0 && vel < 0) {
+		if (ent.getXPosition() <= 0 && vel < 0) {
 			//we are moving into left door
 			return true;
 		}
@@ -495,14 +546,12 @@ void Game::runDebug() {
 	//Define Graphical Objects
 	Background debugBg(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
 	Entity player("data/player.spr", x_pos, y_pos, 3, gRenderer);
-	
+
 	Sprite groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
-	std::vector<Sprite> tiles;
-	tiles.push_back(groundTile);
-	tiles.push_back(platform);
+	std::vector<Tile*> tiles;
 
-	Tilemap tilemap("data/tilemap.txt", gRenderer, tiles);
+	Tilemap tilemap("data/tilemap.txt", tiles);
 
 	//Create temporary standalone tile
 	Tile platformTile(&platform);
@@ -571,8 +620,8 @@ void Game::runDebug() {
 			}
 		}
 
+		bool on_solid = detectCollision(player, tilemap.getTileMap(), x_vel, y_vel);
 		player.movePosition((int)(x_vel * delta_time), (int)(y_vel * delta_time));
-		bool on_solid = detectCollision(player);
 		if (!on_solid && max_y_speed > y_vel) // while in air
 		{
 			y_vel += gravity;
@@ -614,38 +663,6 @@ void Game::runDebug() {
 		//Draw tilemap
 		//tilemap.drawTileMap();
 
-		//Temporarily manually draw platforms
-
-		//Platform 1
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 400, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 416, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 432, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 448, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 464, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 480, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 496, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 512, 480);
-
-		//Platform 2
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 736, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 752, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 768, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 784, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 800, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 816, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 832, 480);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 848, 480);
-
-		//Platform 3
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 568, 390);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 584, 390);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 600, 390);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 616, 390);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 632, 390);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 648, 390);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 664, 390);
-		platformTile.getTileSprite()->draw(gRenderer, -rem_tile + 680, 390);
-	
 
 
 		//draw the player
@@ -654,7 +671,7 @@ void Game::runDebug() {
 		else if (x_vel < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
-		if(player.getFrameIndex() == 1)
+		if (player.getFrameIndex() == 1)
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
 		else
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
