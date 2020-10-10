@@ -27,6 +27,11 @@ Uint32 lastTick = 0;
 Uint32 curTick;
 double delta_time;
 
+//Animation time
+Uint32 lastAnim = 0;
+Uint32 curAnim;
+int lastAnimFrame = 3;
+
 //Event pointer
 SDL_Event e;
 
@@ -144,6 +149,9 @@ void Game::runGame() {
 		delta_time = (curTick - lastTick) / 1000.0;
 		lastTick = curTick;
 
+		//Anim frame tracker
+		curAnim = SDL_GetTicks();
+
 		//Quit game
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
@@ -257,10 +265,10 @@ void Game::runGame() {
 		else if (player.getXVel() < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
-		if (player.getFrameIndex() == 1)
-			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
-		else
+		if (player.getFrameIndex() == 0)
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
+		else
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
 
 		//Draw the player's hp
 		drawHP();
@@ -281,7 +289,25 @@ void Game::getUserInput(Entity* player) {
 
 	//Holding A
 	if (keystate[SDL_SCANCODE_A]) {
-		player->setCurrFrame(1);
+
+		//Animation
+		if (curAnim - lastAnim >= 200.0 && !in_air) {
+			lastAnim = curAnim;
+			if (player->getFrameIndex() == 1 || player->getFrameIndex() == 0) {
+				if (lastAnimFrame == 2) {
+					player->setCurrFrame(3);
+					lastAnimFrame = 3;
+				}
+				else {
+					player->setCurrFrame(2);
+					lastAnimFrame = 2;
+				}
+			}
+			else {
+				player->setCurrFrame(1);
+			}
+		}
+
 		if (player->getXVel() > -max_x_speed) //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmin(player->getXVel() - acceleration, -max_x_speed));
 	}
@@ -293,7 +319,25 @@ void Game::getUserInput(Entity* player) {
 
 	//Holding D
 	if (keystate[SDL_SCANCODE_D]) {
-		player->setCurrFrame(1);
+		
+		//Animation
+		if (curAnim - lastAnim >= 200.0 && !in_air) {
+			lastAnim = curAnim;
+			if (player->getFrameIndex() == 1 || player->getFrameIndex() == 0) {
+				if (lastAnimFrame == 2) {
+					player->setCurrFrame(3);
+					lastAnimFrame = 3;
+				}
+				else {
+					player->setCurrFrame(2);
+					lastAnimFrame = 2;
+				}
+			}
+			else {
+				player->setCurrFrame(1);
+			}
+		}
+
 		if (player->getXVel() < max_x_speed) //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmax(player->getXVel() + acceleration, max_x_speed));
 	}
@@ -314,6 +358,9 @@ void Game::getUserInput(Entity* player) {
 
 	//Not holding side buttons
 	if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
+		if(player->getFrameIndex() != 0)
+			player->setCurrFrame(1);
+		
 		if (player->getXVel() > 0) {
 			player->setXVel(fmax(0, player->getXVel() - acceleration));
 		}
@@ -682,10 +729,10 @@ void Game::runDebug() {
 		else if (player.getXVel() < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
-		if (player.getFrameIndex() == 1)
-			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
-		else
+		if (player.getFrameIndex() == 0)
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
+		else
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
 
 		drawHP();
 
