@@ -82,11 +82,11 @@ void Tilemap::generateTilemap(std::string mapPath)
 				// add to the array
 				tileFile.get(readIn);
 				this->tileMap[i][j] = (readIn - 48);
-				std::cout << tileMap[i][j] << " ";
+				//std::cout << tileMap[i][j] << " ";
 			}
 			// Drop our trailing newline
 			tileFile.get(readIn);
-			std::cout << "\n";
+			//std::cout << "\n";
 		}
 
 		// We're finished, close our file
