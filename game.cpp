@@ -27,6 +27,11 @@ Uint32 lastTick = 0;
 Uint32 curTick;
 double delta_time;
 
+//Animation time
+Uint32 lastAnim = 0;
+Uint32 curAnim;
+int lastAnimFrame = 3;
+
 //Event pointer
 SDL_Event e;
 
@@ -117,23 +122,25 @@ void Game::runGame() {
 	Background bg2(0, 0, 1280, 720, "assets/backgrounds/background2.png", gRenderer);
 	Entity player("data/player.spr", x_pos, y_pos, 3, 0, gRenderer);		//0 is flag for player entity
 
-	//Sprite wall(98, 96, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
-	//Sprite floor(435, 94, 16, 16, 4, "assets/sprites/tiles.png", gRenderer);
-
-	//Create temporary standalone tile
-	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
-	Tile platformTile(&platform);
+	//Tiles to add to tilemap
+	Tile groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
+	Tile platformTile(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 		
 	// Create Tile vector for tilemap contruction and push our temporary tile
 	std::vector<Tile*> tiles;
+	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
-	//Initialize tilemap
-	Tilemap t("data/tilemap.txt", tiles);
-	int** tileArray = t.getTileMap();
+	//Initialize tilemaps
+	Tilemap t0("data/tilemaps/tilemap0.txt", tiles);
+	int** tileArray0 = t0.getTileMap();
+	
+	//Temporarily the exact same tilemap
+	Tilemap t1("data/tilemaps/tilemap1.txt", tiles);
+	int** tileArray1 = t1.getTileMap();
 
-	//1 -> Door is at right edge, -1 -> Door is at left edge
-	int roomNum = 1;
+	//0 is first room, 1 is second room
+	int roomNum = 0;
 
 	//Run the Game
 	while (running) {
@@ -141,6 +148,9 @@ void Game::runGame() {
 		curTick = SDL_GetTicks();
 		delta_time = (curTick - lastTick) / 1000.0;
 		lastTick = curTick;
+
+		//Anim frame tracker
+		curAnim = SDL_GetTicks();
 
 		//Quit game
 		while (SDL_PollEvent(&e) != 0) {
@@ -152,8 +162,13 @@ void Game::runGame() {
 		//Get Input
 		getUserInput(&player);	
 
-		//Handle in-air and on-ground collision
-		handleCollision(&player, &t);
+		//Handle in-air and on-ground collision -- Different tilemap per room
+		if (roomNum == 0) {
+			handleCollision(&player, &t0);
+		}
+		else if (roomNum == 1) {
+			handleCollision(&player, &t1);
+		}
 
 		// Update scroll if Player moves outside of middle third
 		if (player.getXPosition() > (scroll_offset + rthird))
@@ -169,17 +184,23 @@ void Game::runGame() {
 
 		// Check to see if we are at door
 		if (checkDoor(roomNum, player.getXVel(), player)) {
-			roomNum *= -1; //flip room
+			//Flip room
+			if (roomNum == 0) {
+				roomNum = 1;
+			}
+			else {
+				roomNum = 0;
+			}
 
 			// change all details for the room we are rendering
 
-			if (roomNum == 1) { //new room is 1
+			if (roomNum == 0) { //new room is 0
 				//set offset and player position accordingly
 				scroll_offset = LEVEL_LEN - SCREEN_WIDTH;
 				player.setPosition(LEVEL_LEN - player.getCurrFrame().getWidth(), player.getYPosition());
 				//std::cout << roomNum << " " << scroll_offset << " " << player.getXPosition() << std::endl;
 			}
-			else { //new room is -1
+			else { //new room is 1
 				//set offset and player position accordingly
 				scroll_offset = 0;
 				player.setPosition(0, player.getYPosition());
@@ -195,7 +216,7 @@ void Game::runGame() {
 		// Draw the portion of the background currently inside the camera view
 		rem_bg = scroll_offset % SCREEN_WIDTH;
 		rem_tile = scroll_offset % LEVEL_LEN;
-		if (roomNum == 1) {
+		if (roomNum == 0) {
 			bg1.getSprite()->draw(gRenderer, -rem_bg, 0);
 			bg1.getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
 
@@ -204,20 +225,37 @@ void Game::runGame() {
 			// 		 the tilemap.txt at this point in time - JTP
 			// NOTE: Temporary build: Need to fix implementation of tile vector
 			//		 in tilemap implementation.
-			for (int i = 0; i < t.getMaxHeight(); i++)
+			for (int i = 0; i < t0.getMaxHeight(); i++)
 			{
-				for (int j = 0; j < t.getMaxWidth(); j++)
+				for (int j = 0; j < t0.getMaxWidth(); j++)
 				{
-					if (tileArray[i][j] == 1)
+					if (tileArray0[i][j] == 1)
 					{
-						t.getTile(0)->getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
+						t0.getTile(0)->getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
+					}
+					else if (tileArray0[i][j] == 2) {
+						t0.getTile(1)->getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
 					}
 				}
 			}
 		}
-		else if (roomNum == -1) {
+		else if (roomNum == 1) {
 			bg2.getSprite()->draw(gRenderer, -rem_bg, 0);
 			bg2.getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
+
+			for (int i = 0; i < t1.getMaxHeight(); i++)
+			{
+				for (int j = 0; j < t1.getMaxWidth(); j++)
+				{
+					if (tileArray1[i][j] == 1)
+					{
+						t1.getTile(0)->getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
+					}
+					else if (tileArray1[i][j] == 2) {
+						t1.getTile(1)->getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
+					}
+				}
+			}
 		}
 
 
@@ -227,10 +265,10 @@ void Game::runGame() {
 		else if (player.getXVel() < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
-		if (player.getFrameIndex() == 1)
-			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
-		else
+		if (player.getFrameIndex() == 0)
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
+		else
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
 
 		//Draw the player's hp
 		drawHP();
@@ -251,7 +289,25 @@ void Game::getUserInput(Entity* player) {
 
 	//Holding A
 	if (keystate[SDL_SCANCODE_A]) {
-		player->setCurrFrame(1);
+
+		//Animation
+		if (curAnim - lastAnim >= 200.0 && !in_air) {
+			lastAnim = curAnim;
+			if (player->getFrameIndex() == 1 || player->getFrameIndex() == 0) {
+				if (lastAnimFrame == 2) {
+					player->setCurrFrame(3);
+					lastAnimFrame = 3;
+				}
+				else {
+					player->setCurrFrame(2);
+					lastAnimFrame = 2;
+				}
+			}
+			else {
+				player->setCurrFrame(1);
+			}
+		}
+
 		if (player->getXVel() > -max_x_speed) //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmin(player->getXVel() - acceleration, -max_x_speed));
 	}
@@ -263,7 +319,25 @@ void Game::getUserInput(Entity* player) {
 
 	//Holding D
 	if (keystate[SDL_SCANCODE_D]) {
-		player->setCurrFrame(1);
+		
+		//Animation
+		if (curAnim - lastAnim >= 200.0 && !in_air) {
+			lastAnim = curAnim;
+			if (player->getFrameIndex() == 1 || player->getFrameIndex() == 0) {
+				if (lastAnimFrame == 2) {
+					player->setCurrFrame(3);
+					lastAnimFrame = 3;
+				}
+				else {
+					player->setCurrFrame(2);
+					lastAnimFrame = 2;
+				}
+			}
+			else {
+				player->setCurrFrame(1);
+			}
+		}
+
 		if (player->getXVel() < max_x_speed) //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmax(player->getXVel() + acceleration, max_x_speed));
 	}
@@ -284,6 +358,9 @@ void Game::getUserInput(Entity* player) {
 
 	//Not holding side buttons
 	if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
+		if(player->getFrameIndex() != 0)
+			player->setCurrFrame(1);
+		
 		if (player->getXVel() > 0) {
 			player->setXVel(fmax(0, player->getXVel() - acceleration));
 		}
@@ -488,13 +565,13 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 }
 
 bool Game::checkDoor(int room, double vel, Entity& ent) {
-	if (room == 1) { //room 1 has door at LEVEL_LEN
+	if (room == 0) { //room 0 has door at LEVEL_LEN
 		if (ent.getXPosition() >= LEVEL_LEN - ent.getCurrFrame().getWidth() - 1) {
 			//we are moving into right door
 			return true;
 		}
 	}
-	else { // room -1 has door at 0
+	else { // room 1 has door at 0
 		if (ent.getXPosition() <= 0 && vel < 0) {
 			//we are moving into left door
 			return true;
@@ -587,7 +664,7 @@ void Game::runDebug() {
 	tiles.push_back(&platformTile);
 
 	//Create tilemap
-	Tilemap t("data/tilemap.txt", tiles);
+	Tilemap t("data/tilemaps/tilemap0.txt", tiles);
 	int** tileArray = t.getTileMap();
 
 	//Main loop
@@ -652,10 +729,10 @@ void Game::runDebug() {
 		else if (player.getXVel() < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
-		if (player.getFrameIndex() == 1)
-			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
-		else
+		if (player.getFrameIndex() == 0)
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
+		else
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
 
 		drawHP();
 
