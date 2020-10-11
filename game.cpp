@@ -143,7 +143,7 @@ void Game::runGame() {
 	int roomNum = 0;
 
 	//Run the Game
-	while (running) {
+	while (running && gameState == 1) {
 		//Delta time calculation
 		curTick = SDL_GetTicks();
 		delta_time = (curTick - lastTick) / 1000.0;
@@ -198,13 +198,11 @@ void Game::runGame() {
 				//set offset and player position accordingly
 				scroll_offset = LEVEL_LEN - SCREEN_WIDTH;
 				player.setPosition(LEVEL_LEN - player.getCurrFrame().getWidth(), player.getYPosition());
-				//std::cout << roomNum << " " << scroll_offset << " " << player.getXPosition() << std::endl;
 			}
 			else { //new room is 1
 				//set offset and player position accordingly
 				scroll_offset = 0;
 				player.setPosition(0, player.getYPosition());
-				//std::cout << roomNum << " " << scroll_offset << " " << player.getXPosition() << std::endl;
 			}
 		}
 
@@ -281,6 +279,15 @@ void Game::runGame() {
 void Game::getUserInput(Entity* player) {
 	//User input
 	const Uint8* keystate = SDL_GetKeyboardState(nullptr);
+
+	//Pause game and bring up Pause Menu (with esc)
+	if (e.type == SDL_KEYDOWN) { //detect escape keydown
+		switch (e.key.keysym.sym) {
+		
+		case SDLK_ESCAPE:
+			pauseMenu();
+		}
+	}
 
 	//Holding W
 	if (keystate[SDL_SCANCODE_W]) {
@@ -487,6 +494,79 @@ void Game::loadMainMenu() {
 
 		SDL_RenderPresent(gRenderer);
 	}
+}
+
+//Pauses Main game loop and brings up Pause menu
+void Game::pauseMenu()
+{
+	//Mouse Coordinate Variables
+	int mouseX = 0, mouseY = 0;
+
+	// gamestate is paused (2)
+	gameState = 2;
+
+	// paused variable
+	bool paused = true;
+
+	//Pause menu sprites
+	//Sprite border(0, 0, );
+	Sprite pauseLabel(0, 0, 253, 75, 1, "assets/pause_menu/paused.png", gRenderer);
+	Button resumeGame(0, 0, 220, 70, 1, "assets/pause_menu/resume.png", gRenderer);
+	Button mainMenu(0, 0, 303, 70, 1, "assets/pause_menu/mainMenu.png", gRenderer);
+
+	SDL_Rect pauseBox = {SCREEN_WIDTH/2 - 163, 190, 325, 300};
+
+	//Pause menu loop
+	while (running && paused) {
+		
+		//Poll to see if we close the game at any time
+		SDL_PollEvent(&e);
+		if (e.type == SDL_QUIT) {
+			running = false;
+			return;
+		}
+		else if (e.type == SDL_MOUSEBUTTONDOWN) {
+			if (e.button.button == SDL_BUTTON_LEFT) { //if they click on a button
+				//Get mouse positon
+				mouseX = e.button.x;
+				mouseY = e.button.y;
+
+				//Resume Game
+				if ((mouseX > resumeGame.getSprite()->getX()) && (mouseX < resumeGame.getSprite()->getX() + resumeGame.getSprite()->getWidth()) && (mouseY > resumeGame.getSprite()->getY()) && (mouseY < resumeGame.getSprite()->getY() + resumeGame.getSprite()->getHeight())) {
+					gameState = 1;
+					paused = false;
+					break;
+				}
+				else if ((mouseX > mainMenu.getSprite()->getX()) && (mouseX < mainMenu.getSprite()->getX() + mainMenu.getSprite()->getWidth()) && (mouseY > mainMenu.getSprite()->getY()) && (mouseY < mainMenu.getSprite()->getY() + mainMenu.getSprite()->getHeight())) {
+					gameState = 0;
+					paused = false;
+					break;
+				}
+			}
+
+		}
+		else if (e.type == SDL_KEYDOWN) { //or close menu with escape again
+			switch (e.key.keysym.sym) {
+
+			case SDLK_ESCAPE:
+				gameState = 1;
+				paused = false;
+				break;
+			}
+		}
+
+		//SDL_RenderClear(gRenderer);
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
+		SDL_RenderFillRect(gRenderer, &pauseBox);
+
+		//Draw to screen
+		pauseLabel.draw(gRenderer, SCREEN_WIDTH/2 - 126, 200);
+		resumeGame.getSprite()->draw(gRenderer, SCREEN_WIDTH/2 - 110, 300);
+		mainMenu.getSprite()->draw(gRenderer, SCREEN_WIDTH/2 - 152, 400);
+
+		SDL_RenderPresent(gRenderer);
+	}
+
 }
 
 // Detect collision of Entity with Gameworld (edge of screen)
