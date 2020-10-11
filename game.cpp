@@ -285,7 +285,9 @@ void Game::getUserInput(Entity* player) {
 		switch (e.key.keysym.sym) {
 		
 		case SDLK_ESCAPE:
-			pauseMenu();
+			if(!in_air)
+				pauseMenu(gameState);
+			break;
 		}
 	}
 
@@ -497,16 +499,13 @@ void Game::loadMainMenu() {
 }
 
 //Pauses Main game loop and brings up Pause menu
-void Game::pauseMenu()
+void Game::pauseMenu(int prevGameState)
 {
 	//Mouse Coordinate Variables
 	int mouseX = 0, mouseY = 0;
 
 	// gamestate is paused (2)
 	gameState = 2;
-
-	// paused variable
-	bool paused = true;
 
 	//Pause menu sprites
 	//Sprite border(0, 0, );
@@ -517,7 +516,7 @@ void Game::pauseMenu()
 	SDL_Rect pauseBox = {SCREEN_WIDTH/2 - 163, 190, 325, 300};
 
 	//Pause menu loop
-	while (running && paused) {
+	while (running) {
 		
 		//Poll to see if we close the game at any time
 		SDL_PollEvent(&e);
@@ -533,13 +532,15 @@ void Game::pauseMenu()
 
 				//Resume Game
 				if ((mouseX > resumeGame.getSprite()->getX()) && (mouseX < resumeGame.getSprite()->getX() + resumeGame.getSprite()->getWidth()) && (mouseY > resumeGame.getSprite()->getY()) && (mouseY < resumeGame.getSprite()->getY() + resumeGame.getSprite()->getHeight())) {
-					gameState = 1;
-					paused = false;
+					if (prevGameState == 1)
+						gameState = 1;
+					else
+						gameState = 3;
 					break;
 				}
 				else if ((mouseX > mainMenu.getSprite()->getX()) && (mouseX < mainMenu.getSprite()->getX() + mainMenu.getSprite()->getWidth()) && (mouseY > mainMenu.getSprite()->getY()) && (mouseY < mainMenu.getSprite()->getY() + mainMenu.getSprite()->getHeight())) {
+					SDL_Delay(250);
 					gameState = 0;
-					paused = false;
 					break;
 				}
 			}
@@ -737,24 +738,28 @@ void Game::runDebug() {
 	Background debugBg(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
 	Entity player("data/player.spr", x_pos, y_pos, 3, 0, gRenderer);
 
-	//Sprite groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
-	Sprite platform(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
-	std::vector<Tile*> tiles;
+	//Tiles to add to tilemap
+	Tile groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
+	Tile platformTile(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 
-	//Create temporary standalone tile
-	Tile platformTile(&platform);
+	// Create Tile vector for tilemap contruction and push our temporary tile
+	std::vector<Tile*> tiles;
+	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
-	//Create tilemap
+	//Initialize tilemaps
 	Tilemap t("data/tilemaps/tilemap0.txt", tiles);
 	int** tileArray = t.getTileMap();
 
 	//Main loop
-	while (running) {
+	while (running && gameState == 3) {
 		//Delta time calculation
 		curTick = SDL_GetTicks();
 		delta_time = (curTick - lastTick) / 1000.0;
 		lastTick = curTick;
+
+		//Anim frame tracker
+		curAnim = SDL_GetTicks();
 
 		//Quit game
 		while (SDL_PollEvent(&e) != 0) {
@@ -800,7 +805,10 @@ void Game::runDebug() {
 			{
 				if (tileArray[i][j] == 1)
 				{
-					platformTile.getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
+					t.getTile(0)->getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
+				}
+				else if (tileArray[i][j] == 2) {
+					t.getTile(1)->getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
 				}
 			}
 		}
