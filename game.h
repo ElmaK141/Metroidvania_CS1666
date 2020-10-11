@@ -40,6 +40,7 @@ class Game {
 		SDL_Texture* rollCredits();
 		void loadStartScreen();	//Loads the start screen
 		void loadMainMenu();	//Loads the main menu
+		void pauseMenu();		//Pause game and bring up Pause menu
 		void runGame();			//Run the game
 		void runDebug();		//Run debug
 		void getUserInput(Entity* player);		//Handle input from the user
