@@ -545,15 +545,17 @@ void Game::pauseMenu()
 			}
 
 		}
+		/*
 		else if (e.type == SDL_KEYDOWN) { //or close menu with escape again
 			switch (e.key.keysym.sym) {
 
 			case SDLK_ESCAPE:
 				gameState = 1;
-				paused = false;
+				pauseM = false;
 				break;
 			}
 		}
+		*/
 
 		//SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
