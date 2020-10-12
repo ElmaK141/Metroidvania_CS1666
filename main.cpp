@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 
 	Game g(1280, 720);
 
-	g.runGame();
+	g.gameLoop();
 
 	SDL_Quit();
 	return 0;
