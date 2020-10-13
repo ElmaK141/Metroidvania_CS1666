@@ -18,12 +18,14 @@ constexpr int LEVEL_LEN = 3360;
 bool in_air = true;
 double gravity = 0.03 * 3600;
 double jump_strength = 1500;
-double max_x_speed = 500;	//max velocity, prevents weird speed issues
-double max_y_speed = 1000;	//Higher in y directions to give more weight to player
+double max_x_walking_speed = 500;	//max velocity, prevents weird speed issues
+double max_y_walking_speed = 1000;	//Higher in y directions to give more weight to player
 double acceleration = 250; //Player acceleration
 bool grappling = false;
 int grappleX;
 int grappleY;
+double grapple_strength = 0.03 * 3600 * 1.75;
+double grapple_dampen = 0.97;
 
 //Init Stuff for delta_time
 Uint32 lastTick = 0;
@@ -321,9 +323,7 @@ void Game::getUserInput(Entity* player) {
 		}
 	}
 
-	if(grappling){
-		player->setPosition(grappleX, grappleY);
-	}
+	
 
 	//Holding W
 	if (keystate[SDL_SCANCODE_W]) {
@@ -351,8 +351,13 @@ void Game::getUserInput(Entity* player) {
 			}
 		}
 
-		if (player->getXVel() > -max_x_speed) //as long as we don't exceed max speed, change velocity
-			player->setXVel(fmin(player->getXVel() - acceleration, -max_x_speed));
+		if (player->getXVel() > -max_x_walking_speed) //as long as we don't exceed max speed, change velocity
+			player->setXVel(fmin(player->getXVel() - acceleration, -max_x_walking_speed));
+	}
+	else if(!in_air){
+		if (player->getXVel() < 0) {
+			player->setXVel(fmin(0, player->getXVel() + acceleration));
+		}
 	}
 
 	//Holding S
@@ -381,9 +386,15 @@ void Game::getUserInput(Entity* player) {
 			}
 		}
 
-		if (player->getXVel() < max_x_speed) //as long as we don't exceed max speed, change velocity
-			player->setXVel(fmax(player->getXVel() + acceleration, max_x_speed));
+		if (player->getXVel() < max_x_walking_speed) //as long as we don't exceed max speed, change velocity
+			player->setXVel(fmax(player->getXVel() + acceleration, max_x_walking_speed));
 	}
+	else if(!in_air){
+		if (player->getXVel() > 0) {
+			player->setXVel(fmax(0, player->getXVel() - acceleration));
+		}
+	}
+	
 
 	//Holding Spacebar
 	if (keystate[SDL_SCANCODE_SPACE]) {
@@ -403,13 +414,17 @@ void Game::getUserInput(Entity* player) {
 	if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
 		if(player->getFrameIndex() != 0)
 			player->setCurrFrame(1);
+	}
+	
+	if(grappling){
 		
-		if (player->getXVel() > 0) {
-			player->setXVel(fmax(0, player->getXVel() - acceleration));
-		}
-		else if (player->getXVel() < 0) {
-			player->setXVel(fmin(0, player->getXVel() + acceleration));
-		}
+		double xComp = (grappleX - player->getXPosition()) / sqrt((grappleX - player->getXPosition()) * (grappleX - player->getXPosition()) + (grappleY - player->getYPosition()) * (grappleY - player->getYPosition()));
+		double yComp = (grappleY - player->getYPosition()) / sqrt((grappleX - player->getXPosition()) * (grappleX - player->getXPosition()) + (grappleY - player->getYPosition()) * (grappleY - player->getYPosition()));
+	
+		//Apply grapple force
+		player->setXVel((player->getXVel() + xComp * grapple_strength) * grapple_dampen);
+		player->setYVel((player->getYVel() + yComp * grapple_strength) * grapple_dampen);
+		
 	}
 }
 
@@ -417,7 +432,7 @@ void Game::getUserInput(Entity* player) {
 void Game::handleCollision(Entity* player, Tilemap* t) {
 	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time);
 	bool falling = false;
-	if (!on_solid && max_y_speed > player->getYVel()) // while in air
+	if (!on_solid && max_y_walking_speed > player->getYVel()) // while in air
 	{
 		player->setYVel(player->getYVel() + gravity);
 		in_air = true;
