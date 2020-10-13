@@ -21,6 +21,9 @@ double jump_strength = 1500;
 double max_x_speed = 500;	//max velocity, prevents weird speed issues
 double max_y_speed = 1000;	//Higher in y directions to give more weight to player
 double acceleration = 250; //Player acceleration
+bool grappling = false;
+int grappleX;
+int grappleY;
 
 //Init Stuff for delta_time
 Uint32 lastTick = 0;
@@ -34,6 +37,9 @@ int lastAnimFrame = 3;
 
 //Event pointer
 SDL_Event e;
+
+//scroll offset, needs to be used in a few places
+int scroll_offset;
 
 //Game State Tracker
 //0 = main menu, 1 = game, 2 = pause menu, 3 = debug
@@ -104,7 +110,7 @@ void Game::gameLoop()
 //Run the main game code
 void Game::runGame() {
 	//Camera-related variables
-	int scroll_offset = 0;
+	scroll_offset = 0;
 	int rem_bg = 0;
 	int rem_tile = 0;
 	int lthird = (SCREEN_WIDTH / 3);
@@ -279,6 +285,9 @@ void Game::runGame() {
 void Game::getUserInput(Entity* player) {
 	//User input
 	const Uint8* keystate = SDL_GetKeyboardState(nullptr);
+	
+	//Mouse Coordinate Variables
+	int mouseXinWorld = 0, mouseYinWorld = 0;
 
 	//Pause game and bring up Pause Menu (with esc)
 	if (e.type == SDL_KEYDOWN) { //detect escape keydown
@@ -289,6 +298,31 @@ void Game::getUserInput(Entity* player) {
 				pauseMenu(gameState);
 			break;
 		}
+	}
+	
+	if (SDL_BUTTON(SDL_BUTTON_LEFT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
+		mouseXinWorld += scroll_offset;
+		
+		
+		
+		if(!grappling){
+			//std::cout << "pressed" << std::endl;
+			grappleX = mouseXinWorld;
+			grappleY = mouseYinWorld;
+			
+			grappling = true;
+		}
+	}
+	else{
+		
+		if(grappling){
+			//std::cout << "unpressed" << std::endl;
+			grappling = false;
+		}
+	}
+
+	if(grappling){
+		player->setPosition(grappleX, grappleY);
 	}
 
 	//Holding W
