@@ -133,6 +133,7 @@ void Game::runGame() {
 
 	//Initialize tilemaps
 	Tilemap t0("data/tilemaps/tilemap0.txt", tiles);
+	//Tilemap t0(210, 45, tiles);
 	int** tileArray0 = t0.getTileMap();
 	
 	//Temporarily the exact same tilemap
