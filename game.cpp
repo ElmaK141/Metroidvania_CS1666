@@ -426,9 +426,10 @@ void Game::getUserInput(Entity* player) {
 void Game::handleCollision(Entity* player, Tilemap* t) {
 	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time);
 	bool falling = false;
-	if (!on_solid && player->getPhysics()->getMaxY() > player->getYVel()) // while in air
+	if (!on_solid) // while in air
 	{
-		player->setYVel(player->getYVel() + gravity);
+		if(max_y_walking_speed > player->getYVel())
+			player->setYVel(player->getYVel() + gravity);
 		player->getPhysics()->setAirState(true);
 		//player.setCurrFrame(1);
 	}
@@ -623,51 +624,70 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	int pHeight = ent.getCurrFrame().getHeight();
 	int pWidth = ent.getCurrFrame().getWidth();		//get player height, width, & positions
 
-	int yBlockD = (int)(floor((pPosY + pHeight) / 16)) + 1;
-	int yBlockU = (int)(floor(pPosY / 16)) - 1;
-	int xBlockL = (int)(floor(pPosX / 16)) - 1;					//gather adjacent block locations
-	int xBlockR = (int)(floor((pPosX + pWidth) / 16)) + 1;		//including left, right, up, down
+	int yBlockD = (int)(((pPosY + pHeight) / 16)) + 1;
+	int yBlockU = (int)((pPosY / 16)) - 1;
+	int xBlockL = (int)((pPosX / 16)) - 1;					//gather adjacent block locations
+	int xBlockR = (int)(((pPosX + pWidth) / 16)) + 1;		//including left, right, up, down
 	bool land = false;			//determines if you've landed on something			
 
 	ent.setPosition(ent.getXPosition() + x_vel, ent.getYPosition() + y_vel);	//set position
 
-	if (y_vel > 0) {
-		for (int xAdjust = 1; xAdjust <= xBlockR - xBlockL; xAdjust++)
+	if (y_vel >= 0) {
+		for (int xAdjust = 1; xAdjust < xBlockR - xBlockL; xAdjust++)
 		{	//for every block under the player's width
 			if (yBlockD <= 44)
 			{	//if you'd pass a solid block
-				if (pPosY + pHeight + y_vel >= yBlockD * 16 - 1 && tilemap[yBlockD][xBlockR - xAdjust] != 0) 
+				if (pPosY + pHeight + y_vel > yBlockD * 16 - 1 && tilemap[yBlockD][xBlockR - xAdjust] != 0) 
 				{	//set position to above the block
 					ent.setPosition(ent.getXPosition(), yBlockD * 16 - pHeight - 1);
+					pPosY = ent.getYPosition();
 					land = true;
+					break;
 				}
 			}
 			else //if you're trying to fall through the bottom of the screen
+			{
 				ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - pHeight - 17);
+				pPosY = ent.getYPosition();
+				land = true;
+				break;
+			}
 		}
 	}
 
 	if (y_vel < 0) {
-		for (int xAdjust = 1; xAdjust <= xBlockR - xBlockL; xAdjust++)
+		for (int xAdjust = 1; xAdjust < xBlockR - xBlockL; xAdjust++)
 		{	//bonk head on blocks above
-			if (pPosY + y_vel <= yBlockU * 16 + 16 && tilemap[yBlockU][xBlockR - xAdjust] != 0)
-				ent.setPosition(ent.getXPosition(), yBlockU * 16 + 17);
+			if (pPosY + y_vel < yBlockU * 16 + 16 && tilemap[yBlockU][xBlockR - xAdjust] != 0)
+			{
+				ent.setPosition(ent.getXPosition(), yBlockU * 16 + 16);
+				pPosY = ent.getYPosition();
+				break;
+			}
 		}
 	}
 
 	if (x_vel > 0) {
-		for (int yAdjust = 1; yAdjust <= yBlockD - yBlockU; yAdjust++)
+		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	//hit blocks to your right accounting for player height
 			if (pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && tilemap[yBlockD - yAdjust][xBlockR] != 0)
+			{
 				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
+				pPosX = ent.getXPosition();
+				break;
+			}
 		}
 	}
 
 	if (x_vel < 0) {
-		for (int yAdjust = 1; yAdjust <= yBlockD - yBlockU; yAdjust++)
+		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	//hit blocks to your left accounting for player height
 			if (pPosX + x_vel <= xBlockL * 16 + 16 && tilemap[yBlockD - yAdjust][xBlockL] != 0)
+			{
 				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
+				pPosX = ent.getXPosition();
+				break;
+			}
 		}
 	}
 
