@@ -428,7 +428,7 @@ void Game::handleCollision(Entity* player, Tilemap* t) {
 	bool falling = false;
 	if (!on_solid) // while in air
 	{
-		if(max_y_walking_speed > player->getYVel())
+		if(player->getPhysics()->getMaxY() > player->getYVel())
 			player->setYVel(player->getYVel() + gravity);
 		player->getPhysics()->setAirState(true);
 		//player.setCurrFrame(1);
