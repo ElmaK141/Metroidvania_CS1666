@@ -111,38 +111,76 @@ void Game::runGame() {
 	int lthird = (SCREEN_WIDTH / 3);
 	int rthird = (2 * SCREEN_WIDTH / 3);
 
-	//Flip variable for flipping player sprite
-	SDL_RendererFlip flip = SDL_FLIP_NONE;
-
-	//Determine players starting position (middle of background, on the left side of world)
-	double x_pos = SCREEN_WIDTH / 2.0;
-	double y_pos = SCREEN_HEIGHT / 2.0 - 145.0;
-
-	//Define Graphical Objects
+	//Define Backgrounds
 	Background bg1(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
 	Background bg2(0, 0, 1280, 720, "assets/backgrounds/background2.png", gRenderer);
-	Physics plp(1500, 500, 1000, 250);
-	Entity player("data/player.spr", x_pos, y_pos, 3, 0,&plp, gRenderer);		//0 is flag for player entity
 
 	//Tiles to add to tilemap
 	Tile groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 	Tile platformTile(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
-		
+
 	// Create Tile vector for tilemap contruction and push our temporary tile
 	std::vector<Tile*> tiles;
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
-	//Initialize tilemaps
-	Tilemap t0("data/tilemaps/tilemap0.txt", tiles);
+	//Generate First Room Tilemap
+	Tilemap t0;
+	switch (rand() % 3) {
+		case 0:
+			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr0.txt", tiles));
+			break;
+		case 1:
+			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr1.txt", tiles));
+			break;
+		case 2:
+			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr2.txt", tiles));
+			break;
+	}
 	int** tileArray0 = t0.getTileMap();
-	
-	//Temporarily the exact same tilemap
-	Tilemap t1("data/tilemaps/tilemap1.txt", tiles);
+
+	//Generate Second Room Tilemap
+	Tilemap t1;
+	switch (rand() % 3) {
+	case 0:
+		t1 = *(new Tilemap("data/tilemaps/procgen/lExit/tml0.txt", tiles));
+		break;
+	case 1:
+		t1 = *(new Tilemap("data/tilemaps/procgen/lExit/tml1.txt", tiles));
+		break;
+	case 2:
+		t1 = *(new Tilemap("data/tilemaps/procgen/lExit/tml2.txt", tiles));
+		break;
+	}
 	int** tileArray1 = t1.getTileMap();
 
 	//0 is first room, 1 is second room
 	int roomNum = 0;
+
+	//Define player Position
+	double x_pos = SCREEN_WIDTH / 2.0;
+	double y_pos = SCREEN_HEIGHT / 2.0 - 145.0;
+
+	//Find player spawn point
+	for (int i = 0; i < t0.getMaxHeight(); i++)
+	{
+		for (int j = 0; j < t0.getMaxWidth(); j++)
+		{
+			if (tileArray0[i][j] == 3)
+			{
+				x_pos = j * 16.0;
+				y_pos = i * 16.0;
+			}
+		}
+	}
+
+	//Define player entity
+	SDL_RendererFlip flip = SDL_FLIP_NONE;
+	Physics plp(1500, 500, 1000, 250);
+	Entity player("data/player.spr", x_pos, y_pos, 3, 0, &plp, gRenderer);		//0 is flag for player entity
+
+	//"Load" in the game by pausing to avoid buffering in the gappling hook input
+	SDL_Delay(100);
 
 	//Run the Game
 	while (running && gameState == 1) {
@@ -634,7 +672,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 		{	//for every block under the player's width
 			if (yBlockD <= 44)
 			{	//if you'd pass a solid block
-				if (pPosY + pHeight + y_vel > yBlockD * 16 - 1 && tilemap[yBlockD][xBlockR - xAdjust] != 0) 
+				if (pPosY + pHeight + y_vel > yBlockD * 16 - 1 && (tilemap[yBlockD][xBlockR - xAdjust] != 0 && tilemap[yBlockD][xBlockR - xAdjust] != 3)) 
 				{	//set position to above the block
 					ent.setPosition(ent.getXPosition(), yBlockD * 16 - pHeight - 1);
 					pPosY = ent.getYPosition();
@@ -655,7 +693,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	if (y_vel < 0) {
 		for (int xAdjust = 1; xAdjust < xBlockR - xBlockL; xAdjust++)
 		{	//bonk head on blocks above
-			if (pPosY + y_vel < yBlockU * 16 + 16 && tilemap[yBlockU][xBlockR - xAdjust] != 0)
+			if (pPosY + y_vel < yBlockU * 16 + 16 && (tilemap[yBlockU][xBlockR - xAdjust] != 0 && tilemap[yBlockU][xBlockR - xAdjust] != 3))
 			{
 				ent.setPosition(ent.getXPosition(), yBlockU * 16 + 16);
 				pPosY = ent.getYPosition();
@@ -668,7 +706,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	if (x_vel > 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	//hit blocks to your right accounting for player height
-			if (pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && tilemap[yBlockD - yAdjust][xBlockR] != 0)
+			if (pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3))
 			{
 				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -680,7 +718,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	if (x_vel < 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	//hit blocks to your left accounting for player height
-			if (pPosX + x_vel <= xBlockL * 16 + 16 && tilemap[yBlockD - yAdjust][xBlockL] != 0)
+			if (pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3))
 			{
 				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
 				pPosX = ent.getXPosition();

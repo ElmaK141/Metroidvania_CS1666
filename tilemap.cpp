@@ -2,10 +2,16 @@
 #include <iostream>
 #include <fstream>
 
-// See tilemap.h for higher level contex
+// See tilemap.h for higher level context
 /////////////////////////
 // Public Constructors //
 /////////////////////////
+
+// Default Constructor (does nothing for now)
+Tilemap::Tilemap()
+{
+
+}
 
 // Initializes a tilemap object by passing the path
 // to a file representing the tilemap as well as a vector
@@ -19,11 +25,11 @@ Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles)
 	this->xMax = 0;			// Default placeholder
 	this->yMax = 0;			// Default placeholder
 	this->tileArray = tiles;
+
 	// Use the path to load in the tilemap's
 	// text representation and populate the
 	// tileMap array
 	this->generateTilemap(tilemap);
-	// this->assignSprites();
 }
 ///////////////////////
 // Private Functions //
