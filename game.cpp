@@ -317,11 +317,14 @@ void Game::getUserInput(Entity* player) {
 		}
 	}
 
-	
-
 	//Holding W
 	if (keystate[SDL_SCANCODE_W]) {
 
+	}
+	
+	//Holding S
+	if (keystate[SDL_SCANCODE_S]) {
+		player->setCurrFrame(0);
 	}
 
 	//Holding A
@@ -348,17 +351,8 @@ void Game::getUserInput(Entity* player) {
 		if (player->getXVel() > -player->getPhysics()->getMaxX()) //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmin(player->getXVel() - player->getPhysics()->getAcceleration(), -player->getPhysics()->getMaxX()));
 	}
-	else if(!player->getPhysics()->inAir()){
-		if (player->getXVel() < 0) {
-			player->setXVel(fmin(0, player->getXVel() + player->getPhysics()->getAcceleration()));
-		}
-	}
 
-	//Holding S
-	if (keystate[SDL_SCANCODE_S]) {
-		player->setCurrFrame(0);
-	}
-
+	
 	//Holding D
 	if (keystate[SDL_SCANCODE_D]) {
 		
@@ -383,8 +377,12 @@ void Game::getUserInput(Entity* player) {
 		if (player->getXVel() < player->getPhysics()->getMaxX()) //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
 	}
-	else if(!player->getPhysics()->inAir()){
-		if (player->getXVel() > 0) {
+	//TODO
+	if (!player->getPhysics()->inAir() || (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D]) && player->getPhysics()->inAir())) {
+		if (player->getXVel() < 0) {
+			player->setXVel(fmin(0, player->getXVel() + player->getPhysics()->getAcceleration()));
+		}
+		else if (player->getXVel() > 0) {
 			player->setXVel(fmax(0, player->getXVel() - player->getPhysics()->getAcceleration()));
 		}
 	}
@@ -425,7 +423,6 @@ void Game::getUserInput(Entity* player) {
 //Handle the Collision
 void Game::handleCollision(Entity* player, Tilemap* t) {
 	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time);
-	bool falling = false;
 	if (!on_solid) // while in air
 	{
 		if(player->getPhysics()->getMaxY() > player->getYVel())
@@ -662,6 +659,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 			{
 				ent.setPosition(ent.getXPosition(), yBlockU * 16 + 16);
 				pPosY = ent.getYPosition();
+				ent.setYVel(-y_vel);
 				break;
 			}
 		}
