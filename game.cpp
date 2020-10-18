@@ -123,18 +123,22 @@ void Game::runGame() {
 	std::vector<Tile*> tiles;
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
+	//Did this twice so for the time being we dont get a out of bounds vector error, this is not an error
+	//with implementation it just needs some placeholder entries for right now.. so ya 
+	tiles.push_back(&groundTile);
+	tiles.push_back(&platformTile);
 
 	//Generate First Room Tilemap
 	Tilemap t0;
 	switch (rand() % 3) {
 		case 0:
-			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr0.txt", tiles));
+			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr0.txt", tiles, &bg2));
 			break;
 		case 1:
-			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr1.txt", tiles));
+			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr1.txt", tiles, &bg2));
 			break;
 		case 2:
-			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr2.txt", tiles));
+			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr2.txt", tiles, &bg2));
 			break;
 	}
 	int** tileArray0 = t0.getTileMap();
@@ -143,13 +147,13 @@ void Game::runGame() {
 	Tilemap t1;
 	switch (rand() % 3) {
 	case 0:
-		t1 = *(new Tilemap("data/tilemaps/procgen/lExit/tml0.txt", tiles));
+		t1 = *(new Tilemap("data/tilemaps/procgen/lExit/tml0.txt", tiles, &bg1));
 		break;
 	case 1:
-		t1 = *(new Tilemap("data/tilemaps/procgen/lExit/tml1.txt", tiles));
+		t1 = *(new Tilemap("data/tilemaps/procgen/lExit/tml1.txt", tiles, &bg1));
 		break;
 	case 2:
-		t1 = *(new Tilemap("data/tilemaps/procgen/lExit/tml2.txt", tiles));
+		t1 = *(new Tilemap("data/tilemaps/procgen/lExit/tml2.txt", tiles, &bg1));
 		break;
 	}
 	int** tileArray1 = t1.getTileMap();
@@ -255,15 +259,17 @@ void Game::runGame() {
 		rem_bg = scroll_offset % SCREEN_WIDTH;
 		rem_tile = scroll_offset % LEVEL_LEN;
 		if (roomNum == 0) {
-			bg1.getSprite()->draw(gRenderer, -rem_bg, 0);
-			bg1.getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
+			t0.getBackground()->getSprite()->draw(gRenderer, -rem_bg, 0);
+			//bg1.getSprite()->draw(gRenderer, -rem_bg, 0);
+			t0.getBackground()->getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
+			//bg1.getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
 
 			// Temporary: Render the tilemap using the stored tile vector
 			// NOTE: Do not even try to read 0's right now to avoid having
 			// 		 the tilemap.txt at this point in time - JTP
 			// NOTE: Temporary build: Need to fix implementation of tile vector
 			//		 in tilemap implementation.
-			for (int i = 0; i < t0.getMaxHeight(); i++)
+			/*for (int i = 0; i < t0.getMaxHeight(); i++)
 			{
 				for (int j = 0; j < t0.getMaxWidth(); j++)
 				{
@@ -275,12 +281,15 @@ void Game::runGame() {
 						t0.getTile(1)->getTileSprite()->draw(gRenderer, -rem_tile + (j * 16), i * 16);
 					}
 				}
-			}
+			}*/
+			t0.drawTilemap(gRenderer, rem_tile);
 		}
 		else if (roomNum == 1) {
-			bg2.getSprite()->draw(gRenderer, -rem_bg, 0);
+			t1.getBackground()->getSprite()->draw(gRenderer, -rem_bg, 0);
+			t1.getBackground()->getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
+			/*bg2.getSprite()->draw(gRenderer, -rem_bg, 0);
 			bg2.getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
-
+			*/
 			for (int i = 0; i < t1.getMaxHeight(); i++)
 			{
 				for (int j = 0; j < t1.getMaxWidth(); j++)
@@ -294,6 +303,7 @@ void Game::runGame() {
 					}
 				}
 			}
+			//t1.drawTilemap(gRenderer, rem_bg);
 		}
 
 
@@ -848,7 +858,7 @@ void Game::runDebug() {
 	tiles.push_back(&platformTile);
 
 	//Initialize tilemaps
-	Tilemap t("data/tilemaps/tilemap0.txt", tiles);
+	Tilemap t("data/tilemaps/tilemap0.txt", tiles, &debugBg);
 	int** tileArray = t.getTileMap();
 
 	//Main loop
