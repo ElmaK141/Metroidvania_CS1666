@@ -2,7 +2,7 @@
 #include <sstream>
 
 
-Entity::Entity(std::string spriteData, double xPos, double yPos, int scale, int f, SDL_Renderer* context) {
+Entity::Entity(std::string spriteData, double xPos, double yPos, int scale, int f, Physics* phys, SDL_Renderer* context) {
 
 	this->spriteFile = std::ifstream(spriteData);
 	this->context = context;
@@ -13,6 +13,7 @@ Entity::Entity(std::string spriteData, double xPos, double yPos, int scale, int 
 	this->y = yPos;
 	this->index = 0;
 	this->flag = f;
+	this->physics = phys;
 	
 	//Player
 	if (this->flag == 0) {
@@ -79,6 +80,11 @@ void Entity::createSprites() {
 
 int Entity::getFlag() {
 	return this->flag;
+}
+
+Physics* Entity::getPhysics()
+{
+	return this->physics;
 }
 
 void Entity::setXVel(double xVelo) {
