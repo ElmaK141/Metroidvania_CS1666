@@ -42,7 +42,7 @@ void Tilemap::drawTilemap(SDL_Renderer* render, int offset) {
 
 
 
-			if (this->tileMap[i][j] != 0) {
+			if (this->tileMap[i][j] != 0 && this->tileMap[i][j] != 3) {
 				this->tileArray[this->tileMap[i][j] - 1]->getTileSprite()->draw(render, -offset + (j * 16), i * 16);
 			}
 
