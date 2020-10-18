@@ -2,6 +2,7 @@
 #define _ENTITY_H_
 
 #include "sprite.h"
+#include "physics.h"
 
 #include <vector>
 #include <iostream>
@@ -10,7 +11,7 @@
 class Entity{
 	
 	public:
-		Entity(std::string spriteData, double xPos, double yPos, int scale, int f, SDL_Renderer* context);
+		Entity(std::string spriteData, double xPos, double yPos, int scale, int f, Physics* phys,SDL_Renderer* context);
 		~Entity();
 		
 		void setCurrFrame(int index);
@@ -32,6 +33,8 @@ class Entity{
 		bool getJump();
 
 		int getFlag();
+
+		Physics* getPhysics();
 	private:
 
 		void createSprites();
@@ -50,7 +53,7 @@ class Entity{
 		std::string assetLoc;
 		std::ifstream spriteFile;
 		std::vector<Sprite> frames;
-
+		Physics* physics;
 
 };
 
