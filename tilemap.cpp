@@ -1,4 +1,5 @@
 #include "tilemap.h"
+#include "platformInfo.h"
 #include <iostream>
 #include <fstream>
 
@@ -135,7 +136,11 @@ void Tilemap::generateTilemap() {
 	// Platforms should be height+1 off the ground
 	// Platforms cannot be in the same column within height+1
 
-	//idea: is this best to do recursively? - save time and computation to backtrack if needed?
+	// Generates a random layout of platforms of different sizes
+	PlatformInfo info(this->xMax, this->yMax);
+
+	//what if we post process with platforms?????
+	//We would iterate over +/- 1 on each rowLocation -> do sections of three in post
 
 	//init flag - by default it is an empty space
 	int flag = 0;
@@ -145,30 +150,14 @@ void Tilemap::generateTilemap() {
 	{
 		//for this row i (starting from the bottom)
 
-		// for this row, can we have platforms?
-			// if no: 0
-		// if yes: "random" generate and ensure:
-			// # of platforms in this row (and size of each, including if this fits the xMax)
-				//random number of platforms on this row
-				//of a random size each (within a range)
-				//at random but acceptable starting positions relative to each other
-			// ensure that they are "traversable" - for now, that there is no platform/wall above them that would prevent the player from going on them
-				//platform is not allowed if you cannot walk onto it
-				//OR reach it (hard)
-
-		// implementation:
-			//generate a random spread of tiles that will be located within reach
-			// try to generate several rows that will be reachable from the previous row
-		//idea: can we keep track of which rows are allowed to have platforms? for quick back checking?
-			// if i want to put platforms on row 20, where is the next row below this - can it be reached?
-			// dont even get me started on reaching in x and y
-
-		// in here, vars that determine the platforms for this row, which can be used with j below to place platforms
+		// see if we have platforms in this row (within +/- 1) -> rowLocations
+		//    if true: there may be a platform in this row
+		//    if false: there is not a platform in this row
+		//bool platFound = info.checkRow(i);
 
 		for (int j = 0; j < this->xMax; j++)
 		{
 			//for this row i and this col j
-
 
 			//check if this is an outer ring tile
 			if (i == 0 || i == this->yMax - 1 || j == 0 || j == this->xMax - 1) {
@@ -177,19 +166,12 @@ void Tilemap::generateTilemap() {
 			else if ((i > 0 && i < reach) || (i > this->yMax - 1 - playerH && i < this->yMax - 1)) { //these rows violate the wall/ceiling rules
 				flag = 0; //must be empty
 			}
-			else if (i == (this->yMax - 3 - playerH) && (j % 10 < 5)) { //test of some basic platforms
-				flag = 2;
-			}
+			//else if (i == (this->yMax - reach) && (j % 10 < 5)) { //test of some basic platforms
+			//	flag = 2;
+			//}
 			else {
 				flag = 0; //for now
 			}
-
-
-
-
-
-
-
 
 			// add flag to the array
 			this->tileMap[i][j] = flag;
@@ -198,6 +180,38 @@ void Tilemap::generateTilemap() {
 		//std::cout << "\n";
 
 	}
+
+	//not the most efficient tho
+	//for each row that we says has platforms
+	for (int i = 0; i < info.getNumRows(); i++) {
+
+		// the center row that we are placing around
+		int centerRow = info.getRowLocation(i);
+		// number of platforms in this row total
+		int numPlat = info.getNumPlatforms(i);
+		// X positions of each platform in this row
+		int* positions = info.getPositions(i);
+		// Y position of each platform in this row
+		int* heights = info.getHeights(i);
+		// Length of each platform in this row
+		int* lengths = info.getLengths(i);
+
+		// go across Array of platforms and implant them into tilemap
+		for (int j = 0; j < numPlat; j++) {
+			// j is current platform in our list
+			int x = positions[j];
+			int y = heights[j];
+			int len = lengths[j];
+
+			std::cout << x << " " << y << " " << len << " " << std::endl;
+			
+			for (int k = x; k < x+len; k++) {
+				//row y, col x, for len col
+				this->tileMap[y][k] = 2;
+			}
+		}
+	}
+
 }
 /////////////////////////
 // Getters and Setters //
