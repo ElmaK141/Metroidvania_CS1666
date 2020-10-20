@@ -19,7 +19,7 @@ class Tilemap
 		public:
 		// Public Constructors:
 			Tilemap();
-			Tilemap(std::string filename, std::vector<Tile*> tiles);
+			//Tilemap(std::string filename, std::vector<Tile*> tiles);
 			Tilemap(int xDim, int yDim, std::vector<Tile*> tiles, Background* bg);
 			Tilemap(std::string filename, std::vector<Tile*> tiles, Background* bg);
 		// Public Getters and Setters:			

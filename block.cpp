@@ -203,7 +203,7 @@ void Block::generateEmpty() {
 
 // generate a Middle block - this block has no walls, and is only platforms
 void Block::generateMiddle() {
-
+	generateEmpty();
 }
 
 // generate a Floor block - this block always has 1s on the floor at least *except if we do doors in the floor*
@@ -230,7 +230,24 @@ void Block::generateFloor() {
 
 // generate a Ceiling block - this block always has 1s on the ceiling at least *except if we do doors in the ceiling*
 void Block::generateCeiling() {
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
 
+			// if we are at the bottom 
+			if (i == top) {
+				// floor is 1
+				this->map[i][j] = 1;
+			}
+			else {
+				// else empty (for now)
+				this->map[i][j] = 0;
+			}
+
+			// we can add nuance here to create different types of floors with randomness
+
+
+		}
+	}
 }
 
 // generate a WallL block - this block always has 1s on the left *except when it has a door*
@@ -268,7 +285,35 @@ void Block::generateWallL() {
 
 // generate a WallR block - this block always has 1s on the right *except when it has a door*
 void Block::generateWallR() {
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
 
+			//Leftmost column - if not a door
+			if (j == right && !this->door) {
+				this->map[i][j] = 1;
+			}
+			else if (this->corner) { //if we are a corner
+				if (this->row == 0 && i == 0) { // ceiling of corner
+					this->map[i][j] = 1;
+				}
+				else if (this->row == this->numRow - 1 && i == bottom) {// floor of corner
+					this->map[i][j] = 1;
+				}
+				else { // not a floor/ceiling
+					this->map[i][j] = 0;
+				}
+			}
+			else { // otherwise
+
+				// this space would allow us to create partial platforms in this block
+
+				this->map[i][j] = 0;
+			}
+		}
+	}
+
+	// Initial set
+	this->set = 0;
 }
 
 // Check if block B is connected to this block
@@ -294,6 +339,12 @@ bool Block::checkBlock(Block* b) {
 		return false;
 	}
 }
+
+// returns this blocks internal tilemap
+int** Block::getBlockMap() {
+	return this->map;
+}
+
 
 // Getters and Setters
 

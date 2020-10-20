@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cmath>
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 #include "game.h"
 #include "sprite.h"
 #include "entity.h"
@@ -130,9 +132,12 @@ void Game::runGame() {
 
 	//Initialize tilemaps
 	//Tilemap t0("data/tilemaps/tilemap0.txt", tiles);
+	
+	// USE THIS FOR PROC GEN TILEMAP
 	//Tilemap t0(210, 45, tiles, &bg1);
 
 	//Generate First Room Tilemap
+	srand(time(NULL)); // seeds rand with time
 	Tilemap t0;
 	switch (rand() % 3) {
 		case 0:
@@ -145,9 +150,11 @@ void Game::runGame() {
 			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr2.txt", tiles, &bg1));
 			break;
 	}
+
 	int** tileArray0 = t0.getTileMap();
 
 	//Generate Second Room Tilemap
+	srand(time(NULL)); //seeds rand with time
 	Tilemap t1;
 	switch (rand() % 3) {
 	case 0:
