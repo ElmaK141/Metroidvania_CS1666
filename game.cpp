@@ -128,6 +128,10 @@ void Game::runGame() {
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
+	//Initialize tilemaps
+	//Tilemap t0("data/tilemaps/tilemap0.txt", tiles);
+	//Tilemap t0(210, 45, tiles, &bg1);
+
 	//Generate First Room Tilemap
 	Tilemap t0;
 	switch (rand() % 3) {
@@ -358,6 +362,21 @@ void Game::getUserInput(Entity* player) {
 		}
 	}
 
+	//Holding E
+	if (keystate[SDL_SCANCODE_E] && player->getShot())
+	{/*Only allow one shot at a time*/
+		/*
+		//Emil
+		player->setShot(false);
+		// set the start position of projectile to be where the user is
+		//only making horizontal projectile
+		player->setPX(player->getXPosition());
+		player->setPY(player->getYPosition());
+		player->setPVel(-1);
+		player->getCurrFrame().draw(gRenderer, player->getPX() - scroll_offset, player->getPY());
+		*/
+	}
+
 	//Holding W
 	if (keystate[SDL_SCANCODE_W]) {
 
@@ -418,7 +437,7 @@ void Game::getUserInput(Entity* player) {
 		if (player->getXVel() < player->getPhysics()->getMaxX()) //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
 	}
-	//TODO
+	
 	if (!player->getPhysics()->inAir() || (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D]) && player->getPhysics()->inAir())) {
 		if (player->getXVel() < 0) {
 			player->setXVel(fmin(0, player->getXVel() + player->getPhysics()->getAcceleration()));
@@ -463,6 +482,16 @@ void Game::getUserInput(Entity* player) {
 
 //Handle the Collision
 void Game::handleCollision(Entity* player, Tilemap* t) {
+	if (!player->getShot())
+	{/*If a shot has been fired*/
+		/*
+		 //EMIL
+		std::cout << player->getPX() << std::endl;
+		player->setPX(player->getPX() + player->getPVel());
+
+		// if collision, just set shoot to true
+		*/
+	}
 	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time);
 	if (!on_solid) // while in air
 	{
@@ -662,10 +691,10 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	int pHeight = ent.getCurrFrame().getHeight();
 	int pWidth = ent.getCurrFrame().getWidth();		//get player height, width, & positions
 
-	int yBlockD = (int)(((pPosY + pHeight) / 16)) + 1;
-	int yBlockU = (int)((pPosY / 16)) - 1;
-	int xBlockL = (int)((pPosX / 16)) - 1;					//gather adjacent block locations
-	int xBlockR = (int)(((pPosX + pWidth) / 16)) + 1;		//including left, right, up, down
+	int yBlockD = (int)((pPosY + pHeight) / 16) + 1;
+	int yBlockU = (int)(pPosY / 16) - 1;
+	int xBlockL = (int)(pPosX / 16) - 1;					//gather adjacent block locations
+	int xBlockR = (int)((pPosX + pWidth) / 16) + 1;		//including left, right, up, down
 	bool land = false;			//determines if you've landed on something			
 
 	ent.setPosition(ent.getXPosition() + x_vel, ent.getYPosition() + y_vel);	//set position
@@ -675,13 +704,19 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 		{	//for every block under the player's width
 			if (yBlockD <= 44)
 			{	//if you'd pass a solid block
-				if (pPosY + pHeight + y_vel > yBlockD * 16 - 1 && (tilemap[yBlockD][xBlockR - xAdjust] != 0 && tilemap[yBlockD][xBlockR - xAdjust] != 3)) 
-				{	//set position to above the block
-					ent.setPosition(ent.getXPosition(), yBlockD * 16 - pHeight - 1);
-					pPosY = ent.getYPosition();
-					land = true;
-					break;
+				for (int range = pPosY; range <= ent.getYPosition(); range += 16) //for EVERY block that is passed during movement
+				{
+					yBlockD = (int)(((range + pHeight) / 16)) + 1;
+					if (range + pHeight + y_vel > yBlockD * 16 - 1 && (tilemap[yBlockD][xBlockR - xAdjust] != 0 && tilemap[yBlockD][xBlockR - xAdjust] != 3))
+					{	//set position to above the block
+						ent.setPosition(ent.getXPosition(), yBlockD * 16 - pHeight - 1);
+						pPosY = ent.getYPosition();
+						land = true;
+						break;
+					}
 				}
+				if (land)
+					break;
 			}
 			else //if you're trying to fall through the bottom of the screen
 			{
@@ -693,14 +728,32 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 		}
 	}
 
+	bool bonk = false;
 	if (y_vel < 0) {
 		for (int xAdjust = 1; xAdjust < xBlockR - xBlockL; xAdjust++)
 		{	//bonk head on blocks above
-			if (pPosY + y_vel < yBlockU * 16 + 16 && (tilemap[yBlockU][xBlockR - xAdjust] != 0 && tilemap[yBlockU][xBlockR - xAdjust] != 3))
+			if (yBlockU >= 0)
 			{
-				ent.setPosition(ent.getXPosition(), yBlockU * 16 + 16);
+				for (int range = pPosY; range >= ent.getYPosition(); range -= 16) //for EVERY block that is passed during movement
+				{
+					yBlockU = (int)(range / 16) - 1;
+					if (range + y_vel <= yBlockU * 16 + 16 && (tilemap[yBlockU][xBlockR - xAdjust] != 0 && tilemap[yBlockU][xBlockR - xAdjust] != 3))
+					{
+						ent.setPosition(ent.getXPosition(), yBlockU * 16 + 16);
+						pPosY = ent.getYPosition();
+						ent.setYVel(0);
+						bonk = true;
+						break;
+					}
+				}
+				if (bonk)
+					break;
+			}
+			else
+			{
+				ent.setPosition(ent.getXPosition(), 17);
 				pPosY = ent.getYPosition();
-				ent.setYVel(-y_vel);
+				land = true;
 				break;
 			}
 		}

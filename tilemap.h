@@ -19,6 +19,8 @@ class Tilemap
 		public:
 		// Public Constructors:
 			Tilemap();
+			Tilemap(std::string filename, std::vector<Tile*> tiles);
+			Tilemap(int xDim, int yDim, std::vector<Tile*> tiles, Background* bg);
 			Tilemap(std::string filename, std::vector<Tile*> tiles, Background* bg);
 		// Public Getters and Setters:			
 			int getMaxWidth();
@@ -32,6 +34,7 @@ class Tilemap
 		private:
 		// Private Tilemap Functions:
 			void generateTilemap(std::string mapPath);
+			void generateTilemap();
 		// Private Tilemap Variables: 
 			int** tileMap;				// An int array representing the flags at every spot in our tilemap
 			Background* bg;
