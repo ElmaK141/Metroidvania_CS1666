@@ -362,6 +362,21 @@ void Game::getUserInput(Entity* player) {
 		}
 	}
 
+	//Holding E
+	if (keystate[SDL_SCANCODE_E] && player->getShot())
+	{/*Only allow one shot at a time*/
+		/*
+		//Emil
+		player->setShot(false);
+		// set the start position of projectile to be where the user is
+		//only making horizontal projectile
+		player->setPX(player->getXPosition());
+		player->setPY(player->getYPosition());
+		player->setPVel(-1);
+		player->getCurrFrame().draw(gRenderer, player->getPX() - scroll_offset, player->getPY());
+		*/
+	}
+
 	//Holding W
 	if (keystate[SDL_SCANCODE_W]) {
 
@@ -422,7 +437,7 @@ void Game::getUserInput(Entity* player) {
 		if (player->getXVel() < player->getPhysics()->getMaxX()) //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
 	}
-	//TODO
+	
 	if (!player->getPhysics()->inAir() || (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D]) && player->getPhysics()->inAir())) {
 		if (player->getXVel() < 0) {
 			player->setXVel(fmin(0, player->getXVel() + player->getPhysics()->getAcceleration()));
@@ -467,6 +482,16 @@ void Game::getUserInput(Entity* player) {
 
 //Handle the Collision
 void Game::handleCollision(Entity* player, Tilemap* t) {
+	if (!player->getShot())
+	{/*If a shot has been fired*/
+		/*
+		 //EMIL
+		std::cout << player->getPX() << std::endl;
+		player->setPX(player->getPX() + player->getPVel());
+
+		// if collision, just set shoot to true
+		*/
+	}
 	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time);
 	if (!on_solid) // while in air
 	{

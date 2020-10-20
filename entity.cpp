@@ -24,6 +24,8 @@ Entity::Entity(std::string spriteData, double xPos, double yPos, int scale, int 
 
 		//Can jump initially
 		this->canJump = true;
+		this->canShoot = true;
+
 	}
 }
 
@@ -110,4 +112,38 @@ void Entity::setJump(bool jump) {
 
 bool Entity::getJump() {
 	return this->canJump;
+}
+
+
+
+
+bool Entity::getShot() {
+	return this->canShoot;
+}
+
+void Entity::setShot(bool canShoot) {
+	this->canShoot = canShoot;
+}
+void Entity::setPX(double px) {
+	this->px = px;
+}
+
+void Entity::setPY(double py) {
+	this->py = py;
+}
+
+double Entity::getPX() {
+	return this->px;
+}
+
+double Entity::getPY() {
+	return this->py;
+}
+
+void Entity::setPVel(double pvel) {
+	this->pvel = pvel;
+}
+
+double Entity::getPVel() {
+	return this->pvel;
 }
