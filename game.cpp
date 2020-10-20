@@ -130,8 +130,8 @@ void Game::runGame() {
 
 	//Initialize tilemaps
 	//Tilemap t0("data/tilemaps/tilemap0.txt", tiles);
-	Tilemap t0(210, 45, tiles, &bg1);
-	/*
+	//Tilemap t0(210, 45, tiles, &bg1);
+
 	//Generate First Room Tilemap
 	Tilemap t0;
 	switch (rand() % 3) {
@@ -145,7 +145,6 @@ void Game::runGame() {
 			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr2.txt", tiles, &bg1));
 			break;
 	}
-	*/
 	int** tileArray0 = t0.getTileMap();
 
 	//Generate Second Room Tilemap

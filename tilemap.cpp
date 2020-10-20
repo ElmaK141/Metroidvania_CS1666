@@ -45,8 +45,6 @@ Tilemap::Tilemap(int xDim, int yDim, std::vector<Tile*> tiles, Background* bg) {
 
 	//generate tilemap without text file
 	this->generateTilemap();
-
-
 }
 
 void Tilemap::drawTilemap(SDL_Renderer* render, int offset) {
@@ -194,96 +192,8 @@ void Tilemap::generateTilemap() {
 	for (int i = 0; i < this->yMax; i++)
 		this->tileMap[i] = new int[this->xMax];
 
-	// Variables for restrictions	
-	int playerW = 3; //Side facing -> 3 tiles 
-	int playerH = 9; //Height -> 9 tiles high
-
-	//Jump -> 21 tiles high (head reaches tile 21
-	int reach = 10; //Jump -> from standing on 0, top of 11 (feet)
-	
-	//0 = empty    1 = walls    2 = platform
-
-	// RULES:
-	// Must always have a wall around the very outside edge of all 4 sides
-	// Platforms must be 2*reach tiles below the ceiling
-	// Platforms should be height+1 off the ground
-	// Platforms cannot be in the same column within height+1
-
-	// Generates a random layout of platforms of different sizes
-	PlatformInfo info(this->xMax, this->yMax);
-
-	//what if we post process with platforms?????
-	//We would iterate over +/- 1 on each rowLocation -> do sections of three in post
-
-	//init flag - by default it is an empty space
-	int flag = 0;
-	// Now that our tileMap array is initialized,
-	// generate a flag value at each index
-	for (int i = this->yMax-1; i > -1; i--)
-	{
-		//for this row i (starting from the bottom)
-
-		// see if we have platforms in this row (within +/- 1) -> rowLocations
-		//    if true: there may be a platform in this row
-		//    if false: there is not a platform in this row
-		//bool platFound = info.checkRow(i);
-
-		for (int j = 0; j < this->xMax; j++)
-		{
-			//for this row i and this col j
-
-			//check if this is an outer ring tile
-			if (i == 0 || i == this->yMax - 1 || j == 0 || j == this->xMax - 1) {
-				flag = 1; //always wall
-			}
-			else if ((i > 0 && i < reach) || (i > this->yMax - 1 - playerH && i < this->yMax - 1)) { //these rows violate the wall/ceiling rules
-				flag = 0; //must be empty
-			}
-			//else if (i == (this->yMax - reach) && (j % 10 < 5)) { //test of some basic platforms
-			//	flag = 2;
-			//}
-			else {
-				flag = 0; //for now
-			}
-
-			// add flag to the array
-			this->tileMap[i][j] = flag;
-			//std::cout << tileMap[i][j] << " ";
-		}
-		//std::cout << "\n";
-
-	}
-
-	//not the most efficient tho
-	//for each row that we says has platforms
-	for (int i = 0; i < info.getNumRows(); i++) {
-
-		// the center row that we are placing around
-		int centerRow = info.getRowLocation(i);
-		// number of platforms in this row total
-		int numPlat = info.getNumPlatforms(i);
-		// X positions of each platform in this row
-		int* positions = info.getPositions(i);
-		// Y position of each platform in this row
-		int* heights = info.getHeights(i);
-		// Length of each platform in this row
-		int* lengths = info.getLengths(i);
-
-		// go across Array of platforms and implant them into tilemap
-		for (int j = 0; j < numPlat; j++) {
-			// j is current platform in our list
-			int x = positions[j];
-			int y = heights[j];
-			int len = lengths[j];
-
-			std::cout << x << " " << y << " " << len << " " << std::endl;
-			
-			for (int k = x; k < x+len; k++) {
-				//row y, col x, for len col
-				this->tileMap[y][k] = 2;
-			}
-		}
-	}
+	// THIS WILL BE CHANGED WHEN BLOCK IS FINISHED OR CLOSER TO
+	// Here we would iterate through blockMap and convert our completed blockMap into a final tilemap
 
 }
 /////////////////////////
