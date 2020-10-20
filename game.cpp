@@ -724,8 +724,6 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 			{
 				ent.setPosition(ent.getXPosition(), 17);
 				pPosY = ent.getYPosition();
-				yBlockD = (int)(((pPosY + pHeight) / 16)) + 1;
-				yBlockU = (int)((pPosY / 16)) - 1;
 				land = true;
 				break;
 			}
