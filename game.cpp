@@ -128,6 +128,10 @@ void Game::runGame() {
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
+	//Initialize tilemaps
+	//Tilemap t0("data/tilemaps/tilemap0.txt", tiles);
+	//Tilemap t0(210, 45, tiles, &bg1);
+
 	//Generate First Room Tilemap
 	Tilemap t0;
 	switch (rand() % 3) {
