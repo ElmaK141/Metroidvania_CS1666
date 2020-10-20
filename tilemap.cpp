@@ -2,10 +2,16 @@
 #include <iostream>
 #include <fstream>
 
-// See tilemap.h for higher level contex
+// See tilemap.h for higher level context
 /////////////////////////
 // Public Constructors //
 /////////////////////////
+
+// Default Constructor (does nothing for now)
+Tilemap::Tilemap()
+{
+
+}
 
 // Initializes a tilemap object by passing the path
 // to a file representing the tilemap as well as a vector
@@ -13,18 +19,44 @@
 // within the  tilemap.
 // TO-DO: Automatic detection and passing of the relevant tiles
 //		  pertinent to our tileArray vector? (Proc Gen do you hear me???)
-Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles)
+Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles, Background* bg)
 {
 	// Assign values
 	this->xMax = 0;			// Default placeholder
 	this->yMax = 0;			// Default placeholder
 	this->tileArray = tiles;
+	this->bg = bg;
+
 	// Use the path to load in the tilemap's
 	// text representation and populate the
 	// tileMap array
 	this->generateTilemap(tilemap);
-	// this->assignSprites();
 }
+
+
+void Tilemap::drawTilemap(SDL_Renderer* render, int offset) {
+	
+	for (int i = 0; i < this->yMax; i++) {
+		for (int j = 0; j < this->xMax; j++) {
+
+
+
+
+			if (this->tileMap[i][j] != 0 && this->tileMap[i][j] != 3) {
+				this->tileArray[this->tileMap[i][j] - 1]->getTileSprite()->draw(render, -offset + (j * 16), i * 16);
+			}
+
+			/*if (this->tileMap[i][j] == 1) {
+				this->tileArray[0]->getTileSprite()->draw(render, -offset + (j * 16), i * 16);
+			}
+
+			if(this)*/
+
+		}
+	}
+
+}
+
 ///////////////////////
 // Private Functions //
 ///////////////////////
@@ -122,6 +154,12 @@ Tile* Tilemap::getTile(int index)
 {
 	return this->tileArray.at(index);
 }
+
+Background* Tilemap::getBackground() {
+	return this->bg;
+}
+
+
 /////////////////
 // Destructor  //
 /////////////////
