@@ -11,6 +11,7 @@
 class Entity{
 	
 	public:
+		Entity();
 		Entity(std::string spriteData, double xPos, double yPos, int scale, int f, Physics* phys,SDL_Renderer* context);
 		~Entity();
 		

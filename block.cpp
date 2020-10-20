@@ -55,10 +55,10 @@ void Block::initMetadata() {
 	this->set = -1;
 	
 	// by default we have no connections
-	this->connnectedRx = false;
-	this->connnectedRy = false;
+	/*this->connectedRx = false;
+	this->connectedRy = false;
 	this->connectedLx = false;
-	this->connectedLy = false;
+	this->connectedLy = false;*/
 
 	this->x = -1;
 	this->y = -1;
@@ -135,7 +135,7 @@ void Block::setType() {
 	if (this->col == 0) { // WallL
 		this->type = BlockType::WallL;
 		if (this->row == 0) {
-			this->corner = true;=
+			this->corner = true;
 		}
 		else if (this->row == this->numRow - 1) {
 			this->corner = true;
@@ -325,11 +325,11 @@ BlockType Block::getType() {
 */
 
 bool Block::isRight() {
-	return this->connnectedRight;
+	return this->connectedRight;
 }
 
 bool Block::isLeft() {
-	return this->connnectedLeft;
+	return this->connectedLeft;
 }
 
 bool Block::isAbove() {

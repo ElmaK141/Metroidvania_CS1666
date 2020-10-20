@@ -66,8 +66,8 @@ class Block
 		int set;
 
 		// Does this block connect to a block on any side of it?
-		bool connnectedRight;
-		bool connnectedLeft;
+		bool connectedRight;
+		bool connectedLeft;
 		bool connectedAbove;
 		bool connectedBelow;
 

@@ -1,5 +1,5 @@
 #include "tilemap.h"
-#include "platformInfo.h"
+//#include "platformInfo.h"
 #include <iostream>
 #include <fstream>
 
