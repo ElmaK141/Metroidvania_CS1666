@@ -1,4 +1,5 @@
 #include "tilemap.h"
+#include "platformInfo.h"
 #include <iostream>
 #include <fstream>
 
@@ -33,14 +34,23 @@ Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles, Background* bg)
 	this->generateTilemap(tilemap);
 }
 
+// Initializes a tile map based on given X and Y dimensions.
+// Does not use a text file, instead tries to create a Tilemap using randomness
+Tilemap::Tilemap(int xDim, int yDim, std::vector<Tile*> tiles, Background* bg) {
+	//Assign attributes
+	this->yMax = yDim;
+	this->xMax = xDim;
+	this->tileArray = tiles;
+	this->bg = bg;
+
+	//generate tilemap without text file
+	this->generateTilemap();
+}
 
 void Tilemap::drawTilemap(SDL_Renderer* render, int offset) {
 	
 	for (int i = 0; i < this->yMax; i++) {
 		for (int j = 0; j < this->xMax; j++) {
-
-
-
 
 			if (this->tileMap[i][j] != 0 && this->tileMap[i][j] != 3) {
 				this->tileArray[this->tileMap[i][j] - 1]->getTileSprite()->draw(render, -offset + (j * 16), i * 16);
@@ -127,6 +137,64 @@ void Tilemap::generateTilemap(std::string mapPath)
 	// Failed to open??
 	else
 		std::cout << "Error opening  tilemap file";
+}
+
+// Initialize and populate tileMap array without use of
+// an external text file.
+void Tilemap::generateTilemap() {
+	
+	//using block system
+	// so we have room size: 45x210
+	// we define a block that is: 9x10
+	// so any room/map is a 2d array of 5x21 blocks
+
+	// Floor
+	// Ceiling
+	// WallL
+	// WallR
+	// Corners*
+	// (Middle) Platforms
+	// Empty
+	
+	// blockMap = new Block* [5];
+	// for(int i = 0; i < 5; i++){
+	//     blockMap[i] = new Block[21];
+	// }
+	
+	// iterate over blockMap and create Blocks in each
+	
+	// Then we would generate one block at a time -> from bottom up, going across
+	
+	// create the block, check around it, generate it (passing in list of blocks around it that connect)
+		//curr->checkBlock(b) -> check all surrounding blocks against current block
+		// pass in an array of the blocks that DO connect to this block
+	// This way, when generating the block, it accounts for the blocks around it -> knows where the block next to it would like to connect to it (if we decide to connect to it)
+		// maybe we also include a priority for connection (must connect vs can connect)
+	// After generating the block, we set it 0
+	// If a block has 0s and 1s on all sides, it becomes 1 - perma set
+
+	// ** Door set here somewhere? **
+
+
+	// Any block needs:
+	//     Metadata: what blocks CAN be around it
+	//     What defines this block
+	//     Where we get this block definition from?
+
+	// For block index i,j: pick from appropriate pool
+	// check the blocks around it to ensure compatibility (looking at set and other metadata)
+	// if pass: move on (set = 1), if fail: try another from the pool OR (set = -1) and upon setting next block can backtrace
+
+
+	// Use our dimensions to 
+	// initialize our 2d tilemap array
+	this->tileMap = new int* [this->yMax];
+	for (int i = 0; i < this->yMax; i++)
+		this->tileMap[i] = new int[this->xMax];
+
+	// THIS WILL BE CHANGED WHEN BLOCK IS FINISHED OR CLOSER TO
+	// Here we would iterate through blockMap and convert our completed blockMap into a final tilemap
+
 }
 /////////////////////////
 // Getters and Setters //
