@@ -10,8 +10,10 @@ class Block
 		// Public Functions:
 		void generateBlock();
 		bool checkBlock(Block* b);
+		int** getBlockMap();
 		void setBlock(int s);
 		int getSet();
+		void setDoor();
 		int getRow();
 		int getCol();
 		//BlockType getType();
@@ -79,4 +81,6 @@ class Block
 		// Is this block a corner or a door?
 		bool corner;
 		bool door;
+
+		// has platform bool?
 };
