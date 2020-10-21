@@ -3,6 +3,7 @@
 #include "game.h"
 #include "sprite.h"
 #include "entity.h"
+#include "enemies.h"
 #include "tile.h"
 #include "background.h"
 #include "button.h"
@@ -187,9 +188,22 @@ void Game::runGame() {
 	Physics plp(1500, 500, 1000, 250);
 	Entity player("data/player.spr", x_pos, y_pos, 3, 0, &plp, gRenderer);		//0 is flag for player entity
 
+	std::vector<Enemy*> enemies;
+	Enemy eye("data/eye.spr", 30, 30, 3, 1, &plp, gRenderer);
+	Enemy eye2("data/eye.spr", 100, 40, 3, 1, &plp, gRenderer);
+	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
+	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
+	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
+	enemies.push_back(&eye);
+	enemies.push_back(&eye2);
+	enemies.push_back(&eye3);
+	enemies.push_back(&eye4);
+	enemies.push_back(&eye5);
+	int hitTick = 0;
+	bool hit = false;
 	//"Load" in the game by pausing to avoid buffering in the gappling hook input
 	SDL_Delay(100);
-
+	
 	//Run the Game
 	while (running && gameState == 1) {
 		//Delta time calculation
@@ -197,6 +211,7 @@ void Game::runGame() {
 		delta_time = (curTick - lastTick) / 1000.0;
 		lastTick = curTick;
 
+		
 		//Anim frame tracker
 		curAnim = SDL_GetTicks();
 
@@ -216,6 +231,24 @@ void Game::runGame() {
 		}
 		else if (roomNum == 1) {
 			handleCollision(&player, &t1);
+		}
+
+		if (roomNum == 0) {
+			//eye.update(t0.getTileMap(), delta_time, player.getXPosition(), player.getYPosition());
+		}
+		else if (roomNum == 1) {
+			for (int i = 0; i < enemies.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
+			{
+				enemies[i]->update(t1.getTileMap(), delta_time, player.getXPosition(), player.getYPosition());
+				if (!hit)
+				{
+					hit = checkHitPlayer(&player, enemies[i]);
+					if (hit)
+						hitTick = SDL_GetTicks();
+				}
+				else if (SDL_GetTicks() - hitTick > 1000)
+					hit = false;
+			}	
 		}
 
 		// Update scroll if Player moves outside of middle third
@@ -310,10 +343,18 @@ void Game::runGame() {
 		else if (player.getXVel() < 0 && flip == SDL_FLIP_NONE)
 			flip = SDL_FLIP_HORIZONTAL;
 
-		if (player.getFrameIndex() == 0)
+		//hit iframes indicator; blink a tenth of a second every tenth of a second
+		if (player.getFrameIndex() == 0 && (SDL_GetTicks() % 100 > 50 || !hit))
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
-		else
+		else if (SDL_GetTicks() % 100 > 50 || !hit)
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+		if (roomNum == 1)
+		{
+			for (int i = 0; i < enemies.size(); i++)
+			{
+				enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset, enemies[i]->getYPosition());
+			}
+		}
 
 		//Draw the player's hp
 		drawHP();
@@ -757,25 +798,21 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 			}
 		}
 	}
-
-
-
-	/*
-	if (ent.getXPosition() + x_vel < 0) {
-		ent.setPosition(0, ent.getYPosition());
-	}
-	if (ent.getYPosition() + y_vel < 0) {
-		ent.setPosition(ent.getXPosition(), 0);
-	}
-	if (ent.getXPosition() + ent.getCurrFrame().getWidth() + x_vel > LEVEL_LEN) {
-		ent.setPosition(LEVEL_LEN - ent.getCurrFrame().getWidth(), ent.getYPosition());
-	}
-	if (ent.getYPosition() + ent.getCurrFrame().getHeight() + y_vel > SCREEN_HEIGHT) {
-		ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - ent.getCurrFrame().getHeight());
-		return true;
-	}*/
-
 	return land;
+}
+
+bool Game::checkHitPlayer(Entity* player, Enemy* enemy)
+{
+	if (enemy->getXPosition() < player->getXPosition() + player->getCurrFrame().getWidth() &&
+		enemy->getXPosition() + enemy->getCurrFrame().getWidth() > player->getXPosition() &&
+		enemy->getYPosition() < player->getYPosition() + player->getCurrFrame().getHeight() &&
+		enemy->getYPosition() + enemy->getCurrFrame().getHeight() > player->getYPosition())
+	{
+		playerHP -= enemy->getDamage();
+		return true;
+	}
+
+	return false;
 }
 
 bool Game::checkDoor(int room, double vel, Entity& ent) {

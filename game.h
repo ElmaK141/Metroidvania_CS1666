@@ -13,6 +13,7 @@
 
 #include "entity.h"
 #include "tilemap.h"
+#include "enemies.h"
 
 class Game {
 	public:
@@ -45,5 +46,6 @@ class Game {
 		void runDebug();		//Run debug
 		void getUserInput(Entity* player);		//Handle input from the user
 		void handleCollision(Entity* player, Tilemap* t);	//Handles collision events of the player
+		bool checkHitPlayer(Entity* player, Enemy* enemy);
 };
 #endif
