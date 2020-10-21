@@ -447,6 +447,7 @@ void Game::getUserInput(Entity* player) {
 			player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
 	}
 	
+	//THIS IS RESPONSABLE FOR THE SLOW SIDEWAYS GRAPPLE SPEED
 	if (!player->getPhysics()->inAir() || (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D]) && player->getPhysics()->inAir())) {
 		if (player->getXVel() < 0) {
 			player->setXVel(fmin(0, player->getXVel() + player->getPhysics()->getAcceleration()));
