@@ -13,6 +13,7 @@ class Block
 		int** getBlockMap();
 		void setBlock(int s);
 		int getSet();
+		void setDoor();
 		int getRow();
 		int getCol();
 		//BlockType getType();

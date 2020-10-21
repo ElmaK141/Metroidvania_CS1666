@@ -55,10 +55,10 @@ void Block::initMetadata() {
 	this->set = -1;
 	
 	// by default we have no connections
-	/*this->connectedRx = false;
-	this->connectedRy = false;
-	this->connectedLx = false;
-	this->connectedLy = false;*/
+	this->connectedRight = false;
+	this->connectedLeft = false;
+	this->connectedAbove = false;
+	this->connectedBelow = false;
 
 	this->x = -1;
 	this->y = -1;
@@ -204,6 +204,11 @@ void Block::generateEmpty() {
 // generate a Middle block - this block has no walls, and is only platforms
 void Block::generateMiddle() {
 	generateEmpty();
+
+	// middle blocks (as of right now) consist of pretty much only platforms
+	// this is where we would determine where the platforms would be and which adjacent blocks they may connect to
+
+
 }
 
 // generate a Floor block - this block always has 1s on the floor at least *except if we do doors in the floor*
@@ -222,7 +227,9 @@ void Block::generateFloor() {
 			}
 			
 			// we can add nuance here to create different types of floors with randomness
-
+			// say we have the floor go up by one tile halfway through to the right, we would create that here, and then set connectedR true
+			// so when the block on the right is generated, it will know that we have a floor 1 tile higher coming in from the left and account
+			// this is why generate_X will be taking block pointers
 
 		}
 	}
@@ -255,12 +262,15 @@ void Block::generateWallL() {
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 			
-			//Leftmost column - if not a door
+			//Leftmost column wall when we do not have a door
 			if (j == left && !this->door) {
 				this->map[i][j] = 1;
 			}
 			else if (this->corner) { //if we are a corner
-				if (this->row == 0 && i == 0) { // ceiling of corner
+				if (door && j == left && i != bottom) { // door left open
+					this->map[i][j] = 0;
+				}
+				else if (this->row == 0 && i == 0) { // ceiling of corner
 					this->map[i][j] = 1;
 				}
 				else if (this->row == this->numRow - 1 && i == bottom) {// floor of corner
@@ -288,18 +298,21 @@ void Block::generateWallR() {
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 
-			//Leftmost column - if not a door
+			//Rightmost column wall when we do not have a door
 			if (j == right && !this->door) {
 				this->map[i][j] = 1;
 			}
 			else if (this->corner) { //if we are a corner
-				if (this->row == 0 && i == 0) { // ceiling of corner
+				if (door && j == right && i != bottom) { // door left open
+					this->map[i][j] = 0;
+				}
+				else if (this->row == 0 && i == 0) { // ceiling of corner
 					this->map[i][j] = 1;
 				}
 				else if (this->row == this->numRow - 1 && i == bottom) {// floor of corner
 					this->map[i][j] = 1;
 				}
-				else { // not a floor/ceiling
+				else { // not a floor/ceiling/wall
 					this->map[i][j] = 0;
 				}
 			}
@@ -359,6 +372,10 @@ void Block::setBlock(int s) {
 
 int Block::getSet() {
 	return this->set;
+}
+
+void Block::setDoor() {
+	this->door = true;
 }
 
 int Block::getRow() {

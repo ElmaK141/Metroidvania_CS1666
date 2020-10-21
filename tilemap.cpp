@@ -36,10 +36,11 @@ Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles, Background* bg)
 
 // Initializes a tile map based on given X and Y dimensions.
 // Does not use a text file, instead tries to create a Tilemap using randomness
-Tilemap::Tilemap(int xDim, int yDim, std::vector<Tile*> tiles, Background* bg) {
+Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg) {
 	//Assign attributes
 	this->yMax = yDim;
 	this->xMax = xDim;
+	this->room = room;
 	this->tileArray = tiles;
 	this->bg = bg;
 
@@ -158,6 +159,15 @@ void Tilemap::generateTilemap() {
 		// iterate over blockMap and create a Block in each spot
 		for (int j = 0; j < w; j++) {
 			blockMap[i][j] = new Block(i, j, h, w);
+
+			// set door flag
+			if (i == h-1 && j == w-1 && this->room == 0) { //door on the right
+				blockMap[i][j]->setDoor();
+			}
+			else if (i == h - 1 && j == 0 && this->room == 1) { //door on the left
+				blockMap[i][j]->setDoor();
+			}
+
 		}
 	}
 	
@@ -183,6 +193,10 @@ void Tilemap::generateTilemap() {
 			// This way, when generating the block, it accounts for the blocks around it -> knows where the block next to it would like to connect to it (if we decide to connect to it)
 			// maybe we also include a priority for connection (must connect vs can connect)
 
+			// idea is to pass in ptr of blocks that pass a connected check adjacent to this
+			// think there is 3 tiles of platform going out of the right of the block on our left
+			// this block would be told that the left block wants to connect, and then would know where to place a platform in order to connect across blocks
+
 			// generate block, with info of blocks around it (that have been generated)
 			blockMap[i][j]->generateBlock();
 
@@ -196,6 +210,9 @@ void Tilemap::generateTilemap() {
 	}
 
 	// ** Door set here somewhere? **
+
+	// we pass the room num into the tilemap -> from here room can be used to set the door flag for the correct block (Corner WallR at bottom if 0)
+
 
 	// Use our dimensions to 
 	// initialize our 2d tilemap array
