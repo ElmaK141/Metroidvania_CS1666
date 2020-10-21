@@ -11,6 +11,7 @@
 class Entity{
 	
 	public:
+		Entity();
 		Entity(std::string spriteData, double xPos, double yPos, int scale, int f, Physics* phys,SDL_Renderer* context);
 		~Entity();
 		
@@ -31,9 +32,16 @@ class Entity{
 
 		void setJump(bool jump);
 		bool getJump();
-
 		int getFlag();
 
+		bool getShot();
+		void setShot(bool val);
+		void setPX(double px);
+		void setPY(double py);
+		double getPX();
+		double getPY();
+		void setPVel(double py);
+		double getPVel();
 		Physics* getPhysics();
 	private:
 
@@ -47,6 +55,11 @@ class Entity{
 		double xVel;
 		double yVel;
 		bool canJump;
+		// For projectile
+		bool canShoot;
+		double px;
+		double py;
+		double pvel;
 
 		Sprite currFrame;
 		SDL_Renderer* context;
