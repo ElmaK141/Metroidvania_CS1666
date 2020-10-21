@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cmath>
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 #include "game.h"
 #include "sprite.h"
 #include "entity.h"
@@ -123,16 +125,20 @@ void Game::runGame() {
 	std::vector<Tile*> tiles;
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
-	//Did this twice so for the time being we dont get a out of bounds vector error, this is not an error
+	//Did this twice so for the time beindg we dont get a out of bounds vector error, this is not an error
 	//with implementation it just needs some placeholder entries for right now.. so ya 
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
 	//Initialize tilemaps
 	//Tilemap t0("data/tilemaps/tilemap0.txt", tiles);
-	//Tilemap t0(210, 45, tiles, &bg1);
+	
+	// USE THIS FOR PROC GEN TILEMAP
+	//Tilemap t0(210, 45, 0, tiles, &bg1);
+	//Tilemap t1(210, 45, 1, tiles, &bg2);
 
 	//Generate First Room Tilemap
+	srand(time(NULL)); // seeds rand with time
 	Tilemap t0;
 	switch (rand() % 3) {
 		case 0:
@@ -145,9 +151,11 @@ void Game::runGame() {
 			t0 = *(new Tilemap("data/tilemaps/procgen/rExit/tmr2.txt", tiles, &bg1));
 			break;
 	}
+
 	int** tileArray0 = t0.getTileMap();
 
 	//Generate Second Room Tilemap
+	srand(time(NULL)); //seeds rand with time
 	Tilemap t1;
 	switch (rand() % 3) {
 	case 0:
@@ -160,6 +168,7 @@ void Game::runGame() {
 		t1 = *(new Tilemap("data/tilemaps/procgen/lExit/tml2.txt", tiles, &bg2));
 		break;
 	}
+
 	int** tileArray1 = t1.getTileMap();
 
 	//0 is first room, 1 is second room

@@ -55,10 +55,10 @@ void Block::initMetadata() {
 	this->set = -1;
 	
 	// by default we have no connections
-	/*this->connectedRx = false;
-	this->connectedRy = false;
-	this->connectedLx = false;
-	this->connectedLy = false;*/
+	this->connectedRight = false;
+	this->connectedLeft = false;
+	this->connectedAbove = false;
+	this->connectedBelow = false;
 
 	this->x = -1;
 	this->y = -1;
@@ -203,6 +203,11 @@ void Block::generateEmpty() {
 
 // generate a Middle block - this block has no walls, and is only platforms
 void Block::generateMiddle() {
+	generateEmpty();
+
+	// middle blocks (as of right now) consist of pretty much only platforms
+	// this is where we would determine where the platforms would be and which adjacent blocks they may connect to
+
 
 }
 
@@ -222,7 +227,9 @@ void Block::generateFloor() {
 			}
 			
 			// we can add nuance here to create different types of floors with randomness
-
+			// say we have the floor go up by one tile halfway through to the right, we would create that here, and then set connectedR true
+			// so when the block on the right is generated, it will know that we have a floor 1 tile higher coming in from the left and account
+			// this is why generate_X will be taking block pointers
 
 		}
 	}
@@ -230,7 +237,24 @@ void Block::generateFloor() {
 
 // generate a Ceiling block - this block always has 1s on the ceiling at least *except if we do doors in the ceiling*
 void Block::generateCeiling() {
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
 
+			// if we are at the bottom 
+			if (i == top) {
+				// floor is 1
+				this->map[i][j] = 1;
+			}
+			else {
+				// else empty (for now)
+				this->map[i][j] = 0;
+			}
+
+			// we can add nuance here to create different types of floors with randomness
+
+
+		}
+	}
 }
 
 // generate a WallL block - this block always has 1s on the left *except when it has a door*
@@ -238,12 +262,15 @@ void Block::generateWallL() {
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 			
-			//Leftmost column - if not a door
+			//Leftmost column wall when we do not have a door
 			if (j == left && !this->door) {
 				this->map[i][j] = 1;
 			}
 			else if (this->corner) { //if we are a corner
-				if (this->row == 0 && i == 0) { // ceiling of corner
+				if (door && j == left && i != bottom) { // door left open
+					this->map[i][j] = 0;
+				}
+				else if (this->row == 0 && i == 0) { // ceiling of corner
 					this->map[i][j] = 1;
 				}
 				else if (this->row == this->numRow - 1 && i == bottom) {// floor of corner
@@ -268,7 +295,38 @@ void Block::generateWallL() {
 
 // generate a WallR block - this block always has 1s on the right *except when it has a door*
 void Block::generateWallR() {
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
 
+			//Rightmost column wall when we do not have a door
+			if (j == right && !this->door) {
+				this->map[i][j] = 1;
+			}
+			else if (this->corner) { //if we are a corner
+				if (door && j == right && i != bottom) { // door left open
+					this->map[i][j] = 0;
+				}
+				else if (this->row == 0 && i == 0) { // ceiling of corner
+					this->map[i][j] = 1;
+				}
+				else if (this->row == this->numRow - 1 && i == bottom) {// floor of corner
+					this->map[i][j] = 1;
+				}
+				else { // not a floor/ceiling/wall
+					this->map[i][j] = 0;
+				}
+			}
+			else { // otherwise
+
+				// this space would allow us to create partial platforms in this block
+
+				this->map[i][j] = 0;
+			}
+		}
+	}
+
+	// Initial set
+	this->set = 0;
 }
 
 // Check if block B is connected to this block
@@ -295,6 +353,12 @@ bool Block::checkBlock(Block* b) {
 	}
 }
 
+// returns this blocks internal tilemap
+int** Block::getBlockMap() {
+	return this->map;
+}
+
+
 // Getters and Setters
 
 // Set the block to the desired position
@@ -308,6 +372,10 @@ void Block::setBlock(int s) {
 
 int Block::getSet() {
 	return this->set;
+}
+
+void Block::setDoor() {
+	this->door = true;
 }
 
 int Block::getRow() {
