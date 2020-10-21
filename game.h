@@ -41,6 +41,7 @@ class Game {
 		SDL_Texture* rollCredits();
 		void loadStartScreen();	//Loads the start screen
 		void loadMainMenu();	//Loads the main menu
+		void loadDeathScreen(); //Player dies
 		void pauseMenu(int prevGameState);		//Pause game and bring up Pause menu
 		void runGame();			//Run the game
 		void runDebug();		//Run debug

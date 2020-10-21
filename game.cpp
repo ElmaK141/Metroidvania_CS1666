@@ -90,18 +90,22 @@ void Game::gameLoop()
 	//Load into the start screen of the game
 	loadStartScreen();
 
-	while (running && gameState == 0) {
+	while (running) {
 		//Load main menu
-		loadMainMenu();
-
-		//Start normal game
-		if (gameState == 1) {
+		if (gameState == 0) {
+			loadMainMenu();
+		}else if (gameState == 1) {
 			runGame();
+		}else if (gameState == 4) {
+			loadDeathScreen();
 		}
-		//Debug
 		else if (gameState == 3) {
 			runDebug();
 		}
+
+
+
+		//Debug
 	}
 }
 
@@ -368,6 +372,11 @@ void Game::runGame() {
 		//Draw the player's hp
 		drawHP();
 
+		if (playerHP <= 0) {
+			gameState = 4;
+			break;
+		}
+
 		SDL_RenderPresent(gRenderer);
 	}
 }
@@ -562,6 +571,27 @@ void Game::handleCollision(Entity* player, Tilemap* t) {
 	}
 }
 
+void Game::loadDeathScreen() {
+	Sprite deadMsg(0,0, 1280, 720, 1, "assets/kennedys.png", gRenderer);
+
+	while (running) {
+		SDL_PollEvent(&e);
+
+		if (e.type == SDL_QUIT) {
+			running = false;
+			return;
+		}
+		else if (e.type == SDL_KEYDOWN) {
+			gameState = 0;
+			return; 
+		}
+
+		SDL_RenderClear(gRenderer);
+		SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0);
+		deadMsg.draw(gRenderer, 0, 0);
+		SDL_RenderPresent(gRenderer);
+	}
+}
 
 //Load the start screen/main menu of the game
 void Game::loadStartScreen() {
