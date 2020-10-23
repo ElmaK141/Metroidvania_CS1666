@@ -91,26 +91,28 @@ void Game::gameLoop()
 	loadStartScreen();
 
 	while (running) {
+
 		//Load main menu
 		if (gameState == 0) {
 			loadMainMenu();
-		}else if (gameState == 1) {
-			runGame();
-		}else if (gameState == 4) {
+		}
+		else if (gameState == 1) {
+			runGame();	//Run Game
+		}
+		else if (gameState == 4) {	//Player has died
 			loadDeathScreen();
 		}
-		else if (gameState == 3) {
+		else if (gameState == 3) {	//Run Debug
 			runDebug();
 		}
-
-
-
-		//Debug
 	}
 }
 
 //Run the main game code
 void Game::runGame() {
+	//Reset the Player's Health
+	playerHP = 40;
+
 	//Camera-related variables
 	scroll_offset = 0;
 	int rem_bg = 0;
@@ -574,6 +576,12 @@ void Game::handleCollision(Entity* player, Tilemap* t) {
 void Game::loadDeathScreen() {
 	Sprite deadMsg(0,0, 1280, 720, 1, "assets/kennedys.png", gRenderer);
 
+	SDL_RenderClear(gRenderer);
+	SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0);
+	deadMsg.draw(gRenderer, 0, 0);
+	SDL_RenderPresent(gRenderer);
+	SDL_Delay(1000);
+
 	while (running) {
 		SDL_PollEvent(&e);
 
@@ -952,6 +960,8 @@ SDL_Texture* Game::rollCredits()
 void Game::runDebug() {
 	//For now this method is still very similar to game code - this will change as well continue developing the game, but we should still
 	//work on putting drawing functions and scrolling functions into separate functions
+
+	playerHP = 40;
 
 	// variables for background scrolling
 	int scroll_offset = 0;
