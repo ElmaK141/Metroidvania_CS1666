@@ -13,6 +13,7 @@
 
 #include "entity.h"
 #include "tilemap.h"
+#include "enemies.h"
 
 class Game {
 	public:
@@ -40,10 +41,12 @@ class Game {
 		SDL_Texture* rollCredits();
 		void loadStartScreen();	//Loads the start screen
 		void loadMainMenu();	//Loads the main menu
+		void loadDeathScreen(); //Player dies
 		void pauseMenu(int prevGameState);		//Pause game and bring up Pause menu
 		void runGame();			//Run the game
 		void runDebug();		//Run debug
 		void getUserInput(Entity* player);		//Handle input from the user
 		void handleCollision(Entity* player, Tilemap* t);	//Handles collision events of the player
+		bool checkHitPlayer(Entity* player, Enemy* enemy);
 };
 #endif

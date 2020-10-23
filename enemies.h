@@ -1,8 +1,12 @@
 #ifndef _ENEMIES_H_
 #define _ENEMIES_H_
+#include "sprite.h"
 #include "entity.h"
+#include <vector>
+#include <iostream>
+#include <fstream>
 
-class Enemy : public Entity {
+class Enemy {
 	public:
 		Enemy(std::string spriteData, double xPos, double yPos, int scale, int f, Physics* phys, SDL_Renderer* context);
 		~Enemy();
@@ -10,13 +14,46 @@ class Enemy : public Entity {
 		{
 			return hp;
 		}
-		bool touchPlayer();
+		int getDamage()
+		{
+			return damage;
+		}
+		void update(int** tilemap, double delta_time, double playerX, double playerY);
+
+		void setCurrFrame(int index);
+		Sprite getCurrFrame();
+		int getFrameIndex();
+
+		double getXPosition();
+		double getYPosition();
+
+		void movePosition(double xf, double yf);
+		void setPosition(double xPos, double yPos);
+
+		void setXVel(double xVelo);
+		void setYVel(double yVelo);
+		double getXVel();
+		double getYVel();
+
+		void setJump(bool jump);
+		bool getJump();
+
+		int getFlag();
+
+		Physics* getPhysics();
 	private:
+		
+		void collide(int** tilemap, double xVel, double yVel);
 		void createSprites();
+		
 
 		int hp;
 		int maxSpeed;
+		int damage;
 		bool active;
+		double accel;
+		
+
 		double x;
 		double y;
 		int s;
