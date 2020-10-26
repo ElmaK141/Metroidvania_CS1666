@@ -23,7 +23,7 @@ class Game {
 		void gameLoop();
 
 		bool detectCollision(Entity &ent, int** t, double x_vel, double y_vel);
-		bool checkDoor(int room, double vel, Entity& ent);
+		bool checkDoor(int room, double vel, Entity& ent, Tilemap* currRoom);
 	private:
 		SDL_Window* gWindow;
 		SDL_Renderer* gRenderer;
@@ -48,5 +48,6 @@ class Game {
 		void getUserInput(Entity* player);		//Handle input from the user
 		void handleCollision(Entity* player, Tilemap* t);	//Handles collision events of the player
 		bool checkHitPlayer(Entity* player, Enemy* enemy);
+		void generateMap(Tilemap** map, int mapX, int mapY, std::vector<Tile*> tiles, Background* bg);
 };
 #endif
