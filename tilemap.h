@@ -19,6 +19,8 @@ class Tilemap
 		public:
 		// Public Constructors:
 			Tilemap();
+			//Tilemap(std::string filename, std::vector<Tile*> tiles);
+			Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg);
 			Tilemap(std::string filename, std::vector<Tile*> tiles, Background* bg);
 		// Public Getters and Setters:			
 			int getMaxWidth();
@@ -32,11 +34,13 @@ class Tilemap
 		private:
 		// Private Tilemap Functions:
 			void generateTilemap(std::string mapPath);
+			void generateTilemap();
 		// Private Tilemap Variables: 
 			int** tileMap;				// An int array representing the flags at every spot in our tilemap
 			Background* bg;
 			int yMax;					// The height dimension of the tilemap
 			int xMax;					// The width dimension of the tilemap
+			int room;					// Temp way to say which side the door is on for block gen
 			std::vector<Tile*> tileArray;// Stores references to every tile type encountered in the tilemap
 };
 

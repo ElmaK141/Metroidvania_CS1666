@@ -1,6 +1,7 @@
 #include "entity.h"
 #include <sstream>
 
+Entity::Entity() {}
 
 Entity::Entity(std::string spriteData, double xPos, double yPos, int scale, int f, Physics* phys, SDL_Renderer* context) {
 
@@ -19,7 +20,7 @@ Entity::Entity(std::string spriteData, double xPos, double yPos, int scale, int 
 	if (this->flag == 0) {
 		//Initialize Velocity
 		this->xVel = 0.0;
-		this->yVel - 0.0;
+		this->yVel = 0.0;
 
 		//Can jump initially
 		this->canJump = true;

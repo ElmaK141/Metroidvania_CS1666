@@ -1,25 +1,30 @@
-#ifndef _ENTITY_H_
-#define _ENTITY_H_
-
+#ifndef _ENEMIES_H_
+#define _ENEMIES_H_
 #include "sprite.h"
-#include "physics.h"
-
+#include "entity.h"
 #include <vector>
 #include <iostream>
 #include <fstream>
 
-class Entity{
-	
+class Enemy {
 	public:
-		Entity();
-		Entity(std::string spriteData, double xPos, double yPos, int scale, int f, Physics* phys,SDL_Renderer* context);
-		~Entity();
-		
+		Enemy(std::string spriteData, double xPos, double yPos, int scale, int f, Physics* phys, SDL_Renderer* context);
+		~Enemy();
+		int getHP()
+		{
+			return hp;
+		}
+		int getDamage()
+		{
+			return damage;
+		}
+		void update(int** tilemap, double delta_time, double playerX, double playerY);
+
 		void setCurrFrame(int index);
 		Sprite getCurrFrame();
 		int getFrameIndex();
 
-		double getXPosition();	
+		double getXPosition();
 		double getYPosition();
 
 		void movePosition(double xf, double yf);
@@ -32,21 +37,23 @@ class Entity{
 
 		void setJump(bool jump);
 		bool getJump();
+
 		int getFlag();
 
-		bool getShot();
-		void setShot(bool val);
-		void setPX(double px);
-		void setPY(double py);
-		double getPX();
-		double getPY();
-		void setPVel(double py);
-		double getPVel();
 		Physics* getPhysics();
 	private:
-
+		
+		void collide(int** tilemap, double xVel, double yVel);
 		void createSprites();
 		
+
+		int hp;
+		int maxSpeed;
+		int damage;
+		bool active;
+		double accel;
+		
+
 		double x;
 		double y;
 		int s;
@@ -55,11 +62,6 @@ class Entity{
 		double xVel;
 		double yVel;
 		bool canJump;
-		// For projectile
-		bool canShoot;
-		double px;
-		double py;
-		double pvel;
 
 		Sprite currFrame;
 		SDL_Renderer* context;
@@ -67,12 +69,5 @@ class Entity{
 		std::ifstream spriteFile;
 		std::vector<Sprite> frames;
 		Physics* physics;
-
 };
-
-
-
-
-
-
 #endif
