@@ -12,6 +12,7 @@ class Physics {
 		double getMaxX();
 		double getMaxY();
 		void setMaxSpeeds(double x, double y);
+		double getAirDrag();
 
 		double getAcceleration();
 		void setAcceleration(double accel);
@@ -29,6 +30,7 @@ class Physics {
 		double jumpStrength;
 		double maxXSPeed;
 		double maxYSpeed;
+		double airDrag;
 		double acceleration;
 		double grappleStrength;
 		double grappleDampen;

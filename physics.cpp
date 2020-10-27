@@ -7,6 +7,7 @@ Physics::Physics()
 	this->grappleState = false;
 	this->grappleDampen = 0.97;
 	this->grappleStrength = 0.03 * 3600 * 1.75;
+	this->airDrag = 0.03;
 }
 
 //Initialize the entity's physics properties
@@ -20,6 +21,12 @@ Physics::Physics(double jstr, double maxX, double maxY, double accel)
 	this->grappleState = false;
 	this->grappleDampen = 0.97;
 	this->grappleStrength = 0.03 * 3600 * 1.75;
+	this->airDrag = 0.03;
+}
+
+double Physics::getAirDrag()
+{
+		return this->airDrag;
 }
 
 double Physics::getJumpStrength()

@@ -1,8 +1,8 @@
 CC = g++
 LIBS = -lSDL2 -lSDL2_image
 
-main: main.cpp game.o game.h sprite.o button.o background.o entity.o tilemap.o tile.o physics.o block.o
-	$(CC) -o main main.cpp game.o sprite.o button.o background.o entity.o tilemap.o tile.o physics.o block.o $(LIBS)
+main: main.cpp game.o game.h sprite.o button.o background.o entity.o tilemap.o tile.o physics.o block.o enemies.o
+	$(CC) -o main main.cpp game.o sprite.o button.o background.o entity.o tilemap.o tile.o physics.o block.o enemies.o $(LIBS)
 	
 game.o: game.cpp sprite.h game.h sprite.h entity.h tile.h background.h button.h
 	$(CC) -c game.cpp 
