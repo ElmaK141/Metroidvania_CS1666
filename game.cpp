@@ -469,6 +469,18 @@ void Game::getUserInput(Entity* player) {
 			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
 			
 		}
+		else{
+			//Own rules while grappling, do this otherwise
+			//Apply Drag
+			double playerNetVel = sqrt((player->getXVel() * player->getXVel()) + (player->getYVel() * player->getYVel()));
+			double playerXVelNorm = player->getXVel() / playerNetVel;
+			double playerYVelNorm = player->getYVel() / playerNetVel;
+			double dragForce = fmin((1 * playerNetVel) * player->getPhysics()->getAirDrag(), playerNetVel);
+			
+			player->setXVel(player->getXVel() - (playerXVelNorm * dragForce));
+			player->setYVel(player->getYVel() - (playerYVelNorm * dragForce));
+		}
+		
 	}
 	else{
 		//Ground control
@@ -550,7 +562,7 @@ void Game::getUserInput(Entity* player) {
 			if(player->getFrameIndex() != 0)
 				player->setCurrFrame(1);
 				
-			//Movement
+			//Movement apply stopping force
 			if (player->getXVel() < 0) {
 				player->setXVel(fmin(0, player->getXVel() + player->getPhysics()->getAcceleration()));
 			}
@@ -568,8 +580,8 @@ void Game::getUserInput(Entity* player) {
 			double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
 		
 			//Apply grapple force
-			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
-			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+			player->setXVel(player->getXVel() + xComp * player->getPhysics()->getGrappleStr());
+			player->setYVel(player->getYVel() + yComp * player->getPhysics()->getGrappleStr());
 			
 		}
 	}
