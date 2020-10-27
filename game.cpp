@@ -410,67 +410,173 @@ void Game::getUserInput(Entity* player) {
 		*/
 	}
 
-	//Holding W
-	if (keystate[SDL_SCANCODE_W]) {
-
-	}
-	
-	//Holding S
-	if (keystate[SDL_SCANCODE_S]) {
-		player->setCurrFrame(0);
-	}
-
-	//Holding A
-	if (keystate[SDL_SCANCODE_A]) {
-
-		//Animation
-		if (curAnim - lastAnim >= 200.0 && !player->getPhysics()->inAir()) {
-			lastAnim = curAnim;
-			if (player->getFrameIndex() == 1 || player->getFrameIndex() == 0) {
-				if (lastAnimFrame == 2) {
-					player->setCurrFrame(3);
-					lastAnimFrame = 3;
-				}
-				else {
-					player->setCurrFrame(2);
-					lastAnimFrame = 2;
-				}
-			}
-			else {
-				player->setCurrFrame(1);
-			}
-		}
-
-		if (player->getXVel() > -player->getPhysics()->getMaxX()) //as long as we don't exceed max speed, change velocity
-			player->setXVel(fmin(player->getXVel() - player->getPhysics()->getAcceleration(), -player->getPhysics()->getMaxX()));
-	}
-
-	
-	//Holding D
-	if (keystate[SDL_SCANCODE_D]) {
+	//Redone player physics
+	if(player->getPhysics()->inAir()){
+		//Air control
 		
-		//Animation
-		if (curAnim - lastAnim >= 200.0 && !player->getPhysics()->inAir()) {
-			lastAnim = curAnim;
-			if (player->getFrameIndex() == 1 || player->getFrameIndex() == 0) {
-				if (lastAnimFrame == 2) {
-					player->setCurrFrame(3);
-					lastAnimFrame = 3;
-				}
-				else {
-					player->setCurrFrame(2);
-					lastAnimFrame = 2;
-				}
-			}
-			else {
-				player->setCurrFrame(1);
+		//Holding Spacebar
+		if (keystate[SDL_SCANCODE_SPACE]) {
+			if (!player->getPhysics()->inAir() && player->getJump())    //only jump from ground
+			{
+				player->setJump(false);
+				player->getPhysics()->setAirState(true);
+				player->setYVel(player->getYVel() - player->getPhysics()->getJumpStrength());
 			}
 		}
 
-		if (player->getXVel() < player->getPhysics()->getMaxX()) //as long as we don't exceed max speed, change velocity
-			player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
+		if (!keystate[SDL_SCANCODE_SPACE]){ //only jump if you've landed and pressed space again
+			player->setJump(true);
+		}
+		
+		if (keystate[SDL_SCANCODE_A]) {
+			//Movement
+			if (player->getXVel() > -player->getPhysics()->getMaxX()){ //as long as we don't exceed max speed, change velocity
+				player->setXVel(fmin(player->getXVel() - player->getPhysics()->getAcceleration(), -player->getPhysics()->getMaxX()));
+			}
+		}
+		
+		if (keystate[SDL_SCANCODE_S]) {
+			//Animation
+			player->setCurrFrame(0);
+			
+			//Movement
+		}
+		
+		if (keystate[SDL_SCANCODE_D]) {
+			//Movement
+			if (player->getXVel() < player->getPhysics()->getMaxX()){ //as long as we don't exceed max speed, change velocity
+				player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
+			}
+		}
+		
+		//Not holding side buttons
+		if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
+			//Animation
+			if(player->getFrameIndex() != 0)
+				player->setCurrFrame(1);
+		}
+		
+		if(player->getPhysics()->isGrappling()){
+			
+			double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth()/2);
+			double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight()/2);
+			
+			double xComp = (grappleX - playerCenterX) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
+			double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
+		
+			//Apply grapple force
+			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+			
+		}
+	}
+	else{
+		//Ground control
+		
+		//Holding Spacebar
+		if (keystate[SDL_SCANCODE_SPACE]) {
+			if (!player->getPhysics()->inAir() && player->getJump())    //only jump from ground
+			{
+				player->setJump(false);
+				player->getPhysics()->setAirState(true);
+				player->setYVel(player->getYVel() - player->getPhysics()->getJumpStrength());
+			}
+		}
+
+		if (!keystate[SDL_SCANCODE_SPACE]){ //only jump if you've landed and pressed space again
+			player->setJump(true);
+		}
+		
+		if (keystate[SDL_SCANCODE_A]) {
+			//Animation
+			if (curAnim - lastAnim >= 200.0) {
+				lastAnim = curAnim;
+				if (player->getFrameIndex() == 1 || player->getFrameIndex() == 0) {
+					if (lastAnimFrame == 2) {
+						player->setCurrFrame(3);
+						lastAnimFrame = 3;
+					}
+					else {
+						player->setCurrFrame(2);
+						lastAnimFrame = 2;
+					}
+				}
+				else {
+					player->setCurrFrame(1);
+				}
+			}
+			
+			//Movement
+			if (player->getXVel() > -player->getPhysics()->getMaxX()){ //as long as we don't exceed max speed, change velocity
+				player->setXVel(fmin(player->getXVel() - player->getPhysics()->getAcceleration(), -player->getPhysics()->getMaxX()));
+			}
+		}
+		
+		if (keystate[SDL_SCANCODE_S]) {
+			//Animation
+			player->setCurrFrame(0);
+		}
+		
+		if (keystate[SDL_SCANCODE_D]) {
+			//Animation
+			if (curAnim - lastAnim >= 200.0 && !player->getPhysics()->inAir()) {
+				lastAnim = curAnim;
+				if (player->getFrameIndex() == 1 || player->getFrameIndex() == 0) {
+					if (lastAnimFrame == 2) {
+						player->setCurrFrame(3);
+						lastAnimFrame = 3;
+					}
+					else {
+						player->setCurrFrame(2);
+						lastAnimFrame = 2;
+					}
+				}
+				else {
+					player->setCurrFrame(1);
+				}
+			}
+			
+			//Movement
+			
+			if (player->getXVel() < player->getPhysics()->getMaxX()){ //as long as we don't exceed max speed, change velocity
+				player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
+			}
+		}
+		else
+		
+		//Not holding side buttons
+		if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
+			//Animation
+			if(player->getFrameIndex() != 0)
+				player->setCurrFrame(1);
+				
+			//Movement
+			if (player->getXVel() < 0) {
+				player->setXVel(fmin(0, player->getXVel() + player->getPhysics()->getAcceleration()));
+			}
+			else if (player->getXVel() > 0) {
+				player->setXVel(fmax(0, player->getXVel() - player->getPhysics()->getAcceleration()));
+			}
+		}
+		
+		if(player->getPhysics()->isGrappling()){
+			
+			double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth()/2);
+			double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight()/2);
+			
+			double xComp = (grappleX - playerCenterX) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
+			double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
+		
+			//Apply grapple force
+			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+			
+		}
 	}
 	
+	//Old player Physics
+	
+	/*
 	//THIS IS RESPONSABLE FOR THE SLOW SIDEWAYS GRAPPLE SPEED
 	if (!player->getPhysics()->inAir() || (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D]) && player->getPhysics()->inAir())) {
 		if (player->getXVel() < 0) {
@@ -480,38 +586,8 @@ void Game::getUserInput(Entity* player) {
 			player->setXVel(fmax(0, player->getXVel() - player->getPhysics()->getAcceleration()));
 		}
 	}
+	*/
 	
-
-	//Holding Spacebar
-	if (keystate[SDL_SCANCODE_SPACE]) {
-		if (!player->getPhysics()->inAir() && player->getJump())    //only jump from ground
-		{
-			player->setJump(false);
-			player->getPhysics()->setAirState(true);
-			player->setYVel(player->getYVel() - player->getPhysics()->getJumpStrength());
-		}
-	}
-
-	if (!keystate[SDL_SCANCODE_SPACE]) //only jump if you've landed and pressed space again
-		player->setJump(true);
-
-
-	//Not holding side buttons
-	if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
-		if(player->getFrameIndex() != 0)
-			player->setCurrFrame(1);
-	}
-	
-	if(player->getPhysics()->isGrappling()){
-		
-		double xComp = (grappleX - player->getXPosition()) / sqrt((grappleX - player->getXPosition()) * (grappleX - player->getXPosition()) + (grappleY - player->getYPosition()) * (grappleY - player->getYPosition()));
-		double yComp = (grappleY - player->getYPosition()) / sqrt((grappleX - player->getXPosition()) * (grappleX - player->getXPosition()) + (grappleY - player->getYPosition()) * (grappleY - player->getYPosition()));
-	
-		//Apply grapple force
-		player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
-		player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
-		
-	}
 }
 
 //Handle the Collision
