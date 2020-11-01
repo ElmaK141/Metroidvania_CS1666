@@ -24,6 +24,7 @@ public:
 	void updatePosition(int x, int y);	// update which room the player is in
 	int getCurrentX();
 	int getCurrentY();
+	void setCurrentPosition(int x, int y);
 	// Public Destructor: 
 	~Gamemap();
 private:

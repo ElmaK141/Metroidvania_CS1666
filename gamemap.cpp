@@ -35,11 +35,21 @@ void Gamemap::generateGamemap() {
 	//init rand seed based on current time
 	srand(time(NULL));
 
+	// randomly choose a starting location for the player spawn room
+	int spawnX = rand() % mapLength;
+	int spawnY = rand() % mapHeight;
+
 	// first thing we do is place the spawn room - the spawn room will be a predefined room
 		// then when we generate the gamemap, we will choose how many rooms in the map will be generated
 		// the gamemap will create rooms that connect off of the spawn room, as long as every room is reachable from there we are good
 	// spawn room will have 2 doors min?
 	// create and place this room in map
+	map[spawnY][spawnX] = *(new Tilemap("data/tilemaps/spawnroom.txt", tiles, bgs[rand() % bgs.size()]));
+
+	// set current position to this tilemap
+	setCurrentPosition(spawnX, spawnY);
+
+	// could we BFS or DFS from spawn?
 
 
 	//For each room/tilemap - generate information about the room, then create the tilemap
@@ -69,4 +79,10 @@ void Gamemap::generateGamemap() {
 			}
 		}
 	}
+}
+
+// set the position of which room in the map the player is in
+void Gamemap::setCurrentPosition(int x, int y) {
+	currXPos = x;
+	currYPos = y;
 }
