@@ -3,6 +3,7 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 #include "game.h"
+#include "gamemap.h"
 #include "sprite.h"
 #include "entity.h"
 #include "enemies.h"
@@ -124,6 +125,10 @@ void Game::runGame() {
 	Background bg1(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
 	Background bg2(0, 0, 1280, 720, "assets/backgrounds/background2.png", gRenderer);
 
+	std::vector<Background*> backgrounds;
+	backgrounds.push_back(&bg1);
+	backgrounds.push_back(&bg2);
+
 	//Tiles to add to tilemap
 	Tile groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 	Tile platformTile(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
@@ -137,10 +142,18 @@ void Game::runGame() {
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
-	//Initialize tilemaps
-	//Tilemap t0("data/tilemaps/tilemap0.txt", tiles);
+	// If we are going to have a "map" of the entire world, and all the rooms
+	// Here we would generate our map, and have information on the metadata for each room/tilemap
+	// Map would then be a collection of all of the tilemaps? So it can connect them to each other
+	// with a map, we can track where the player is in the 2s array of tilemaps. When we go through a door,
+	// we would know which tilemap we are going into, so that we can render that tilemap asap and from the correct place.
 	
-	// USE THIS FOR PROC GEN TILEMAP
+	//Gamemap map(3, 3, tiles, backgrounds);
+
+	// Init tilemaps (inside map?) with knowledge of overall map metadata
+	// when we create a tilemap, we must tell it where the doors are going to be so that it can generate them
+	
+	// Current tilemap constructor for procgen
 	//Tilemap t0(210, 45, 0, tiles, &bg1);
 	//Tilemap t1(210, 45, 1, tiles, &bg2);
 
