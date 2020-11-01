@@ -147,7 +147,8 @@ void Game::runGame() {
 	// Map would then be a collection of all of the tilemaps? So it can connect them to each other
 	// with a map, we can track where the player is in the 2s array of tilemaps. When we go through a door,
 	// we would know which tilemap we are going into, so that we can render that tilemap asap and from the correct place.
-	Gamemap map(3, 3);
+	
+	//Gamemap map(3, 3, tiles, backgrounds);
 
 	// Init tilemaps (inside map?) with knowledge of overall map metadata
 	// when we create a tilemap, we must tell it where the doors are going to be so that it can generate them

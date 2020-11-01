@@ -21,10 +21,10 @@ public:
 	// Public Constructors:
 	Gamemap(int length, int height, std::vector<Tile*> tiles, std::vector<Background*> bgs);
 	// Public Getters and Setters:	
-	void updatePosition(int x, int y);	// update which room the player is in
 	int getCurrentX();
 	int getCurrentY();
-	void setCurrentPosition(int x, int y);
+	void setCurrentPosition(int x, int y); // update which room the player is in
+	Tilemap* getCurrentRoom();
 	// Public Destructor: 
 	~Gamemap();
 private:
