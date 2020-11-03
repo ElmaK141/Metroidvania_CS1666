@@ -142,13 +142,9 @@ void Game::runGame() {
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
-	// If we are going to have a "map" of the entire world, and all the rooms
-	// Here we would generate our map, and have information on the metadata for each room/tilemap
-	// Map would then be a collection of all of the tilemaps? So it can connect them to each other
-	// with a map, we can track where the player is in the 2s array of tilemaps. When we go through a door,
-	// we would know which tilemap we are going into, so that we can render that tilemap asap and from the correct place.
-	
-	//Gamemap map(3, 3, tiles, backgrounds);
+	// create our Gamemap - right now it is 3x3
+	// This means our total map (all rooms) will be up to 9
+	Gamemap map(3, 3, tiles, backgrounds);
 
 	// Init tilemaps (inside map?) with knowledge of overall map metadata
 	// when we create a tilemap, we must tell it where the doors are going to be so that it can generate them

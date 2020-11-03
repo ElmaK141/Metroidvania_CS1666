@@ -3,6 +3,7 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h> 
 #include <iostream>
+#include <queue>
 
 // See gamemap.h for higher level context
 /////////////////////////
@@ -20,21 +21,38 @@ Gamemap::Gamemap(int length, int height, std::vector<Tile*> tiles, std::vector<B
 	this->tiles = tiles;
 	this->bgs = bgs;
 
-	//Map should be a Graph, where each node is a room, and edges represent a door between them
-	// our graph will be laid out like a 2d array (vertex can have x,y pos var)
-	// Maybe we have a 2d array of our nodes, and each node has a tilemap
-	// then we can easily traverse the graph, and change which room we are in - returning current nodes tilemap
-
-	//Create Map - 2D array of Tilemaps
-	map = new Tilemap * [mapHeight];
-	for (int i = 0; i < mapHeight; i++)
-		map[i] = new Tilemap[mapLength];
+	//Create Map - 2D array of Tilemap Nodes
+	map = new Node * [mapHeight];
+	for (int i = 0; i < mapHeight; i++) {
+		map[i] = new Node[mapLength];
+		for (int j = 0; j < mapLength; j++) {
+			map[i][j].valid = false;
+		}
+	}
 
 	//Now we generate the Map - this is where we would define and create each Tilemap/Room
 	// We know of Tiles, Bgs, Size, and Tilemap Array internally
 	generateGamemap();
 
+	/* print debug
+	for (int i = 0; i < mapHeight; i++) {
+		for (int j = 0; j < mapLength; j++) {
+			if(map[i][j].valid)
+				std::cout << map[i][j].doors << "\t";
+			else
+				std::cout << -1 << "\t";
+		}
+		std::cout << "\n" << std::endl;
+	}
+	*/
 }
+
+// Make sure to clean up memory
+Gamemap::~Gamemap()
+{
+	delete this->map;
+}
+
 
 /* generates the full gamemap, using randomness (and some predefined values if we want) to define:
 *	How many rooms we will have
@@ -47,15 +65,9 @@ void Gamemap::generateGamemap() {
 	//init rand seed based on current time
 	srand(time(NULL));
 
-	// randomly choose a starting location for the player spawn room
+	// randomly choose a starting location for the player spawn room and map gen
 	int spawnX = rand() % mapLength;
 	int spawnY = rand() % mapHeight;
-
-	// create and place the spawn room in the map at the random location
-	map[spawnY][spawnX] = *(new Tilemap("data/tilemaps/spawnroom.txt", tiles, bgs[rand() % bgs.size()]));
-	// spawn room will have 2 doors max - left and right (unless we cannot have a left/right)
-	// as of right now, the spawn room does not have doors - the doors must be set for it like for all other rooms?
-	// doors cannot exist until we know where they must be - based on the rooms it will connect to
 
 	// set current position to this tilemap - player starts in the spawn room
 	setCurrentPosition(spawnX, spawnY);
@@ -66,15 +78,130 @@ void Gamemap::generateGamemap() {
 	// then when we generate the gamemap, we will choose how many rooms in the map will be generated (one of these rooms is the spawn room)
 	int numRooms = rand() % ((mapLength * mapHeight) - (minRooms - 1)) + minRooms;
 
-	// the gamemap will create rooms that connect off of the spawn room, as long as every room is reachable from there we are good
-	// could we BFS or DFS from spawn? Some sort of way to recursively branch rooms out from the spawn
-	// ** THIS IS IMPORTANT - WHAT IS THE BEST WAY TO RANDOMLY CREATE THE MAP - SIMILAR TO WHAT DUNGEON CRAWLER DID??? **
-	// doing it this way will allows us to ensure all of our rooms are reachable
+	// create the vector that we will use as our queue
+	std::queue<Node*> q;
+	
+	// create spawn node, add to array, add to queue
+	struct Node spawn = {true, spawnX, spawnY, nullptr, 0};
+	map[spawnY][spawnX] = spawn;
+	q.push(&spawn);
+	// spawn node created (and doors it has) based on where it is
 
-	// Needs to be done recursively
+	// when we add a node to the array, we count a room. spawn counts as a room, so we count for it
+	numRooms -= 1;
 
-	// generate the "path", then we can iterate over all rooms and create 
-	// from spawn, create a room in 1 direction
+	// while the stack is not empty - process next node
+	while (!q.empty()) {
+		// get the current node, and remove it from the queue
+		Node* curr = q.front();
+		q.pop();
+
+		// If this is the Spawn room, we are predefined for our children nodes
+		if (curr->x == spawnX && curr->y == spawnY) {
+			int spawnRooms = getSpawnRooms(spawnX);
+
+			// create children nodes
+			if (spawnRooms == 3) { // left and right
+				// create both children nodes, one on the right, one on the left
+				Node r = { true, spawnX + 1, spawnY, nullptr, 2 };
+				map[spawnY][spawnX + 1] = r;
+				Node l = { true, spawnX - 1, spawnY, nullptr, 1 };
+				map[spawnY][spawnX - 1] = l;
+				
+				// add them to queue
+				q.push(&r);
+				q.push(&l);
+				numRooms -= 2;
+			}
+			else if (spawnRooms == 1) { // right
+				// create the node for this child room, located one to the right of the spawn room
+				// rooms value is default 2 because it knows it has a parent on the left
+				Node c = { true, spawnX + 1, spawnY, nullptr, 2 };
+				map[spawnY][spawnX + 1] = c;
+				q.push(&c);
+				numRooms -= 1;
+			}
+			else if (spawnRooms == 2) { // left
+				// create the node for this child room, located one to the left of the spawn room
+				// rooms value is default 1 because it knows it has a parent on the right
+				Node c = { true, spawnX - 1, spawnY, nullptr, 1 };
+				map[spawnY][spawnX - 1] = c;
+				q.push(&c);
+				numRooms -= 1;
+			}
+
+			// generate the spawn room based on template and record doors
+			curr->doors = spawnRooms;
+			curr->t = new Tilemap(getSpawn(spawnX), tiles, bgs[rand() % bgs.size()]);
+
+			//std::cout << "Created spawn at " << spawnY << " " << spawnX << " " << spawnRooms << " " << curr->doors << "\n" << std::endl;
+		}
+		else { // This room is not the spawn room
+
+			//std::cout << "Procesing Node at " << curr->y << " " << curr->x << "\n" << std::endl;
+
+			// int for the doors off of this one
+			int rooms = 0;
+
+			// if we are allowed to make a new room, try to
+			if (numRooms > 0) { // we can make a new room (at least one)
+				
+				//std::cout << numRooms << " remaining rooms\n";
+
+				// how many should we try to make? anywhere from 1 to 3
+				int r = rand() % std::min(3, numRooms) + 1;
+
+				//std::cout << r << " rooms to create\n";
+
+				// for each number, try to find a valid direction, if we can, make room and add it
+				for (int i = 0; i < r; i++) {
+					// direction is random - 0-3, converted to 4-bit
+					int dir = randToDir(rand() % 4);
+					int tries = 4;
+					
+					while (!isValid(curr->x, curr->y, dir) && tries > 0) {
+						//std::cout << dir << "\n" << std::endl;
+						dir = randToDir(rand() % 4);
+						tries--;
+					}
+
+					//std::cout << "Create room in direction " << dir << "\n" << std::endl;
+
+					if (isValid(curr->x, curr->y, dir)) { // if this is valid, then we can create a child
+						int xAdj = xFromDir(dir);
+						int yAdj = yFromDir(dir);
+
+						int startX = curr->x;
+						int startY = curr->y;
+
+						//std::cout << "Current: " << curr->y << " " << curr->x << "\n";
+						//std::cout << "Start: " << startY << " " << startX << "\n";
+
+						int from = parentDir(dir);
+						Node c = { true, startX + xAdj, startY + yAdj, nullptr, from};
+
+						//std::cout << "Adjust: " << yAdj << " " << xAdj << "\n";
+
+						map[startY + yAdj][startX + xAdj] = c;
+						q.push(&c);
+						numRooms -= 1;
+
+						// count this door
+						rooms += dir;
+						//std::cout << "Added room at " << startY + yAdj << " " << startX + xAdj << "\n" << std::endl;
+					}
+				}
+			}
+
+			// add the doors
+			curr->doors += rooms;
+
+			// generate a procgen room with these doors
+			curr->t = new Tilemap(210, 45, rooms, tiles, bgs[rand() % bgs.size()]);
+		}
+		// update our node (since we have updated doors and t)
+		map[curr->y][curr->x] = *curr;
+	}
 
 	/*
 	Create spawn room vertex as root node
@@ -100,38 +227,6 @@ void Gamemap::generateGamemap() {
 	S	R1	R3
 	0	0	0
 	*/
-
-
-
-
-	// This is not even worth doing
-	//For each room/tilemap - generate information about the room, then create the tilemap
-	for (int i = 0; i < mapHeight; i++) {
-		for (int j = 0; j < mapLength; j++) {
-
-			// 3 room sizes (right now)
-			int roomSize = rand() % 3;		//For now, equal probability for small, medium, or large room
-
-			//TODO: Make verticle rooms too, and also rooms with different proportions.
-			//Right now every room has doors on the left or right and we will need ones with doors on the top/bottom
-
-			// randomly select the background that we will use for this room
-			int bg = rand() % bgs.size();
-
-			switch (roomSize) {
-			case 0:		//small room
-				map[i][j] = *(new Tilemap(90, 45, 0, tiles, bgs[bg]));
-				break;
-			case 1:		//medium room
-				map[i][j] = *(new Tilemap(210, 45, 0, tiles, bgs[bg]));
-				break;
-			case 2:		//large room
-				map[i][j] = *(new Tilemap(420, 45, 0, tiles, bgs[bg]));
-				break;
-				;
-			}
-		}
-	}
 }
 
 // set the position of which room in the map the player is in
@@ -142,5 +237,116 @@ void Gamemap::setCurrentPosition(int x, int y) {
 
 // returns a pointer to the current Tilemap that the player is in
 Tilemap* Gamemap::getCurrentRoom() {
-	return &map[currYPos][currXPos];
+	return map[currYPos][currXPos].t;
+}
+
+// gets the template for the spawn room
+std::string Gamemap::getSpawn(int x) {
+	std::string s;
+	if (x > 0 && x < mapLength - 1) { // if not on either edge, door on both sides
+		s = "data/tilemaps/spawn/spawnroomLR.txt";
+	}
+	else if (x == 0) { // if on the left, door on right
+		s = "data/tilemaps/spawn/spawnroomR.txt";
+	}
+	else { // if on the right, door on left
+		s = "data/tilemaps/spawn/spawnroomL.txt";
+	}
+	return s;
+}
+
+// gets the "rooms" value for the spawn room
+int Gamemap::getSpawnRooms(int x){
+	int r;
+	if (x > 0 && x < mapLength - 1) { // if not on either edge, door on both sides
+		r = 3;
+	}
+	else if (x == 0) { // if on the left, door on right
+		r = 1;
+	}
+	else { // if on the right, door on left
+		r = 2;
+	}
+	return r;
+}
+
+//  converts the rand 0-3 for direction into our "4-bit"
+int Gamemap::randToDir(int r) {
+	if (r == 0) { // right
+		return 1;
+	}
+	else if (r == 1) { //left
+		return 2;
+	}
+	else if (r == 2) { //down
+		return 4;
+	}
+	else { //up
+		return 8;
+	}
+}
+
+// checks if the direction chosen is valid for a new room based on where we are now and the direction we want to go in.
+bool Gamemap::isValid(int x, int y, int dir) {
+	bool ret = false;
+
+	//std::cout << x << " " << y << " " << dir << " " << std::endl;
+
+	// if a node is already there OR if it goes out of bounds - invalid
+	
+	if (dir == 1 && x != mapLength - 1) { // if right is valid
+		if (map[y][x + 1].valid == false) //check node
+			ret = true;
+	}
+	else if (dir == 2 && x != 0) { // if left is valid
+		if (map[y][x - 1].valid == false) //check node
+			ret = true;
+	}
+	else if (dir == 4 && y != mapHeight - 1) { // if down is valid
+		if (map[y + 1][x].valid == false) //check node
+			ret = true;
+	}
+	else if(dir == 8 && y != 0) { // if up is valid
+		if (map[y - 1][x].valid == false) //check node
+			ret = true;
+	}
+
+	//std::cout << ret << "\n" << std::endl;
+	return ret;
+}
+
+// converts the dir value into x adjustment
+int Gamemap::xFromDir(int dir){
+	if (dir == 1)
+		return 1;
+	else if (dir == 2)
+		return -1;
+	else
+		return 0;
+}
+
+// converts the dir value into y adjustment
+int Gamemap::yFromDir(int dir) {
+	if (dir == 4)
+		return 1;
+	else if (dir == 8)
+		return -1;
+	else
+		return 0;
+}
+
+// convert dir into direction for child node
+int Gamemap::parentDir(int dir) {
+	if (dir == 1) { // if we go right, come from left
+		return 2;
+	}
+	else if (dir == 2) { // if we go left, come from right
+		return 1;
+	}
+	else if (dir == 4) { // if we go down, come from up
+		return 8;
+	}
+	else { // if we go up, come from down
+		return 4;
+	}
 }

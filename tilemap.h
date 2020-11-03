@@ -1,6 +1,6 @@
 #ifndef _TILEMAP_H_
 #define _TILEMAP_H_
-#endif
+
 
 #include <string>
 #include <vector>
@@ -44,3 +44,4 @@ class Tilemap
 			std::vector<Tile*> tileArray;// Stores references to every tile type encountered in the tilemap
 };
 
+#endif

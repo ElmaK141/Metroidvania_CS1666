@@ -30,9 +30,24 @@ public:
 private:
 	// Private Functions:
 	void generateGamemap();		// creates the Gamemap
-	// Private Variables: 
-	Tilemap** map;				// The 2D array of Tilemaps that make up this worlds map
+	std::string getSpawn(int x);
+	int getSpawnRooms(int x);
+	int randToDir(int r);
+	bool isValid(int x, int y, int dir);
+	int xFromDir(int dir);
+	int yFromDir(int dir);
+	int parentDir(int dir);
+	// Private Variables:
+	struct Node {			// Node is a wrapper for all of our Tilemaps
+		bool valid;			// Has this node been created
+		int x;
+		int y;				// x and y location (in 2D array of this node)
+		Tilemap* t;			// Pointer to this room's Tilemap
+		int doors;			// 4-bit int encoding of where the doors are in this room
+	};
 
+	Node** map;				// 2D array of Nodes makes up the map
+	
 	std::vector<Tile*> tiles;		// tiles we have for the tilemaps
 	std::vector<Background*> bgs;	// backgrounds we have for tilemaps
 
