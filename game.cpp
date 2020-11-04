@@ -1109,8 +1109,8 @@ void Game::generateMap(Tilemap** map, int mapX, int mapY, std::vector<Tile*> til
 	srand(time(NULL));
 	int start = rand() % mapX;
 	int end = rand() % mapX;
-	map[0][start].setStart();
-	map[mapY - 1][end].setEnd();
+	//map[0][start].setStart();
+	//map[mapY - 1][end].setEnd();
 
 	/*for (int i = 0; i < mapY; i++) {
 		for (int j = 0; j < mapX; j++) {
