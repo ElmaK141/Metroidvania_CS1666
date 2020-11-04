@@ -403,6 +403,7 @@ void Game::runGame() {
 		//Draw the player's hp
 		drawHP();
 
+		//Player is Dead
 		if (playerHP <= 0) {
 			gameState = 4;
 			break;
@@ -1088,8 +1089,7 @@ void Game::generateMap(Tilemap** map, int mapX, int mapY, std::vector<Tile*> til
 			
 			//std::cout << roomSize << std::endl;
 
-			//TODO: Make verticle rooms too, and also rooms with different proportions.
-			//Right now every room has doors on the left or right and we will need ones with doors on the top/bottom
+			//TODO: Make rooms with different proportions.
 
 			switch (roomSize) {
 				case 0:		//small room
@@ -1104,6 +1104,35 @@ void Game::generateMap(Tilemap** map, int mapX, int mapY, std::vector<Tile*> til
 ;			}
 		}
 	}
+
+	//Create starting and ending rooms
+	srand(time(NULL));
+	int start = rand() % mapX;
+	int end = rand() % mapX;
+	//map[0][start].setStart();
+	//map[mapY - 1][end].setEnd();
+
+	/*for (int i = 0; i < mapY; i++) {
+		for (int j = 0; j < mapX; j++) {
+			if (map[i][j].isStart())
+				std::cout << "1 ";
+			else if (map[i][j].isEnd())
+				std::cout << "2 ";
+			else
+				std::cout << "0 ";
+		}
+		std::cout << std::endl;
+	}*/
+
+	//TODO: Generate a path from the start to the end
+	/*bool path = false;
+	while (!path) {
+		for (int i = 0; i < mapY; i++) {
+			for (int j = 0; j < mapX; j++) {
+
+			}
+		}
+	}*/
 }
 
 void Game::update()
@@ -1184,6 +1213,9 @@ void Game::runDebug() {
 	//Current room
 	int roomNum = 0;
 	Tilemap* currRoom = &map[0][0];
+
+	//"Load" in the game by pausing to avoid buffering in the gappling hook input
+	SDL_Delay(100);
 
 	//Main loop
 	while (running && gameState == 3) {
