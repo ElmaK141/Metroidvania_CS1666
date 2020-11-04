@@ -27,8 +27,6 @@ Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles, Background* bg)
 	this->yMax = 0;			// Default placeholder
 	this->tileArray = tiles;
 	this->bg = bg;
-	this->start = false;
-	this->end = false;
 
 	// Use the path to load in the tilemap's
 	// text representation and populate the
@@ -45,8 +43,6 @@ Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Backgro
 	this->room = room;
 	this->tileArray = tiles;
 	this->bg = bg;
-	this->start = false;
-	this->end = false;
 
 	//generate tilemap without text file
 	this->generateTilemap();
@@ -70,22 +66,6 @@ void Tilemap::drawTilemap(SDL_Renderer* render, int offset) {
 		}
 	}
 
-}
-
-void Tilemap::setStart() {
-	this->start = true;
-}
-
-void Tilemap::setEnd() {
-	this->end = true;
-}
-
-bool Tilemap::isStart() {
-	return this->start;
-}
-
-bool Tilemap::isEnd() {
-	return this->end;
 }
 
 ///////////////////////
@@ -167,143 +147,42 @@ void Tilemap::generateTilemap() {
 	//using block system
 	// so we have room size: 45x210
 	// we define a block that is: 9x10
+	int blockHeight = 9;
+	int blockWidth = 10;
 	// so any room/map is a 2d array of 5x21 blocks
-	int h = this->yMax / 9;
-	int w = this->xMax / 10;
+	int h = this->yMax / blockHeight;
+	int w = this->xMax / blockWidth;
 
-	// i have looked into maybe using std::array for this but eh
+	// I have looked into maybe using std::array for this but eh
 	Block*** blockMap = new Block** [h];
 	for(int i = 0; i < h; i++){
 		blockMap[i] = new Block*[w];
 		
 		// iterate over blockMap and create a Block in each spot
+		// FIRST PASS - create and generate walls
 		for (int j = 0; j < w; j++) {
+
+			// create a block in this spot
 			blockMap[i][j] = new Block(i, j, h, w);
 
-			// set door flag
-			if (this->room == 0 && i == h - 1 && j == w - 1) { //door on the right
-				blockMap[i][j]->setDoor();
-			}
-			else if (this->room == 1 && i == h - 1 && j == 0) { //door on the left
-				blockMap[i][j]->setDoor();
-			}
-			else if (this->room == 2 && i == h - 1 && j == (w - 1) / 2) {	//door on the bottom
-				blockMap[i][j]->setDoor();
-			}
-			else if (this->room == 3 && i == 0 && j == (w - 1) / 2) {		//door on the top
-				blockMap[i][j]->setDoor();
-			}
-			else if (this->room == 4) {		//door on left and right
-				if (i == h - 1 && j == 0) {	//Left
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == h - 1 && j == w - 1) {	//Right
-					blockMap[i][j]->setDoor();
-				}
-			}
-			else if (this->room == 5) {	//door on left and top
-				if (i == h - 1 && j == 0) { //Left
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == 0 && j == (w - 1) / 2) {	//Top
-					blockMap[i][j]->setDoor();
-				}
-			}
-			else if (this->room == 6) {	//door on left and bottom
-				if (i == h - 1 && j == 0) { //Left
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
-					blockMap[i][j]->setDoor();
-				}
-			}
-			else if (this->room == 7) {	//door on right and top
-				if (i == h - 1 && j == w - 1) { //Right
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == 0 && j == (w - 1) / 2) {	//Top
-					blockMap[i][j]->setDoor();
-				}
-			}
-			else if (this->room == 8) {	//door on right and bottom
-				if (i == h - 1 && j == w - 1) { //Right
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
-					blockMap[i][j]->setDoor();
-				}
-			}
-			else if (this->room == 9) {	//door on top and bottom
-				if (i == 0 && j == (w - 1) / 2) { //Top
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
-					blockMap[i][j]->setDoor();
-				}
-			}
-			else if (this->room == 10) {	//door on left, right, and bottom
-				if (i == h - 1 && j == 0) { //Left
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == h - 1 && j == w - 1) {	//Right
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
-					blockMap[i][j]->setDoor();
-				}
-			}
-			else if (this->room == 11) {	//door on left, right, and top
-				if (i == h - 1 && j == 0) { //Left
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == h - 1 && j == w - 1) {	//Right
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == 0 && j == (w - 1) / 2) {	//Top
-					blockMap[i][j]->setDoor();
-				}
-			}
-			else if (this->room == 12) {	//door on left, top, and bottom
-				if (i == h - 1 && j == 0) { //Left
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == 0 && j == (w - 1) / 2) {	//Top
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
-					blockMap[i][j]->setDoor();
-				}
-			}
-			else if (this->room == 13) {	//door on right, top, and bottom
-				if (i == h - 1 && j == w - 1) { //Right
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == 0 && j == (w - 1) / 2) {	//Top
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
-					blockMap[i][j]->setDoor();
-				}
-			}
-			else if (this->room == 14) {	//door on left, right, top, and bottom
-				if (i == h - 1 && j == 0) { //Left
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == h - 1 && j == w - 1) {	//Right
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == 0 && j == (w - 1) / 2) {	//Top
-					blockMap[i][j]->setDoor();
-				}
-				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
-					blockMap[i][j]->setDoor();
-				}
-			}
+			// then generate this block
+			// *Generate creates basic walls that outline the room*
+			blockMap[i][j]->generateBlock();
 
+			/*
+			// set door flag
+			if (i == h-1 && j == w-1 && this->room == 0) { //door on the right
+				blockMap[i][j]->setDoor();
+			}
+			else if (i == h - 1 && j == 0 && this->room == 1) { //door on the left
+				blockMap[i][j]->setDoor();
+			}
+			*/
 		}
 	}
 	
-	// Then we would generate one block at a time -> from bottom left to top right
+
+	// First Pass: Generate each block in terms of the tiles it needs by defualt -> from bottom left to top right
 	for (int i = h-1; i > -1; i--) { //reverse, bot to top
 		for (int j = 0; j < w; j++) { //left to right
 
@@ -341,9 +220,63 @@ void Tilemap::generateTilemap() {
 		}
 	}
 
-	// ** Door set here somewhere? **
-
 	// we pass the room num into the tilemap -> from here room can be used to set the door flag for the correct block (Corner WallR at bottom if 0)
+
+	// now that the room and walls exist, we want to make a second pass and add platforms
+	// we should gen a number of platforms here to say how many platforms will be in the room
+
+	//number of platforms for this room?
+	int numPlats = rand() % 4 + 5;
+
+	// when populating the room, we decide if we will have a platform in this block, if we can (because of total num and if a platform is nearby)
+		// are there numPlat platforms?
+			//Yes: we cannot have anymore
+			//No: check surrounding to see if this is a valid platform location
+				//Valid: roll for plat
+				//Invalid: cannot put a plat here
+	// some way to randomly make sure plats are offset, not always in same place, and also that we are not rolling under too often and not creating any platforms?
+	// maybe we generate here the location of every platform and then just tell the blocks where they are?
+
+
+
+	// Second Pass: Platforms (and Doors? we have doors in first pass rn)
+	// call it PopulateBlock()? or AddPlatforms()?
+	for (int i = h - 1; i > -1; i--) { //reverse, bot to top
+		for (int j = 0; j < w; j++) { //left to right
+
+			// check around this block on all 4 sides
+			if (j > 0) { // there is a block to the left
+				blockMap[i][j]->checkBlock(blockMap[i][j - 1]);
+			}
+			if (j < w - 1) { // there is a block to the right
+				blockMap[i][j]->checkBlock(blockMap[i][j + 1]);
+			}
+			if (i > 0) { // there is a block above
+				blockMap[i][j]->checkBlock(blockMap[i - 1][j]);
+			}
+			if (i < h - 1) { // there is a block below
+				blockMap[i][j]->checkBlock(blockMap[i + 1][j]);
+			}
+
+			//WHAT DO WE DO WITH CHECK
+			// This way, when generating the block, it accounts for the blocks around it -> knows where the block next to it would like to connect to it (if we decide to connect to it)
+			// maybe we also include a priority for connection (must connect vs can connect)
+
+			// idea is to pass in ptr of blocks that pass a connected check adjacent to this
+			// think there is 3 tiles of platform going out of the right of the block on our left
+			// this block would be told that the left block wants to connect, and then would know where to place a platform in order to connect across blocks
+
+			// generate block, with info of blocks around it (that have been generated)
+			blockMap[i][j]->populateBlock();
+
+			// After generating the block, we set it 0 - initially generated
+			//blockMap[i][j]->setBlock(0);
+
+			// If a block has 0s and 1s on all sides, it becomes 1 - perma set
+			// not doing this yet
+
+		}
+	}
 
 
 	// Use our dimensions to 
@@ -361,11 +294,11 @@ void Tilemap::generateTilemap() {
 			// this sucks is there a better way to do this? I am dumb for doing it this way perhaps?
 
 			// copy into tilemap
-			for (int row = 0; row < 9; row++) {
-				for (int col = 0; col < 10; col++) {
+			for (int row = 0; row < blockHeight; row++) {
+				for (int col = 0; col < blockWidth; col++) {
 					// index in tilemap is offset by which block we are copying
-					int rowInd = row + (i * 9);
-					int colInd = col + (j * 10);
+					int rowInd = row + (i * blockHeight);
+					int colInd = col + (j * blockWidth);
 					//std::cout << curr[row][col] << " to tilemap index " << rowInd << " " << colInd << std::endl;
 					this->tileMap[rowInd][colInd] = curr[row][col];
 				}

@@ -1,6 +1,6 @@
 #ifndef _TILEMAP_H_
 #define _TILEMAP_H_
-#endif
+
 
 #include <string>
 #include <vector>
@@ -50,3 +50,4 @@ class Tilemap
 			bool end;					// True if is the end of a map
 };
 
+#endif
