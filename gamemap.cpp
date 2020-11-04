@@ -34,7 +34,7 @@ Gamemap::Gamemap(int length, int height, std::vector<Tile*> tiles, std::vector<B
 	// We know of Tiles, Bgs, Size, and Tilemap Array internally
 	generateGamemap();
 
-	/* print debug
+	/* print debug */
 	for (int i = 0; i < mapHeight; i++) {
 		for (int j = 0; j < mapLength; j++) {
 			if(map[i][j].valid)
@@ -44,7 +44,6 @@ Gamemap::Gamemap(int length, int height, std::vector<Tile*> tiles, std::vector<B
 		}
 		std::cout << "\n" << std::endl;
 	}
-	*/
 }
 
 // Make sure to clean up memory
@@ -66,8 +65,8 @@ void Gamemap::generateGamemap() {
 	srand(time(NULL));
 
 	// randomly choose a starting location for the player spawn room and map gen
-	int spawnX = rand() % mapLength;
-	int spawnY = rand() % mapHeight;
+	this->spawnX = rand() % mapLength;
+	this->spawnY = rand() % mapHeight;
 
 	// set current position to this tilemap - player starts in the spawn room
 	setCurrentPosition(spawnX, spawnY);
@@ -87,6 +86,8 @@ void Gamemap::generateGamemap() {
 	q.push(&spawn);
 	// spawn node created (and doors it has) based on where it is
 
+	//std::cout << "Spawn " << spawn.t << " " << &spawn << std::endl;
+
 	// when we add a node to the array, we count a room. spawn counts as a room, so we count for it
 	numRooms -= 1;
 
@@ -96,6 +97,8 @@ void Gamemap::generateGamemap() {
 		Node* curr = q.front();
 		q.pop();
 
+		//std::cout << "Curr at pop " << curr->t << " " << curr << std::endl;
+
 		// If this is the Spawn room, we are predefined for our children nodes
 		if (curr->x == spawnX && curr->y == spawnY) {
 			int spawnRooms = getSpawnRooms(spawnX);
@@ -103,38 +106,59 @@ void Gamemap::generateGamemap() {
 			// create children nodes
 			if (spawnRooms == 3) { // left and right
 				// create both children nodes, one on the right, one on the left
-				Node r = { true, spawnX + 1, spawnY, nullptr, 2 };
-				map[spawnY][spawnX + 1] = r;
-				Node l = { true, spawnX - 1, spawnY, nullptr, 1 };
-				map[spawnY][spawnX - 1] = l;
 				
-				// add them to queue
-				q.push(&r);
-				q.push(&l);
+				// Right node
+				map[spawnY][spawnX + 1].valid = true;
+				map[spawnY][spawnX + 1].x = spawnX + 1;
+				map[spawnY][spawnX + 1].y = spawnY;
+				map[spawnY][spawnX + 1].t = nullptr;
+				map[spawnY][spawnX + 1].doors = 2;
+				q.push(&map[spawnY][spawnX + 1]);
+
+				// Left Node
+				map[spawnY][spawnX - 1].valid = true;
+				map[spawnY][spawnX - 1].x = spawnX - 1;
+				map[spawnY][spawnX - 1].y = spawnY;
+				map[spawnY][spawnX - 1].t = nullptr;
+				map[spawnY][spawnX - 1].doors = 1;
+				q.push(&map[spawnY][spawnX - 1]);
+
+				// We have 2 new valid rooms
 				numRooms -= 2;
 			}
 			else if (spawnRooms == 1) { // right
 				// create the node for this child room, located one to the right of the spawn room
 				// rooms value is default 2 because it knows it has a parent on the left
-				Node c = { true, spawnX + 1, spawnY, nullptr, 2 };
-				map[spawnY][spawnX + 1] = c;
-				q.push(&c);
+				map[spawnY][spawnX + 1].valid = true;
+				map[spawnY][spawnX + 1].x = spawnX + 1;
+				map[spawnY][spawnX + 1].y = spawnY;
+				map[spawnY][spawnX + 1].t = nullptr;
+				map[spawnY][spawnX + 1].doors = 2;
+				q.push(&map[spawnY][spawnX + 1]);
+
+				// 1 new room
 				numRooms -= 1;
 			}
 			else if (spawnRooms == 2) { // left
 				// create the node for this child room, located one to the left of the spawn room
 				// rooms value is default 1 because it knows it has a parent on the right
-				Node c = { true, spawnX - 1, spawnY, nullptr, 1 };
-				map[spawnY][spawnX - 1] = c;
-				q.push(&c);
+				map[spawnY][spawnX - 1].valid = true;
+				map[spawnY][spawnX - 1].x = spawnX - 1;
+				map[spawnY][spawnX - 1].y = spawnY;
+				map[spawnY][spawnX - 1].t = nullptr;
+				map[spawnY][spawnX - 1].doors = 1;
+				q.push(&map[spawnY][spawnX - 1]);
+
+				// 1 new room
 				numRooms -= 1;
 			}
 
 			// generate the spawn room based on template and record doors
 			curr->doors = spawnRooms;
 			curr->t = new Tilemap(getSpawn(spawnX), tiles, bgs[rand() % bgs.size()]);
-
-			//std::cout << "Created spawn at " << spawnY << " " << spawnX << " " << spawnRooms << " " << curr->doors << "\n" << std::endl;
+			
+			//std::cout << "Create spawn " << curr->t << " " << curr << std::endl;
+			//std::cout << "Created spawn at " << spawnY << " " << spawnX << " " << spawnRooms << "\n" << std::endl;
 		}
 		else { // This room is not the spawn room
 
@@ -178,12 +202,18 @@ void Gamemap::generateGamemap() {
 						//std::cout << "Start: " << startY << " " << startX << "\n";
 
 						int from = parentDir(dir);
-						Node c = { true, startX + xAdj, startY + yAdj, nullptr, from};
+					
+						// set fields of this node we are setting 
+						map[startY + yAdj][startX + xAdj].valid = true;
+						map[startY + yAdj][startX + xAdj].x = startX + xAdj;
+						map[startY + yAdj][startX + xAdj].y = startY + yAdj;
+						map[startY + yAdj][startX + xAdj].t = nullptr;
+						map[startY + yAdj][startX + xAdj].doors = from;
 
-						//std::cout << "Adjust: " << yAdj << " " << xAdj << "\n";
-
-						map[startY + yAdj][startX + xAdj] = c;
-						q.push(&c);
+						//std::cout << "New Node1 " << map[startY + yAdj][startX + xAdj].t << " " << &map[startY + yAdj][startX + xAdj] << std::endl;
+						
+						// add this node to the queue
+						q.push(&map[startY + yAdj][startX + xAdj]);
 						numRooms -= 1;
 
 						// count this door
@@ -196,37 +226,18 @@ void Gamemap::generateGamemap() {
 			// add the doors
 			curr->doors += rooms;
 
+			//std::cout << "Generating tilemap for room at: " << curr->y << " " << curr->x << std::endl;
+
+			//std::cout << "Before Gen: " << curr->t << " " << curr << std::endl;
+
 			// generate a procgen room with these doors
 			curr->t = new Tilemap(210, 45, rooms, tiles, bgs[rand() % bgs.size()]);
+
+			//std::cout << "After Gen: " << curr->t << " " << curr << std::endl;
 		}
-		// update our node (since we have updated doors and t)
+		// update our node (since we have updated doors and t) - just in case, i was getting some weird issues that this fixed
 		map[curr->y][curr->x] = *curr;
 	}
-
-	/*
-	Create spawn room vertex as root node
-		must keep track of graph size in terms of 2d array (map height and length)
-	Starting from root node (which we will say only has doors on left/right when possible)
-		Create up to 2 children (left and/or right)
-		An edge connects these nodes to the spawn (tells us there should be a door
-	Then for each node, based on the number of rooms we have vs number of rooms we are allowed:
-		Randomly decide the number of children and which directions
-			Cannot move outside of the map or into a node that already exists
-		Create those children (as long as we have rooms avail)
-		Add the children to the queue
-	Breadth First approach: Say we have 3x3 map with 5 rooms
-		Spawn is selected at left wall in the middle
-			It gets 1 room to the right R1
-		R1 rolls 2 rooms, one up, one right
-			Creates R2 up, Creates R3 right
-		R2 rolls 2, it cannot go up or down
-			Creates R4 left, cannot create any more rooms (all 5 rooms exist)
-		Process R3 and R4 (nothing happens because no more rooms
-	Final layout:
-	R4	R2	0
-	S	R1	R3
-	0	0	0
-	*/
 }
 
 // set the position of which room in the map the player is in
@@ -235,9 +246,30 @@ void Gamemap::setCurrentPosition(int x, int y) {
 	currYPos = y;
 }
 
+// Updates current position based on which door we go through
+void Gamemap::updatePosition(int door) {
+	if (door == 8) { //up
+		currYPos -= 1;
+	}
+	else if (door == 4) { //down
+		currYPos += 1;
+	}
+	else if (door == 2) { //left
+		currXPos -= 1;
+	}
+	else { //right
+		currXPos += 1;
+	}
+}
+
 // returns a pointer to the current Tilemap that the player is in
 Tilemap* Gamemap::getCurrentRoom() {
 	return map[currYPos][currXPos].t;
+}
+
+// Returns "doors" 4-bit number of where there are doors in this room
+int Gamemap::getRooms() {
+	return map[currYPos][currXPos].doors;
 }
 
 // gets the template for the spawn room
@@ -349,4 +381,24 @@ int Gamemap::parentDir(int dir) {
 	else { // if we go up, come from down
 		return 4;
 	}
+}
+
+// True if current room is spawn room
+bool Gamemap::ifSpawn(){
+	if (currXPos == spawnX && currYPos == spawnY) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+//
+int Gamemap::getCurrX() {
+	return this->currXPos;
+}
+
+//
+int Gamemap::getCurrY() {
+	return this->currYPos;
 }
