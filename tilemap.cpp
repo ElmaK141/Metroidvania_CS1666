@@ -27,6 +27,8 @@ Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles, Background* bg)
 	this->yMax = 0;			// Default placeholder
 	this->tileArray = tiles;
 	this->bg = bg;
+	this->start = false;
+	this->end = false;
 
 	// Use the path to load in the tilemap's
 	// text representation and populate the
@@ -43,6 +45,8 @@ Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Backgro
 	this->room = room;
 	this->tileArray = tiles;
 	this->bg = bg;
+	this->start = false;
+	this->end = false;
 
 	//generate tilemap without text file
 	this->generateTilemap();
@@ -66,6 +70,22 @@ void Tilemap::drawTilemap(SDL_Renderer* render, int offset) {
 		}
 	}
 
+}
+
+void Tilemap::setStart() {
+	this->start = true;
+}
+
+void Tilemap::setEnd() {
+	this->end = true;
+}
+
+bool Tilemap::isStart() {
+	return this->start;
+}
+
+bool Tilemap::isEnd() {
+	return this->end;
 }
 
 ///////////////////////
@@ -161,11 +181,123 @@ void Tilemap::generateTilemap() {
 			blockMap[i][j] = new Block(i, j, h, w);
 
 			// set door flag
-			if (i == h-1 && j == w-1 && this->room == 0) { //door on the right
+			if (this->room == 0 && i == h - 1 && j == w - 1) { //door on the right
 				blockMap[i][j]->setDoor();
 			}
-			else if (i == h - 1 && j == 0 && this->room == 1) { //door on the left
+			else if (this->room == 1 && i == h - 1 && j == 0) { //door on the left
 				blockMap[i][j]->setDoor();
+			}
+			else if (this->room == 2 && i == h - 1 && j == (w - 1) / 2) {	//door on the bottom
+				blockMap[i][j]->setDoor();
+			}
+			else if (this->room == 3 && i == 0 && j == (w - 1) / 2) {		//door on the top
+				blockMap[i][j]->setDoor();
+			}
+			else if (this->room == 4) {		//door on left and right
+				if (i == h - 1 && j == 0) {	//Left
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == h - 1 && j == w - 1) {	//Right
+					blockMap[i][j]->setDoor();
+				}
+			}
+			else if (this->room == 5) {	//door on left and top
+				if (i == h - 1 && j == 0) { //Left
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == 0 && j == (w - 1) / 2) {	//Top
+					blockMap[i][j]->setDoor();
+				}
+			}
+			else if (this->room == 6) {	//door on left and bottom
+				if (i == h - 1 && j == 0) { //Left
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
+					blockMap[i][j]->setDoor();
+				}
+			}
+			else if (this->room == 7) {	//door on right and top
+				if (i == h - 1 && j == w - 1) { //Right
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == 0 && j == (w - 1) / 2) {	//Top
+					blockMap[i][j]->setDoor();
+				}
+			}
+			else if (this->room == 8) {	//door on right and bottom
+				if (i == h - 1 && j == w - 1) { //Right
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
+					blockMap[i][j]->setDoor();
+				}
+			}
+			else if (this->room == 9) {	//door on top and bottom
+				if (i == 0 && j == (w - 1) / 2) { //Top
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
+					blockMap[i][j]->setDoor();
+				}
+			}
+			else if (this->room == 10) {	//door on left, right, and bottom
+				if (i == h - 1 && j == 0) { //Left
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == h - 1 && j == w - 1) {	//Right
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
+					blockMap[i][j]->setDoor();
+				}
+			}
+			else if (this->room == 11) {	//door on left, right, and top
+				if (i == h - 1 && j == 0) { //Left
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == h - 1 && j == w - 1) {	//Right
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == 0 && j == (w - 1) / 2) {	//Top
+					blockMap[i][j]->setDoor();
+				}
+			}
+			else if (this->room == 12) {	//door on left, top, and bottom
+				if (i == h - 1 && j == 0) { //Left
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == 0 && j == (w - 1) / 2) {	//Top
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
+					blockMap[i][j]->setDoor();
+				}
+			}
+			else if (this->room == 13) {	//door on right, top, and bottom
+				if (i == h - 1 && j == w - 1) { //Right
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == 0 && j == (w - 1) / 2) {	//Top
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
+					blockMap[i][j]->setDoor();
+				}
+			}
+			else if (this->room == 14) {	//door on left, right, top, and bottom
+				if (i == h - 1 && j == 0) { //Left
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == h - 1 && j == w - 1) {	//Right
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == 0 && j == (w - 1) / 2) {	//Top
+					blockMap[i][j]->setDoor();
+				}
+				else if (i == h - 1 && j == (w - 1) / 2) {	//Bottom
+					blockMap[i][j]->setDoor();
+				}
 			}
 
 		}

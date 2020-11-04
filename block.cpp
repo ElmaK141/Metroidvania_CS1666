@@ -217,7 +217,7 @@ void Block::generateFloor() {
 		for (int j = 0; j < width; j++) {
 			
 			// if we are at the bottom 
-			if (i == bottom) {
+			if (i == bottom && !this->door) {
 				// floor is 1
 				this->map[i][j] = 1;
 			}
@@ -240,9 +240,9 @@ void Block::generateCeiling() {
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 
-			// if we are at the bottom 
-			if (i == top) {
-				// floor is 1
+			// if we are at the top 
+			if (i == top && !this->door) {
+				// ceiling is 1
 				this->map[i][j] = 1;
 			}
 			else {
