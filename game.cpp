@@ -3,6 +3,7 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 #include "game.h"
+#include "gamemap.h"
 #include "sprite.h"
 #include "entity.h"
 #include "enemies.h"
@@ -124,6 +125,10 @@ void Game::runGame() {
 	Background bg1(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
 	Background bg2(0, 0, 1280, 720, "assets/backgrounds/background2.png", gRenderer);
 
+	std::vector<Background*> backgrounds;
+	backgrounds.push_back(&bg1);
+	backgrounds.push_back(&bg2);
+
 	//Tiles to add to tilemap
 	Tile groundTile(0, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
 	Tile platformTile(16, 0, 16, 16, 1, "assets/sprites/tiles.png", gRenderer);
@@ -137,10 +142,13 @@ void Game::runGame() {
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
-	//Initialize tilemaps
-	//Tilemap t0("data/tilemaps/tilemap0.txt", tiles);
-	
-	// USE THIS FOR PROC GEN TILEMAP
+	// create our Gamemap - right now it is 3x3
+	// This means our total map (all rooms) will be up to 9
+	Gamemap map(3, 3, tiles, backgrounds);
+
+	/*
+
+	// Current tilemap constructor for procgen
 	//Tilemap t0(210, 45, 0, tiles, &bg1);
 	//Tilemap t1(210, 45, 1, tiles, &bg2);
 
@@ -180,18 +188,22 @@ void Game::runGame() {
 
 	//0 is first room, 1 is second room
 	int roomNum = 0;
-	Tilemap* currRoom = &t0;
+	*/
+
+	// CurrRoom is the pointer to our current room tilemap
+	Tilemap* currRoom = map.getCurrentRoom();
+	int** tileArray = currRoom->getTileMap();
 
 	//Define player Position
 	double x_pos = SCREEN_WIDTH / 2.0;
 	double y_pos = SCREEN_HEIGHT / 2.0 - 145.0;
 
 	//Find player spawn point
-	for (int i = 0; i < t0.getMaxHeight(); i++)
+	for (int i = 0; i < currRoom->getMaxHeight(); i++)
 	{
-		for (int j = 0; j < t0.getMaxWidth(); j++)
+		for (int j = 0; j < currRoom->getMaxWidth(); j++)
 		{
-			if (tileArray0[i][j] == 3)
+			if (tileArray[i][j] == 3)
 			{
 				x_pos = j * 16.0;
 				y_pos = i * 16.0;
@@ -245,6 +257,22 @@ void Game::runGame() {
 		//Handle in-air and on-ground collision for current room
 		handleCollision(&player, currRoom);
 
+		// enemies
+		if (!map.ifSpawn()) {
+			for (int i = 0; i < enemies.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
+			{
+				enemies[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
+				if (!hit)
+				{
+					hit = checkHitPlayer(&player, enemies[i]);
+					if (hit)
+						hitTick = SDL_GetTicks();
+				}
+				else if (SDL_GetTicks() - hitTick > 1000)
+					hit = false;
+			}
+		}
+		/*
 		if (roomNum == 0) {
 			//eye.update(t0.getTileMap(), delta_time, player.getXPosition(), player.getYPosition());
 		}
@@ -262,6 +290,7 @@ void Game::runGame() {
 					hit = false;
 			}	
 		}
+		*/
 
 		// Update scroll if Player moves outside of middle third
 		if (player.getXPosition() > (scroll_offset + rthird))
@@ -276,27 +305,38 @@ void Game::runGame() {
 		if (scroll_offset + SCREEN_WIDTH > currRoom->getMaxWidth()*16)
 			scroll_offset = currRoom->getMaxWidth()*16 - SCREEN_WIDTH;
 
-		// Check to see if we are at door
-		if (checkDoor(roomNum, player.getXVel(), player, currRoom)) {
-			//Flip room
-			if (roomNum == 0) {
-				roomNum = 1;
-				currRoom = &t1;
-			}
-			else {
-				roomNum = 0;
-				currRoom = &t0;
-			}
+		// Check if we are going through a door
+		int newRoom = checkDoor(map.getRooms(), player, currRoom);
+		
+		// if we are, update our room and position
+		if (newRoom != -1) {
+			// If this is true, then we must update our tilemap, and map position
+			// as well as reset details for room rendering
+			
+			std::cout << "We are changing from: " << map.getCurrY() << " " << map.getCurrX() << " " << newRoom << std::endl;
 
-			// change all details for the room we are rendering
+			// updates our position in map to the new room, update our Tilemap pointer and tileArray
+			map.updatePosition(newRoom);
 
-			if (roomNum == 0) { //new room is 0
-				//set offset and player position accordingly
-				scroll_offset = currRoom->getMaxWidth()*16 - SCREEN_WIDTH;
-				player.setPosition(currRoom->getMaxWidth()*16 - player.getCurrFrame().getWidth(), player.getYPosition());
+			std::cout << "We are now in: " << map.getCurrY() << " " << map.getCurrX() << std::endl;
+
+			currRoom = map.getCurrentRoom();
+			tileArray = currRoom->getTileMap();
+
+			if (newRoom == 8) { //moving up
+				// right now nothing with scroll offset (need y offset too now)
+				//also, account for player height?
+				player.setPosition(player.getXPosition(), currRoom->getMaxHeight()*16);
 			}
-			else { //new room is 1
-				//set offset and player position accordingly
+			else if (newRoom == 4) { //moving down
+				// right now no scroll
+				player.setPosition(player.getXPosition(), 0);
+			}
+			else if (newRoom == 2) { //moving left
+				scroll_offset = currRoom->getMaxWidth() * 16 - SCREEN_WIDTH;
+				player.setPosition(currRoom->getMaxWidth() * 16 - player.getCurrFrame().getWidth(), player.getYPosition());
+			}
+			else { //moving right
 				scroll_offset = 0;
 				player.setPosition(0, player.getYPosition());
 			}
@@ -310,6 +350,12 @@ void Game::runGame() {
 		// Draw the portion of the background currently inside the camera view
 		rem_bg = scroll_offset % SCREEN_WIDTH;
 		rem_tile = scroll_offset % (currRoom->getMaxWidth()*16);
+		
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg, 0);
+		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
+		currRoom->drawTilemap(gRenderer, rem_tile);
+
+		/*
 		if (roomNum == 0) {
 			t0.getBackground()->getSprite()->draw(gRenderer, -rem_bg, 0);
 			t0.getBackground()->getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
@@ -322,6 +368,7 @@ void Game::runGame() {
 			
 			t1.drawTilemap(gRenderer, rem_tile);
 		}
+		*/
 
 
 		//draw the player
@@ -335,6 +382,15 @@ void Game::runGame() {
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
 		else if (SDL_GetTicks() % 100 > 50 || !hit)
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+		
+		// Draw Enemies
+		if (!map.ifSpawn()) {
+			for (int i = 0; i < enemies.size(); i++)
+			{
+				enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset, enemies[i]->getYPosition());
+			}
+		}
+		/*
 		if (roomNum == 1)
 		{
 			for (int i = 0; i < enemies.size(); i++)
@@ -342,6 +398,7 @@ void Game::runGame() {
 				enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset, enemies[i]->getYPosition());
 			}
 		}
+		*/
 
 		//Draw the player's hp
 		drawHP();
@@ -948,20 +1005,49 @@ bool Game::checkHitPlayer(Entity* player, Enemy* enemy)
 	return false;
 }
 
-bool Game::checkDoor(int room, double vel, Entity& ent, Tilemap* currRoom) {
-	if (room == 0) { //room 0 has door at the end of the room
-		if (ent.getXPosition() >= currRoom->getMaxWidth()*16 - ent.getCurrFrame().getWidth() - 1) {
-			//we are moving into right door
-			return true;
-		}
+// Look at player position, the room, and if we are leaving (and can).
+// Return the door that we are going through (4-bit) or -1
+int Game::checkDoor(int doors, Entity& ent, Tilemap* currRoom) {
+	// bools break up doors
+	bool up = false;
+	bool down = false;
+	bool left = false;
+	bool right = false;
+
+	// based on doors, determine where we have doors
+	if (doors >= 8) {
+		up = true;
+		doors -= 8;
 	}
-	else { // room 1 has door at 0
-		if (ent.getXPosition() <= 0 && vel < 0) {
-			//we are moving into left door
-			return true;
-		}
+	if (doors >= 4) {
+		down = true;
+		doors -= 4;
 	}
-	return false;
+	if (doors >= 2) {
+		left = true;
+		doors -= 2;
+	}
+	if (doors >= 1) {
+		right = true;
+		doors -= 1;
+	}
+
+	// if there is a door in this direction, and we are at the edge of the room on this side and moving in that direction
+	if (up && ent.getYPosition() <= 0 && ent.getYVel() < 0) {
+		return 8;
+	}
+	else if(down && ent.getYPosition() >= currRoom->getMaxHeight()*16 && ent.getYVel() > 0){ // needs testing when we get up/down doors
+		return 4;
+	}
+	else if (left && ent.getXPosition() <= 0 && ent.getXVel() < 0) {
+		return 2;
+	}
+	else if (right && ent.getXPosition() >= currRoom->getMaxWidth()*16 - ent.getCurrFrame().getWidth() && ent.getXVel() > 0) {
+		return 1;
+	}
+	else {
+		return -1;
+	}
 }
 
 void Game::drawHP()
@@ -1134,6 +1220,7 @@ void Game::runDebug() {
 		if (scroll_offset + SCREEN_WIDTH > currRoom->getMaxWidth()*16)
 			scroll_offset = currRoom->getMaxWidth()*16 - SCREEN_WIDTH;
 
+		/* REMOVED FOR TESTING ON MAIN
 		//Check for switching room
 		if (checkDoor(roomNum, player.getXVel(), player, currRoom)) {
 			//Flip room
@@ -1159,6 +1246,7 @@ void Game::runDebug() {
 				player.setPosition(0, player.getYPosition());
 			}
 		}
+		*/
 
 		//Draw to screen
 		SDL_RenderClear(gRenderer);
