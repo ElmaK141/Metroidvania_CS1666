@@ -169,15 +169,25 @@ void Tilemap::generateTilemap() {
 			// *Generate creates basic walls that outline the room*
 			blockMap[i][j]->generateBlock();
 
-			/*
-			// set door flag
-			if (i == h-1 && j == w-1 && this->room == 0) { //door on the right
+			// set door flags
+			if (i == 0 && j == (w - 1) / 2 && this->room >= 8) { //door on the top
 				blockMap[i][j]->setDoor();
+				this->room -= 8;
 			}
-			else if (i == h - 1 && j == 0 && this->room == 1) { //door on the left
+			if (i == h - 1 && j == (w - 1) / 2 && (this->room >= 4 && this->room < 8)) { //door on the bottom
 				blockMap[i][j]->setDoor();
+				this->room -= 4;
 			}
-			*/
+			if (i == h - 1 && j == 0 && (this->room >= 2 && this->room < 4)) {	//door on the left
+				blockMap[i][j]->setDoor();
+				blockMap[i-1][j]->setDoor();
+				this->room -= 2;
+			}
+			if (i == h - 1 && j == w - 1 && this->room < 2) {	//door on the right
+				blockMap[i][j]->setDoor();
+				blockMap[i - 1][j]->setDoor();
+			}
+			
 		}
 	}
 	

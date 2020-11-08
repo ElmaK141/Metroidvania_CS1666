@@ -35,6 +35,8 @@ Gamemap::Gamemap(int length, int height, std::vector<Tile*> tiles, std::vector<B
 	generateGamemap();
 
 	/* print debug */
+	std::cout << "Spawn: "  << spawnY << " " << spawnX << std::endl;
+
 	for (int i = 0; i < mapHeight; i++) {
 		for (int j = 0; j < mapLength; j++) {
 			if(map[i][j].valid)
@@ -231,7 +233,7 @@ void Gamemap::generateGamemap() {
 			//std::cout << "Before Gen: " << curr->t << " " << curr << std::endl;
 
 			// generate a procgen room with these doors
-			curr->t = new Tilemap(210, 45, rooms, tiles, bgs[rand() % bgs.size()]);
+			curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()]);
 
 			//std::cout << "After Gen: " << curr->t << " " << curr << std::endl;
 		}
