@@ -11,6 +11,10 @@
 #include "background.h"
 #include "button.h"
 
+// Double jump to fullfill requirement
+bool canSecond = true; //The ability: change when getting ability
+bool doneSecond = false; // only allow 1 extra jump
+
 //size of the Window/Screen and thus the size of the Camera
 int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
@@ -313,12 +317,12 @@ void Game::runGame() {
 			// If this is true, then we must update our tilemap, and map position
 			// as well as reset details for room rendering
 			
-			std::cout << "We are changing from: " << map.getCurrY() << " " << map.getCurrX() << " " << newRoom << std::endl;
+			//std::cout << "We are changing from: " << map.getCurrY() << " " << map.getCurrX() << " " << newRoom << std::endl;
 
 			// updates our position in map to the new room, update our Tilemap pointer and tileArray
 			map.updatePosition(newRoom);
 
-			std::cout << "We are now in: " << map.getCurrY() << " " << map.getCurrX() << std::endl;
+			//std::cout << "We are now in: " << map.getCurrY() << " " << map.getCurrX() << std::endl;
 
 			currRoom = map.getCurrentRoom();
 			tileArray = currRoom->getTileMap();
@@ -457,7 +461,6 @@ void Game::getUserInput(Entity* player) {
 	if (keystate[SDL_SCANCODE_E] && player->getShot())
 	{/*Only allow one shot at a time*/
 		/*
-		//Emil
 		player->setShot(false);
 		// set the start position of projectile to be where the user is
 		//only making horizontal projectile
@@ -471,65 +474,19 @@ void Game::getUserInput(Entity* player) {
 	//Redone player physics
 	if(player->getPhysics()->inAir()){
 		//Air control
-		
-		//Holding Spacebar
 		if (keystate[SDL_SCANCODE_SPACE]) {
-			if (!player->getPhysics()->inAir() && player->getJump())    //only jump from ground
-			{
+			if (player->getJump() && canSecond && !doneSecond)
+			{ /* Double jump */
+				doneSecond = true;
+
 				player->setJump(false);
-				player->getPhysics()->setAirState(true);
 				player->setYVel(player->getYVel() - player->getPhysics()->getJumpStrength());
 			}
 		}
-
-		if (!keystate[SDL_SCANCODE_SPACE]){ //only jump if you've landed and pressed space again
-			player->setJump(true);
-		}
 		
-		if (keystate[SDL_SCANCODE_A]) {
-			//Movement
-			if (player->getXVel() > -player->getPhysics()->getMaxX()){ //as long as we don't exceed max speed, change velocity
-				player->setXVel(fmin(player->getXVel() - player->getPhysics()->getAcceleration(), -player->getPhysics()->getMaxX()));
-			}
-		}
-		
-		if (keystate[SDL_SCANCODE_S]) {
-			//Animation
-			player->setCurrFrame(0);
-			
-			//Movement
-		}
-		
-		if (keystate[SDL_SCANCODE_D]) {
-			//Movement
-			if (player->getXVel() < player->getPhysics()->getMaxX()){ //as long as we don't exceed max speed, change velocity
-				player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
-			}
-		}
-		
-		//Not holding side buttons
-		if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
-			//Animation
-			if(player->getFrameIndex() != 0)
-				player->setCurrFrame(1);
-		}
-		
-		if(player->getPhysics()->isGrappling()){
-			
-			double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth()/2);
-			double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight()/2);
-			
-			double xComp = (grappleX - playerCenterX) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
-			double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
-		
-			//Apply grapple force
-			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
-			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
-			
-		}
-		else{
+		//Apply Drag
+		if(!player->getPhysics()->isGrappling()){
 			//Own rules while grappling, do this otherwise
-			//Apply Drag
 			double playerNetVel = sqrt((player->getXVel() * player->getXVel()) + (player->getYVel() * player->getYVel()));
 			double playerXVelNorm = player->getXVel() / playerNetVel;
 			double playerYVelNorm = player->getYVel() / playerNetVel;
@@ -538,27 +495,23 @@ void Game::getUserInput(Entity* player) {
 			player->setXVel(player->getXVel() - (playerXVelNorm * dragForce));
 			player->setYVel(player->getYVel() - (playerYVelNorm * dragForce));
 		}
-		
 	}
 	else{
 		//Ground control
 		
-		//Holding Spacebar
 		if (keystate[SDL_SCANCODE_SPACE]) {
-			if (!player->getPhysics()->inAir() && player->getJump())    //only jump from ground
+			if (player->getJump()) //jump from ground
 			{
-				player->setJump(false);
 				player->getPhysics()->setAirState(true);
+				doneSecond = false; //jumping from ground resets the double
+				
+				player->setJump(false);
 				player->setYVel(player->getYVel() - player->getPhysics()->getJumpStrength());
 			}
 		}
-
-		if (!keystate[SDL_SCANCODE_SPACE]){ //only jump if you've landed and pressed space again
-			player->setJump(true);
-		}
 		
+		//Animation
 		if (keystate[SDL_SCANCODE_A]) {
-			//Animation
 			if (curAnim - lastAnim >= 200.0) {
 				lastAnim = curAnim;
 				if (player->getFrameIndex() == 1 || player->getFrameIndex() == 0) {
@@ -575,11 +528,6 @@ void Game::getUserInput(Entity* player) {
 					player->setCurrFrame(1);
 				}
 			}
-			
-			//Movement
-			if (player->getXVel() > -player->getPhysics()->getMaxX()){ //as long as we don't exceed max speed, change velocity
-				player->setXVel(fmin(player->getXVel() - player->getPhysics()->getAcceleration(), -player->getPhysics()->getMaxX()));
-			}
 		}
 		
 		if (keystate[SDL_SCANCODE_S]) {
@@ -587,8 +535,8 @@ void Game::getUserInput(Entity* player) {
 			player->setCurrFrame(0);
 		}
 		
+		//Animation
 		if (keystate[SDL_SCANCODE_D]) {
-			//Animation
 			if (curAnim - lastAnim >= 200.0 && !player->getPhysics()->inAir()) {
 				lastAnim = curAnim;
 				if (player->getFrameIndex() == 1 || player->getFrameIndex() == 0) {
@@ -605,21 +553,14 @@ void Game::getUserInput(Entity* player) {
 					player->setCurrFrame(1);
 				}
 			}
-			
-			//Movement
-			
-			if (player->getXVel() < player->getPhysics()->getMaxX()){ //as long as we don't exceed max speed, change velocity
-				player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
-			}
 		}
-		else
-		
-		//Not holding side buttons
+
+		//Not holding side buttons (Move outside else if we want 'immediate' stopping for not pressing. using drag)
 		if (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D])) {
 			//Animation
-			if(player->getFrameIndex() != 0)
+			if (player->getFrameIndex() != 0)
 				player->setCurrFrame(1);
-				
+
 			//Movement apply stopping force
 			if (player->getXVel() < 0) {
 				player->setXVel(fmin(0, player->getXVel() + player->getPhysics()->getAcceleration()));
@@ -628,36 +569,41 @@ void Game::getUserInput(Entity* player) {
 				player->setXVel(fmax(0, player->getXVel() - player->getPhysics()->getAcceleration()));
 			}
 		}
-		
-		if(player->getPhysics()->isGrappling()){
-			
-			double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth()/2);
-			double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight()/2);
-			
-			double xComp = (grappleX - playerCenterX) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
-			double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
-		
-			//Apply grapple force
-			player->setXVel(player->getXVel() + xComp * player->getPhysics()->getGrappleStr());
-			player->setYVel(player->getYVel() + yComp * player->getPhysics()->getGrappleStr());
-			
+	}
+
+
+	// simplifying code. both were identical for air or ground so moved out
+	if (!keystate[SDL_SCANCODE_SPACE]) { //only jump if you've landed and pressed space again
+		player->setJump(true);
+	}
+	
+	/*making a and d button else if instead of if takes away the ability to move while grappling. fixes zooming but no additional control while doing it*/
+	if (player->getPhysics()->isGrappling()) {
+		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2);
+		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2);
+
+		double xComp = (grappleX - playerCenterX) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
+		double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
+
+		//Apply grapple force
+		player->setXVel(player->getXVel() + xComp * player->getPhysics()->getGrappleStr());
+		player->setYVel(player->getYVel() + yComp * player->getPhysics()->getGrappleStr());
+	}
+	//movement
+	if (keystate[SDL_SCANCODE_A]) {
+		//Movement
+		if (player->getXVel() > -player->getPhysics()->getMaxX()) { //as long as we don't exceed max speed, change velocity
+			player->setXVel(fmin(player->getXVel() - player->getPhysics()->getAcceleration(), -player->getPhysics()->getMaxX()));
 		}
 	}
 	
-	//Old player Physics
-	
-	/*
-	//THIS IS RESPONSABLE FOR THE SLOW SIDEWAYS GRAPPLE SPEED
-	if (!player->getPhysics()->inAir() || (!(keystate[SDL_SCANCODE_A] || keystate[SDL_SCANCODE_D]) && player->getPhysics()->inAir())) {
-		if (player->getXVel() < 0) {
-			player->setXVel(fmin(0, player->getXVel() + player->getPhysics()->getAcceleration()));
-		}
-		else if (player->getXVel() > 0) {
-			player->setXVel(fmax(0, player->getXVel() - player->getPhysics()->getAcceleration()));
+	//movement
+	if (keystate[SDL_SCANCODE_D]) {
+		//Movement
+		if (player->getXVel() < player->getPhysics()->getMaxX()) { //as long as we don't exceed max speed, change velocity
+			player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
 		}
 	}
-	*/
-	
 }
 
 //Handle the Collision
@@ -665,7 +611,6 @@ void Game::handleCollision(Entity* player, Tilemap* t) {
 	if (!player->getShot())
 	{/*If a shot has been fired*/
 		/*
-		 //EMIL
 		std::cout << player->getPX() << std::endl;
 		player->setPX(player->getPX() + player->getPVel());
 
