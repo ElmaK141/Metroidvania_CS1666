@@ -28,11 +28,7 @@ class Tilemap
 			int** getTileMap();
 			Tile* getTile(int index);
 			Background* getBackground();
-			void drawTilemap(SDL_Renderer* render, int offset);
-			void setStart();
-			void setEnd();
-			bool isStart();
-			bool isEnd();
+			void drawTilemap(SDL_Renderer* render, int offset_x, int offset_y);
 		// Public Destructor: 
 			~Tilemap();
 		private:
