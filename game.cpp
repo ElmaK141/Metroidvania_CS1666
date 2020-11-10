@@ -1007,7 +1007,7 @@ int Game::checkDoor(int doors, Entity& ent, Tilemap* currRoom) {
 	else if (left && ent.getXPosition() <= 0 && ent.getXVel() < 0) {
 		return 2;
 	}
-	else if (right && ent.getXPosition() >= currRoom->getMaxWidth()*16 - ent.getCurrFrame().getWidth() && ent.getXVel() > 0) {
+	else if (right && ent.getXPosition() >= currRoom->getMaxWidth()*16 - ent.getCurrFrame().getWidth() - 1 && ent.getXVel() > 0) {
 		return 1;
 	}
 	else {
