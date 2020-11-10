@@ -217,7 +217,7 @@ void Block::generateFloor() {
 		for (int j = 0; j < width; j++) {
 			
 			// if we are at the bottom 
-			if (i == bottom) {
+			if (i == bottom && !this->door) {
 				// floor is 1
 				this->map[i][j] = 1;
 			}
@@ -240,9 +240,9 @@ void Block::generateCeiling() {
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 
-			// if we are at the bottom 
-			if (i == top) {
-				// floor is 1
+			// if we are at the top 
+			if (i == top && !this->door) {
+				// ceiling is 1
 				this->map[i][j] = 1;
 			}
 			else {
@@ -322,6 +322,91 @@ void Block::generateWallR() {
 
 				this->map[i][j] = 0;
 			}
+		}
+	}
+
+	// Initial set
+	this->set = 0;
+}
+
+// populate blocks based on type
+void Block::populateBlock() {
+	//switch on type
+	switch (this->type) {
+	case BlockType::Middle:
+		populateMiddle();
+		break;
+	case BlockType::Floor:
+		populateFloor();
+		break;
+	case BlockType::Ceiling:
+		populateCeiling();
+		break;
+	case BlockType::WallL:
+		populateWallL();
+		break;
+	case BlockType::WallR:
+		populateWallR();
+		break;
+	}
+}
+
+// generate a Middle block - this block has no walls, and is only platforms
+void Block::populateMiddle() {
+	//generateEmpty();
+
+	// middle blocks (as of right now) consist of pretty much only platforms
+	// this is where we would determine where the platforms would be and which adjacent blocks they may connect to
+
+
+}
+
+// generate a Floor block - this block always has 1s on the floor at least *except if we do doors in the floor*
+void Block::populateFloor() {
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+
+			// we can add nuance here to create different types of floors with randomness
+			// say we have the floor go up by one tile halfway through to the right, we would create that here, and then set connectedR true
+			// so when the block on the right is generated, it will know that we have a floor 1 tile higher coming in from the left and account
+			// this is why generate_X will be taking block pointers
+
+		}
+	}
+}
+
+// generate a Ceiling block - this block always has 1s on the ceiling at least *except if we do doors in the ceiling*
+void Block::populateCeiling() {
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+
+			
+			// we can add nuance here to create different types of floors with randomness
+
+
+		}
+	}
+}
+
+// generate a WallL block - this block always has 1s on the left *except when it has a door*
+void Block::populateWallL() {
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+
+			
+		}
+	}
+
+	// Initial set
+	this->set = 0;
+}
+
+// generate a WallR block - this block always has 1s on the right *except when it has a door*
+void Block::populateWallR() {
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+
+			
 		}
 	}
 

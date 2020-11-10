@@ -9,6 +9,7 @@ class Block
 		Block(int row, int col, int numRow, int numCol);
 		// Public Functions:
 		void generateBlock();
+		void populateBlock();
 		bool checkBlock(Block* b);
 		int** getBlockMap();
 		void setBlock(int s);
@@ -27,12 +28,19 @@ class Block
 		// Private Functions:
 		void setType();
 		void initMetadata();
+		// generate blocks (first pass)
 		void generateEmpty();
 		void generateMiddle();
 		void generateFloor();
 		void generateCeiling();
 		void generateWallL();
 		void generateWallR();
+		// populate blocks (second pass)
+		void populateMiddle();
+		void populateFloor();
+		void populateCeiling();
+		void populateWallL();
+		void populateWallR();
 		
 
 		// check surrounding?
