@@ -356,8 +356,14 @@ void Block::populateMiddle() {
 	//generateEmpty();
 
 	// middle blocks (as of right now) consist of pretty much only platforms
-	// this is where we would determine where the platforms would be and which adjacent blocks they may connect to
-
+	// this is where we would determine where the platforms would be and which adjacent blocks they may connect to	
+	int decide = rand() % 9;
+	if (decide <= 3) {
+		int r = rand() % height;
+		for (int i = 0; i < height; i++) {
+			this->map[r][i] = 2;
+		}
+	}
 
 }
 
@@ -393,7 +399,6 @@ void Block::populateWallL() {
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 
-			
 		}
 	}
 
