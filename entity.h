@@ -40,8 +40,10 @@ class Entity{
 		void setPY(double py);
 		double getPX();
 		double getPY();
-		void setPVel(double py);
-		double getPVel();
+		void setPVelX(double py);
+		void setPVelY(double py);
+		double getPVelY();
+		double getPVelX();
 		Physics* getPhysics();
 	private:
 
@@ -59,7 +61,8 @@ class Entity{
 		bool canShoot;
 		double px;
 		double py;
-		double pvel;
+		double pvelx;
+		double pvely;
 
 		Sprite currFrame;
 		SDL_Renderer* context;

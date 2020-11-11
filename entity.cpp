@@ -15,6 +15,7 @@ Entity::Entity(std::string spriteData, double xPos, double yPos, int scale, int 
 	this->index = 0;
 	this->flag = f;
 	this->physics = phys;
+	this->canShoot = true;
 	
 	//Player
 	if (this->flag == 0) {
@@ -140,10 +141,18 @@ double Entity::getPY() {
 	return this->py;
 }
 
-void Entity::setPVel(double pvel) {
-	this->pvel = pvel;
+void Entity::setPVelX(double pvelx) {
+	this->pvelx = pvelx;
 }
 
-double Entity::getPVel() {
-	return this->pvel;
+void Entity::setPVelY(double pvely) {
+	this->pvely = pvely;
+}
+
+double Entity::getPVelY() {
+	return this->pvely;
+}
+
+double Entity::getPVelX() {
+	return this->pvelx;
 }
