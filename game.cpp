@@ -476,18 +476,29 @@ void Game::getUserInput(Entity* player) {
 		}
 	}
 
+	/*Shooting*/
+	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
+
+		mouseXinWorld += scroll_offset_x;
+		mouseYinWorld += scroll_offset_y;
+
+		double x_vector = mouseXinWorld - player->getXPosition();
+		double y_vector = mouseYinWorld - player->getYPosition();
+		
+		double playerNetVel = sqrt((x_vector * x_vector) + (y_vector * y_vector));
+		double directionXVelNorm = x_vector / playerNetVel;
+		double directionYVelNorm = y_vector / playerNetVel; //direction of shot, opposite of recoil
+		
+		/*Apply recoil*/
+		double recoilForce = 200;
+		player->setXVel(player->getXVel() - (recoilForce * directionXVelNorm));
+		player->setYVel(player->getYVel() - (recoilForce * directionYVelNorm));
+	}
+
 	//Holding E
 	if (keystate[SDL_SCANCODE_E] && player->getShot())
-	{/*Only allow one shot at a time*/
-		/*
-		player->setShot(false);
-		// set the start position of projectile to be where the user is
-		//only making horizontal projectile
-		player->setPX(player->getXPosition());
-		player->setPY(player->getYPosition());
-		player->setPVel(-1);
-		player->getCurrFrame().draw(gRenderer, player->getPX() - scroll_offset, player->getPY());
-		*/
+	{
+		//Can be used for something else now
 	}
 
 	//Redone player physics
@@ -609,7 +620,7 @@ void Game::getUserInput(Entity* player) {
 		player->setYVel(player->getYVel() + yComp * player->getPhysics()->getGrappleStr());
 	}
 	//movement
-	if (keystate[SDL_SCANCODE_A]) {
+	else if (keystate[SDL_SCANCODE_A]) {
 		//Movement
 		if (player->getXVel() > -player->getPhysics()->getMaxX()) { //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmin(player->getXVel() - player->getPhysics()->getAcceleration(), -player->getPhysics()->getMaxX()));
@@ -617,7 +628,7 @@ void Game::getUserInput(Entity* player) {
 	}
 	
 	//movement
-	if (keystate[SDL_SCANCODE_D]) {
+	else if (keystate[SDL_SCANCODE_D]) {
 		//Movement
 		if (player->getXVel() < player->getPhysics()->getMaxX()) { //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
