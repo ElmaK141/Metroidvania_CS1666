@@ -891,9 +891,9 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 			}
 			else //if you're trying to fall through the bottom of the screen
 			{
-				ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - pHeight - 17);
+				/*ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - pHeight - 17);
 				pPosY = ent.getYPosition();
-				land = true;
+				land = true;*/
 				break;
 			}
 		}
@@ -908,7 +908,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 				for (int range = pPosY; range >= ent.getYPosition(); range -= 16) //for EVERY block that is passed during movement
 				{
 					yBlockU = (int)(range / 16) - 1;
-					if (range + y_vel <= yBlockU * 16 + 16 && (tilemap[yBlockU][xBlockR - xAdjust] != 0 && tilemap[yBlockU][xBlockR - xAdjust] != 3))
+					if (yBlockU >= 0 && range + y_vel <= yBlockU * 16 + 16 && (tilemap[yBlockU][xBlockR - xAdjust] != 0 && tilemap[yBlockU][xBlockR - xAdjust] != 3))
 					{
 						ent.setPosition(ent.getXPosition(), yBlockU * 16 + 16);
 						pPosY = ent.getYPosition();
@@ -922,9 +922,9 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 			}
 			else
 			{
-				ent.setPosition(ent.getXPosition(), 17);
+				/*ent.setPosition(ent.getXPosition(), 17);
 				pPosY = ent.getYPosition();
-				land = true;
+				land = true;*/
 				break;
 			}
 		}
@@ -933,7 +933,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	if (x_vel > 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	//hit blocks to your right accounting for player height
-			if (pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3))
+			if (yBlockD <= 45 && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3))
 			{
 				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -945,7 +945,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	if (x_vel < 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	//hit blocks to your left accounting for player height
-			if (pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3))
+			if (yBlockD <= 45 && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3))
 			{
 				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -998,10 +998,10 @@ int Game::checkDoor(int doors, Entity& ent, Tilemap* currRoom) {
 	}
 
 	// if there is a door in this direction, and we are at the edge of the room on this side and moving in that direction
-	if (up && ent.getYPosition() <= 0 && ent.getYVel() < 0) {
+	if (up && ent.getYPosition() <= 1 && ent.getYVel() < 0) {
 		return 8;
 	}
-	else if(down && ent.getYPosition() >= currRoom->getMaxHeight()*16 && ent.getYVel() > 0){ // needs testing when we get up/down doors
+	else if(down && ent.getYPosition() >= currRoom->getMaxHeight()*16 - 1 && ent.getYVel() > 0){ // needs testing when we get up/down doors
 		return 4;
 	}
 	else if (left && ent.getXPosition() <= 0 && ent.getXVel() < 0) {
