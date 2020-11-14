@@ -42,7 +42,8 @@ int lastAnimFrame = 3;
 SDL_Event e;
 
 //scroll offset, needs to be used in a few places
-int scroll_offset;
+int scroll_offset_x;
+int scroll_offset_y;
 
 //Game State Tracker
 //0 = main menu, 1 = game, 2 = pause menu, 3 = debug
@@ -119,11 +120,16 @@ void Game::runGame() {
 	playerHP = 40;
 
 	//Camera-related variables
-	scroll_offset = 0;
-	int rem_bg = 0;
-	int rem_tile = 0;
+	scroll_offset_x = 0;
+	scroll_offset_y = SCREEN_HEIGHT;
+	int rem_bg_x = 0;
+	int rem_tile_x = 0;
+	int rem_bg_y = SCREEN_HEIGHT;
+	int rem_tile_y = SCREEN_HEIGHT;
 	int lthird = (SCREEN_WIDTH / 3);
 	int rthird = (2 * SCREEN_WIDTH / 3);
+	int tthird = (SCREEN_HEIGHT / 3);
+	int bthird = (2 * SCREEN_HEIGHT / 3);
 
 	//Define Backgrounds
 	Background bg1(0, 0, 1280, 720, "assets/backgrounds/background1.png", gRenderer);
@@ -228,14 +234,14 @@ void Game::runGame() {
 	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
 	enemies.push_back(&eye);
 	enemies.push_back(&eye2);
-	enemies.push_back(&eye3);
-	enemies.push_back(&eye4);
-	enemies.push_back(&eye5);
+	//enemies.push_back(&eye3);
+	//enemies.push_back(&eye4);
+	//enemies.push_back(&eye5);
 	int hitTick = 0;
 	bool hit = false;
 
 	//"Load" in the game by pausing to avoid buffering in the gappling hook input
-	SDL_Delay(100);
+	SDL_Delay(150);
 	
 	//Run the Game
 	while (running && gameState == 1) {
@@ -296,18 +302,30 @@ void Game::runGame() {
 		}
 		*/
 
-		// Update scroll if Player moves outside of middle third
-		if (player.getXPosition() > (scroll_offset + rthird))
-			scroll_offset = player.getXPosition() - rthird;
-		else if (player.getXPosition() < (scroll_offset + lthird))
-			scroll_offset = player.getXPosition() - lthird;
+		// Update scroll if Player moves outside of middle third in x direction
+		if (player.getXPosition() > (scroll_offset_x + rthird))
+			scroll_offset_x = player.getXPosition() - rthird;
+		else if (player.getXPosition() < (scroll_offset_x + lthird))
+			scroll_offset_x = player.getXPosition() - lthird;
 
-		//Prevent scroll_offset from placing Camera outside of gameworld
+		// Update scroll if Player moves outside middle third in y direction
+		if (player.getYPosition() < (scroll_offset_y + tthird))
+			scroll_offset_y = player.getYPosition() - tthird;
+		else if (player.getYPosition() > (scroll_offset_y + bthird))
+			scroll_offset_y = player.getYPosition() - bthird;
+
+		//Prevent scroll_offset_x from placing Camera outside of gameworld in x direction
 		//std::cout << currRoom->getMaxWidth()*16 << std::endl;
-		if (scroll_offset < 0)
-			scroll_offset = 0;
-		if (scroll_offset + SCREEN_WIDTH > currRoom->getMaxWidth()*16)
-			scroll_offset = currRoom->getMaxWidth()*16 - SCREEN_WIDTH;
+		if (scroll_offset_x < 0)
+			scroll_offset_x = 0;
+		if (scroll_offset_x + SCREEN_WIDTH > currRoom->getMaxWidth() * 16)
+			scroll_offset_x = currRoom->getMaxWidth() * 16 - SCREEN_WIDTH;
+
+		//Prevent scroll_offset_y from placing Camera outside of gameworld in y direction
+		if (scroll_offset_y < 0)
+			scroll_offset_y = 0;
+		if (scroll_offset_y + SCREEN_HEIGHT > currRoom->getMaxHeight() * 16)
+			scroll_offset_y = currRoom->getMaxHeight() * 16 - SCREEN_HEIGHT;
 
 		// Check if we are going through a door
 		int newRoom = checkDoor(map.getRooms(), player, currRoom);
@@ -328,20 +346,19 @@ void Game::runGame() {
 			tileArray = currRoom->getTileMap();
 
 			if (newRoom == 8) { //moving up
-				// right now nothing with scroll offset (need y offset too now)
-				//also, account for player height?
-				player.setPosition(player.getXPosition(), currRoom->getMaxHeight()*16);
+				scroll_offset_y = currRoom->getMaxHeight() * 16 - SCREEN_HEIGHT;
+				player.setPosition(player.getXPosition(), currRoom->getMaxHeight() * 16 - player.getCurrFrame().getHeight());
 			}
 			else if (newRoom == 4) { //moving down
-				// right now no scroll
+				scroll_offset_y = 0;
 				player.setPosition(player.getXPosition(), 0);
 			}
 			else if (newRoom == 2) { //moving left
-				scroll_offset = currRoom->getMaxWidth() * 16 - SCREEN_WIDTH;
+				scroll_offset_x = currRoom->getMaxWidth() * 16 - SCREEN_WIDTH;
 				player.setPosition(currRoom->getMaxWidth() * 16 - player.getCurrFrame().getWidth(), player.getYPosition());
 			}
 			else { //moving right
-				scroll_offset = 0;
+				scroll_offset_x = 0;
 				player.setPosition(0, player.getYPosition());
 			}
 		}
@@ -352,12 +369,14 @@ void Game::runGame() {
 
 
 		// Draw the portion of the background currently inside the camera view
-		rem_bg = scroll_offset % SCREEN_WIDTH;
-		rem_tile = scroll_offset % (currRoom->getMaxWidth()*16);
+		rem_bg_x = scroll_offset_x % SCREEN_WIDTH;
+		rem_tile_x = scroll_offset_x % (currRoom->getMaxWidth() * 16);
+		rem_bg_y = scroll_offset_y % SCREEN_HEIGHT;
+		rem_tile_y = scroll_offset_y % (currRoom->getMaxHeight() * 16);
 		
-		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg, 0);
-		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
-		currRoom->drawTilemap(gRenderer, rem_tile);
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y);
+		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y));
+		currRoom->drawTilemap(gRenderer, rem_tile_x, rem_tile_y);
 
 		/*
 		if (roomNum == 0) {
@@ -383,15 +402,15 @@ void Game::runGame() {
 
 		//hit iframes indicator; blink a tenth of a second every tenth of a second
 		if (player.getFrameIndex() == 0 && (SDL_GetTicks() % 100 > 50 || !hit))
-			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset_x, player.getYPosition() - scroll_offset_y);
 		else if (SDL_GetTicks() % 100 > 50 || !hit)
-			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset_x, player.getYPosition() - scroll_offset_y, flip);
 		
 		// Draw Enemies
 		if (!map.ifSpawn()) {
 			for (int i = 0; i < enemies.size(); i++)
 			{
-				enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset, enemies[i]->getYPosition());
+				enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
 			}
 		}
 		/*
@@ -437,8 +456,8 @@ void Game::getUserInput(Entity* player) {
 	}
 	
 	if (SDL_BUTTON(SDL_BUTTON_LEFT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
-		mouseXinWorld += scroll_offset;
-		
+		mouseXinWorld += scroll_offset_x;
+		mouseYinWorld += scroll_offset_y;
 		
 		
 		if(!player->getPhysics()->isGrappling()){
@@ -457,18 +476,29 @@ void Game::getUserInput(Entity* player) {
 		}
 	}
 
+	/*Shooting*/
+	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
+
+		mouseXinWorld += scroll_offset_x;
+		mouseYinWorld += scroll_offset_y;
+
+		double x_vector = mouseXinWorld - player->getXPosition();
+		double y_vector = mouseYinWorld - player->getYPosition();
+		
+		double playerNetVel = sqrt((x_vector * x_vector) + (y_vector * y_vector));
+		double directionXVelNorm = x_vector / playerNetVel;
+		double directionYVelNorm = y_vector / playerNetVel; //direction of shot, opposite of recoil
+		
+		/*Apply recoil*/
+		double recoilForce = 200;
+		player->setXVel(player->getXVel() - (recoilForce * directionXVelNorm));
+		player->setYVel(player->getYVel() - (recoilForce * directionYVelNorm));
+	}
+
 	//Holding E
 	if (keystate[SDL_SCANCODE_E] && player->getShot())
-	{/*Only allow one shot at a time*/
-		/*
-		player->setShot(false);
-		// set the start position of projectile to be where the user is
-		//only making horizontal projectile
-		player->setPX(player->getXPosition());
-		player->setPY(player->getYPosition());
-		player->setPVel(-1);
-		player->getCurrFrame().draw(gRenderer, player->getPX() - scroll_offset, player->getPY());
-		*/
+	{
+		//Can be used for something else now
 	}
 
 	//Redone player physics
@@ -521,6 +551,7 @@ void Game::getUserInput(Entity* player) {
 					}
 					else {
 						player->setCurrFrame(2);
+						//player->setPosition(player->getXPosition() - 3, player->getYPosition());
 						lastAnimFrame = 2;
 					}
 				}
@@ -532,7 +563,12 @@ void Game::getUserInput(Entity* player) {
 		
 		if (keystate[SDL_SCANCODE_S]) {
 			//Animation
+			if (player->getFrameIndex() != 0) {
+				player->setPosition(player->getXPosition() - 39, player->getYPosition());
+			}
+
 			player->setCurrFrame(0);
+				
 		}
 		
 		//Animation
@@ -547,6 +583,9 @@ void Game::getUserInput(Entity* player) {
 					else {
 						player->setCurrFrame(2);
 						lastAnimFrame = 2;
+
+						//Adjust for shift in width
+						player->setPosition(player->getXPosition() - 9, player->getYPosition());
 					}
 				}
 				else {
@@ -590,7 +629,7 @@ void Game::getUserInput(Entity* player) {
 		player->setYVel(player->getYVel() + yComp * player->getPhysics()->getGrappleStr());
 	}
 	//movement
-	if (keystate[SDL_SCANCODE_A]) {
+	else if (keystate[SDL_SCANCODE_A]) {
 		//Movement
 		if (player->getXVel() > -player->getPhysics()->getMaxX()) { //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmin(player->getXVel() - player->getPhysics()->getAcceleration(), -player->getPhysics()->getMaxX()));
@@ -598,7 +637,7 @@ void Game::getUserInput(Entity* player) {
 	}
 	
 	//movement
-	if (keystate[SDL_SCANCODE_D]) {
+	else if (keystate[SDL_SCANCODE_D]) {
 		//Movement
 		if (player->getXVel() < player->getPhysics()->getMaxX()) { //as long as we don't exceed max speed, change velocity
 			player->setXVel(fmax(player->getXVel() + player->getPhysics()->getAcceleration(), player->getPhysics()->getMaxX()));
@@ -872,9 +911,9 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 			}
 			else //if you're trying to fall through the bottom of the screen
 			{
-				ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - pHeight - 17);
+				/*ent.setPosition(ent.getXPosition(), SCREEN_HEIGHT - pHeight - 17);
 				pPosY = ent.getYPosition();
-				land = true;
+				land = true;*/
 				break;
 			}
 		}
@@ -889,7 +928,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 				for (int range = pPosY; range >= ent.getYPosition(); range -= 16) //for EVERY block that is passed during movement
 				{
 					yBlockU = (int)(range / 16) - 1;
-					if (range + y_vel <= yBlockU * 16 + 16 && (tilemap[yBlockU][xBlockR - xAdjust] != 0 && tilemap[yBlockU][xBlockR - xAdjust] != 3))
+					if (yBlockU >= 0 && range + y_vel <= yBlockU * 16 + 16 && (tilemap[yBlockU][xBlockR - xAdjust] != 0 && tilemap[yBlockU][xBlockR - xAdjust] != 3))
 					{
 						ent.setPosition(ent.getXPosition(), yBlockU * 16 + 16);
 						pPosY = ent.getYPosition();
@@ -903,9 +942,9 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 			}
 			else
 			{
-				ent.setPosition(ent.getXPosition(), 17);
+				/*ent.setPosition(ent.getXPosition(), 17);
 				pPosY = ent.getYPosition();
-				land = true;
+				land = true;*/
 				break;
 			}
 		}
@@ -914,7 +953,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	if (x_vel > 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	//hit blocks to your right accounting for player height
-			if (pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3))
+			if (yBlockD <= 45 && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3))
 			{
 				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -926,7 +965,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	if (x_vel < 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	//hit blocks to your left accounting for player height
-			if (pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3))
+			if (yBlockD <= 45 && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3))
 			{
 				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -979,16 +1018,16 @@ int Game::checkDoor(int doors, Entity& ent, Tilemap* currRoom) {
 	}
 
 	// if there is a door in this direction, and we are at the edge of the room on this side and moving in that direction
-	if (up && ent.getYPosition() <= 0 && ent.getYVel() < 0) {
+	if (up && ent.getYPosition() <= 1 && ent.getYVel() < 0) {
 		return 8;
 	}
-	else if(down && ent.getYPosition() >= currRoom->getMaxHeight()*16 && ent.getYVel() > 0){ // needs testing when we get up/down doors
+	else if(down && ent.getYPosition() >= currRoom->getMaxHeight()*16 - 1 && ent.getYVel() > 0){ // needs testing when we get up/down doors
 		return 4;
 	}
 	else if (left && ent.getXPosition() <= 0 && ent.getXVel() < 0) {
 		return 2;
 	}
-	else if (right && ent.getXPosition() >= currRoom->getMaxWidth()*16 - ent.getCurrFrame().getWidth() && ent.getXVel() > 0) {
+	else if (right && ent.getXPosition() >= currRoom->getMaxWidth()*16 - ent.getCurrFrame().getWidth() - 1 && ent.getXVel() > 0) {
 		return 1;
 	}
 	else {
@@ -1111,11 +1150,16 @@ void Game::runDebug() {
 	playerHP = 40;
 
 	// variables for background scrolling
-	int scroll_offset = 0;
-	int rem_bg = 0;
-	int rem_tile = 0;
+	int scroll_offset_x = 0;
+	int rem_bg_x = 0;
+	int rem_tile_x = 0;
+	int scroll_offset_y = 0;
+	int rem_bg_y = 0;
+	int rem_tile_y = 0;
 	int lthird = (SCREEN_WIDTH / 3);
 	int rthird = (2 * SCREEN_WIDTH / 3);
+	int tthird = (2 * SCREEN_HEIGHT / 3);
+	int bthird = (SCREEN_HEIGHT / 3);
 
 	//Flip variable for flipping player sprite
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
@@ -1186,16 +1230,26 @@ void Game::runDebug() {
 		handleCollision(&player, currRoom);
 
 		// Update scroll if Player moves outside of middle third
-		if (player.getXPosition() > (scroll_offset + rthird))
-			scroll_offset = player.getXPosition() - rthird;
-		else if (player.getXPosition() < (scroll_offset + lthird))
-			scroll_offset = player.getXPosition() - lthird;
+		if (player.getXPosition() > (scroll_offset_x + rthird))
+			scroll_offset_x = player.getXPosition() - rthird;
+		else if (player.getXPosition() < (scroll_offset_x + lthird))
+			scroll_offset_x = player.getXPosition() - lthird;
+
+		if (player.getYPosition() < (scroll_offset_y + tthird))
+			scroll_offset_y = player.getYPosition() - tthird;
+		else if (player.getYPosition() > (scroll_offset_y + bthird))
+			scroll_offset_y = player.getYPosition() - bthird;
 
 		//Prevent scroll_offset from placing left side of the Cam outside of gameworld
-		if (scroll_offset < 0)
-			scroll_offset = 0;
-		if (scroll_offset + SCREEN_WIDTH > currRoom->getMaxWidth()*16)
-			scroll_offset = currRoom->getMaxWidth()*16 - SCREEN_WIDTH;
+		if (scroll_offset_x < 0)
+			scroll_offset_x = 0;
+		if (scroll_offset_x + SCREEN_WIDTH > currRoom->getMaxWidth() * 16)
+			scroll_offset_x = currRoom->getMaxWidth() * 16 - SCREEN_WIDTH;
+
+		if (scroll_offset_y < 0)
+			scroll_offset_y = 0;
+		if (scroll_offset_y + SCREEN_HEIGHT > currRoom->getMaxHeight() * 16)
+			scroll_offset_y = currRoom->getMaxHeight() * 16 - SCREEN_HEIGHT;
 
 		/* REMOVED FOR TESTING ON MAIN
 		//Check for switching room
@@ -1230,15 +1284,17 @@ void Game::runDebug() {
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
 		// Draw the portion of the background currently inside the camera view
-		rem_bg = scroll_offset % SCREEN_WIDTH;
-		rem_tile = scroll_offset % (currRoom->getMaxWidth()*16);
+		rem_bg_x = scroll_offset_x % SCREEN_WIDTH;
+		rem_tile_x = scroll_offset_x % (currRoom->getMaxWidth() * 16);
+		rem_bg_y = scroll_offset_y % SCREEN_HEIGHT;
+		rem_tile_y = scroll_offset_y % (currRoom->getMaxHeight() * 16);
 
 		//Draw Room
-		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg, 0);
-		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg + SCREEN_WIDTH), 0);
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y);
+		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y + SCREEN_HEIGHT));
 
 		//Draw Tilemap
-		currRoom->drawTilemap(gRenderer, rem_tile);
+		currRoom->drawTilemap(gRenderer, rem_tile_x, rem_tile_y);
 
 		//draw the player
 		if (player.getXVel() > 0 && flip == SDL_FLIP_HORIZONTAL)
@@ -1247,9 +1303,9 @@ void Game::runDebug() {
 			flip = SDL_FLIP_HORIZONTAL;
 
 		if (player.getFrameIndex() == 0)
-			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition());
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset_x, player.getYPosition() - scroll_offset_y);
 		else
-			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset, player.getYPosition(), flip);
+			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset_x, player.getYPosition() - scroll_offset_y, flip);
 
 		//Draw HP
 		drawHP();

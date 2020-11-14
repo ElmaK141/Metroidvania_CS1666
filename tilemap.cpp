@@ -48,21 +48,14 @@ Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Backgro
 	this->generateTilemap();
 }
 
-void Tilemap::drawTilemap(SDL_Renderer* render, int offset) {
+void Tilemap::drawTilemap(SDL_Renderer* render, int offset_x, int offset_y) {
 	
 	for (int i = 0; i < this->yMax; i++) {
 		for (int j = 0; j < this->xMax; j++) {
 
 			if (this->tileMap[i][j] != 0 && this->tileMap[i][j] != 3) {
-				this->tileArray[this->tileMap[i][j] - 1]->getTileSprite()->draw(render, -offset + (j * 16), i * 16);
+				this->tileArray[this->tileMap[i][j] - 1]->getTileSprite()->draw(render, -offset_x + (j * 16), -offset_y + (i * 16));
 			}
-
-			/*if (this->tileMap[i][j] == 1) {
-				this->tileArray[0]->getTileSprite()->draw(render, -offset + (j * 16), i * 16);
-			}
-
-			if(this)*/
-
 		}
 	}
 
