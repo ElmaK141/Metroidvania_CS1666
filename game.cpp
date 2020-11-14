@@ -551,6 +551,7 @@ void Game::getUserInput(Entity* player) {
 					}
 					else {
 						player->setCurrFrame(2);
+						//player->setPosition(player->getXPosition() - 3, player->getYPosition());
 						lastAnimFrame = 2;
 					}
 				}
@@ -562,7 +563,12 @@ void Game::getUserInput(Entity* player) {
 		
 		if (keystate[SDL_SCANCODE_S]) {
 			//Animation
+			if (player->getFrameIndex() != 0) {
+				player->setPosition(player->getXPosition() - 39, player->getYPosition());
+			}
+
 			player->setCurrFrame(0);
+				
 		}
 		
 		//Animation
@@ -577,6 +583,9 @@ void Game::getUserInput(Entity* player) {
 					else {
 						player->setCurrFrame(2);
 						lastAnimFrame = 2;
+
+						//Adjust for shift in width
+						player->setPosition(player->getXPosition() - 9, player->getYPosition());
 					}
 				}
 				else {
