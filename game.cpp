@@ -12,7 +12,6 @@
 #include "button.h"
 
 // Double jump to fullfill requirement
-bool canSecond = true; //The ability: change when getting ability
 bool doneSecond = false; // only allow 1 extra jump
 
 //size of the Window/Screen and thus the size of the Camera
@@ -195,25 +194,24 @@ void Game::runGame() {
 				x_pos = j * 16.0;
 				y_pos = i * 16.0;
 			}
-			else if (tileArray[i][j] == 9) { // for every 9 *tp* in this tilemap, we create a sprite for it
-				//std::cout << " Found tp at " << j << " " << i << std::endl;
-				// 9 creates our tps, based on our current MAP TYPE, we know which teleporters we need (internal to entity based on flag)
-				// type 2 tp returns us to main room - allMaps[0]
-				// type 3 tp sends us to first section - allMaps[1]
-				// type 4 tp sends us to second section - allMaps[2]
-				// type 5 tp sends us to the boss - allMaps[3]
+			else if (tileArray[i][j] == 9) { // 9 marks that there is a teleporter
+				// Entity flag in the teleporters determine where they send you
+					// 2 tp to main room, 3 tp to Sec1, 4 tp to Sec2, 5 tp to boss
 				// teleporters decided by how high they are. with boss at highest, then 2nd Section, then 1st section at floor
+					// this only matters / is the case for the main room
+
+				// idea (when ready) is to no longer spawn TP to Sec1/2 after the player returns from that area with the powerup
+				// as well as order, the player would need to have hasDouble and hasGrapple set to false for them to spawn
 				if (order == 0) { // (to boss)
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 5, &plp, gRenderer));
-					order += 1;
 				}
 				else if (order == 1) { // (to Sec2)
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 4, &plp, gRenderer));
-					order += 1;
 				}
 				else { // (to Sec1)
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 3, &plp, gRenderer));
 				}
+				order++;
 			}
 		}
 	}
@@ -297,17 +295,20 @@ void Game::runGame() {
 						// When we teleport, the only room we can tp to with teleporters is Main Room
 						if (map->getType() == 0) {
 							// teleporters decided by how high they are. with boss at highest, then 2nd Section, then 1st section at floor
+
+							// idea (when ready) is to no longer spawn TP to Sec1/2 after the player returns from that area with the powerup
+							// as well as order, the player would need to have hasDouble and hasGrapple set to false for them to spawn
+
 							if (order == 0) { // (to boss)
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 5, &plp, gRenderer));
-								order += 1;
 							}
 							else if (order == 1) { // (to Sec2)
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 4, &plp, gRenderer));
-								order += 1;
 							}
 							else { // (to Sec1)
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 3, &plp, gRenderer));
 							}
+							order++;
 						}
 					}
 				}
@@ -501,7 +502,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		mouseYinWorld += scroll_offset_y;
 		
 		
-		if(!player->getPhysics()->isGrappling()){
+		if(!player->getPhysics()->isGrappling() && player->getGrapple()){
 			//std::cout << "pressed" << std::endl;
 			grappleX = mouseXinWorld;
 			grappleY = mouseYinWorld;
@@ -540,7 +541,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	if(player->getPhysics()->inAir()){
 		//Air control
 		if (keystate[SDL_SCANCODE_SPACE]) {
-			if (player->getJump() && canSecond && !doneSecond)
+			if (player->getJump() && player->getDouble() && !doneSecond)
 			{ /* Double jump */
 				doneSecond = true;
 
