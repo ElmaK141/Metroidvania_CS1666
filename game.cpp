@@ -282,6 +282,34 @@ void Game::runGame() {
 					hit = false;
 			}
 		}
+
+		if (!player.getShot())
+		{/*If a shot has been fired*/
+			for (int i = 0; i < enemies.size(); i++)
+			{
+				if (checkHitEnemy(&player, enemies[i]))
+				{
+					//and remove enemy
+					player.setShot(true);
+					std::cout << "Enemy" << std::endl;
+				}
+			}
+			if (tileArray[(int)(player.getPY() / 16)][(int)(player.getPX() / 16)] != 0 && tileArray[(int)(player.getPY() / 16)][(int)(player.getPX() / 16)] != 3) //hit something not air
+			{
+				player.setShot(true);
+				std::cout << "Wall" << std::endl;
+			}
+
+
+			std::cout << player.getPX() << " | " << player.getPY() << std::endl;
+
+			player.setPX(player.getPX() + player.getPVelX());
+			player.setPY(player.getPY() + player.getPVelY());
+
+			// if collision, just set shoot to true
+		}
+
+
 		/*
 		if (roomNum == 0) {
 			//eye.update(t0.getTileMap(), delta_time, player.getXPosition(), player.getYPosition());
@@ -477,8 +505,7 @@ void Game::getUserInput(Entity* player) {
 	}
 
 	/*Shooting*/
-	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
-
+	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld) && player->getShot() ) {
 		mouseXinWorld += scroll_offset_x;
 		mouseYinWorld += scroll_offset_y;
 
@@ -488,7 +515,19 @@ void Game::getUserInput(Entity* player) {
 		double playerNetVel = sqrt((x_vector * x_vector) + (y_vector * y_vector));
 		double directionXVelNorm = x_vector / playerNetVel;
 		double directionYVelNorm = y_vector / playerNetVel; //direction of shot, opposite of recoil
+
+		/*Shoot*/
+		player->setShot(false); //can only shoot one at a time. for multple maybe change to an array of n size for n shots?
 		
+								//Set projectile to start at player
+		player->setPX(player->getXPosition());
+		player->setPY(player->getYPosition());
+
+		//Set the velocities
+		double projectileVelocity = 100;
+		player->setPVelX(projectileVelocity * directionXVelNorm);
+		player->setPVelY(projectileVelocity * directionYVelNorm);
+
 		/*Apply recoil*/
 		double recoilForce = 200;
 		player->setXVel(player->getXVel() - (recoilForce * directionXVelNorm));
@@ -496,7 +535,7 @@ void Game::getUserInput(Entity* player) {
 	}
 
 	//Holding E
-	if (keystate[SDL_SCANCODE_E] && player->getShot())
+	if (keystate[SDL_SCANCODE_E] )
 	{
 		//Can be used for something else now
 	}
@@ -647,15 +686,6 @@ void Game::getUserInput(Entity* player) {
 
 //Handle the Collision
 void Game::handleCollision(Entity* player, Tilemap* t) {
-	if (!player->getShot())
-	{/*If a shot has been fired*/
-		/*
-		std::cout << player->getPX() << std::endl;
-		player->setPX(player->getPX() + player->getPVel());
-
-		// if collision, just set shoot to true
-		*/
-	}
 	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time);
 	if (!on_solid) // while in air
 	{
@@ -989,6 +1019,16 @@ bool Game::checkHitPlayer(Entity* player, Enemy* enemy)
 
 	return false;
 }
+
+
+bool Game::checkHitEnemy(Entity* player, Enemy* enemy)
+{
+	return (player->getPX() > enemy->getXPosition() &&
+		player->getPX() < enemy->getXPosition() + enemy->getCurrFrame().getWidth() &&
+		player->getPY() < enemy->getYPosition() &&
+		player->getPY() < enemy->getYPosition() + enemy->getCurrFrame().getHeight());
+}
+
 
 // Look at player position, the room, and if we are leaving (and can).
 // Return the door that we are going through (4-bit) or -1
