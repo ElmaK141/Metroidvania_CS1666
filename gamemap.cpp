@@ -1,7 +1,8 @@
 #include "gamemap.h"
 #include "block.h"
 #include <stdlib.h>     /* srand, rand */
-#include <time.h> 
+#include <time.h>
+#include <chrono>
 #include <iostream>
 #include <queue>
 
@@ -82,8 +83,8 @@ Gamemap::~Gamemap()
 *  It will then generate each room as a tilemap - with randomness used to layout platforms
 */
 void Gamemap::generateGamemap() {
-	//init rand seed based on current time
-	srand(time(NULL));
+	//init rand seed based on current time since epoch in ms (before we used Time and this was very bad)
+	srand(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
 
 	// randomly choose a starting location for the player spawn room and map gen
 	this->spawnX = rand() % mapLength;
