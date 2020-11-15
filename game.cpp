@@ -563,12 +563,13 @@ void Game::getUserInput(Entity* player) {
 		
 		if (keystate[SDL_SCANCODE_S]) {
 			//Animation
-			if (player->getFrameIndex() != 0) {
-				player->setPosition(player->getXPosition() - 39, player->getYPosition());
-			}
+			if (player->getXVel() == 0) {
+				if (player->getFrameIndex() != 0) {
+					player->setPosition(player->getXPosition() - 39, player->getYPosition());
+				}
 
-			player->setCurrFrame(0);
-				
+				player->setCurrFrame(0);
+			}
 		}
 		
 		//Animation
