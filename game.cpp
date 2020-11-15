@@ -286,7 +286,6 @@ void Game::runGame() {
 			//Now we must find the player spawn point for this need room/map.
 			for (int i = 0; i < currRoom->getMaxHeight(); i++)
 			{
-master
 				if (enemies[i]->getHP() > 0)
 				{
 					enemies[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
@@ -325,7 +324,6 @@ master
 							}
 						}
 					}
-master
 				}
 			}
 
@@ -333,7 +331,6 @@ master
 			continue;
 		}
 
-master
 		if (!player.getShot())
 		{/*If a shot has been fired EMIL*/
 
@@ -385,7 +382,6 @@ master
 
 		// enemies
 		if (!map->ifSpawn()) {
-master
 			for (int i = 0; i < enemies.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
 			{
 				enemies[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
@@ -1098,7 +1094,6 @@ bool Game::checkHitPlayer(Entity* player, Enemy* enemy)
 	return false;
 }
 
-master
 
 bool Game::checkHitEnemy(Entity* player, Enemy* enemy)
 {
@@ -1123,7 +1118,6 @@ bool Game::checkPlayerCollision(Entity* player, Entity* ent) {
 	return false;
 }
 
-master
 // Look at player position, the room, and if we are leaving (and can).
 // Return the door that we are going through (4-bit) or -1
 int Game::checkDoor(int doors, Entity& ent, Tilemap* currRoom) {
