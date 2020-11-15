@@ -14,6 +14,7 @@
 // Double jump to fullfill requirement
 bool canSecond = true; //The ability: change when getting ability
 bool doneSecond = false; // only allow 1 extra jump
+double projectileVelocity = 20;
 
 //size of the Window/Screen and thus the size of the Camera
 int SCREEN_WIDTH;
@@ -271,42 +272,59 @@ void Game::runGame() {
 		if (!map.ifSpawn()) {
 			for (int i = 0; i < enemies.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
 			{
-				enemies[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
-				if (!hit)
+				if (enemies[i]->getHP() > 0)
 				{
-					hit = checkHitPlayer(&player, enemies[i]);
-					if (hit)
-						hitTick = SDL_GetTicks();
+					enemies[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
+					if (!hit)
+					{
+						hit = checkHitPlayer(&player, enemies[i]);
+						if (hit)
+							hitTick = SDL_GetTicks();
+					}
+					else if (SDL_GetTicks() - hitTick > 1000)
+						hit = false;
+
 				}
-				else if (SDL_GetTicks() - hitTick > 1000)
-					hit = false;
 			}
 		}
 
 		if (!player.getShot())
-		{/*If a shot has been fired*/
-			for (int i = 0; i < enemies.size(); i++)
-			{
-				if (checkHitEnemy(&player, enemies[i]))
-				{
-					//and remove enemy
-					player.setShot(true);
-					std::cout << "Enemy" << std::endl;
-				}
-			}
-			if (tileArray[(int)(player.getPY() / 16)][(int)(player.getPX() / 16)] != 0 && tileArray[(int)(player.getPY() / 16)][(int)(player.getPX() / 16)] != 3) //hit something not air
+		{/*If a shot has been fired EMIL*/
+
+			double projectileX = player.getPX() + player.getPVelX();
+			double projectileY = player.getPY() + player.getPVelY();
+
+			player.setPX(projectileX);
+			player.setPY(projectileY);
+
+
+			// Draw box
+			SDL_Rect fillRect = {player.getPX(), player.getPY(), 5, 5};
+			SDL_RenderFillRect(gRenderer, &fillRect);
+			SDL_RenderPresent(gRenderer);
+
+			int tileMapY = (int)(player.getPY() / 16);
+			int tileMapX = (int)(player.getPX() / 16);
+
+			bool checkFlag1 = tileArray[tileMapY][tileMapX] != 0;
+			bool checkFlag3 = tileArray[tileMapY][tileMapX] != 3;
+			bool checkFlag9 = tileArray[tileMapY][tileMapX] != 9;
+
+			if (checkFlag1 && checkFlag3 && checkFlag9) //hit something not air
 			{
 				player.setShot(true);
-				std::cout << "Wall" << std::endl;
 			}
-
-
-			std::cout << player.getPX() << " | " << player.getPY() << std::endl;
-
-			player.setPX(player.getPX() + player.getPVelX());
-			player.setPY(player.getPY() + player.getPVelY());
-
-			// if collision, just set shoot to true
+			else
+			{
+				for (int i = 0; i < enemies.size(); i++)
+				{
+					if (checkHitEnemy(&player, enemies[i]))
+					{
+						enemies[i]->takeDamage(player.getPVelX(), player.getPVelY());
+						player.setShot(true);
+					}
+				}
+			}
 		}
 
 
@@ -438,7 +456,8 @@ void Game::runGame() {
 		if (!map.ifSpawn()) {
 			for (int i = 0; i < enemies.size(); i++)
 			{
-				enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
+				if (enemies[i]->getHP() > 0) //only draw live enemies
+					enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
 			}
 		}
 		/*
@@ -519,12 +538,14 @@ void Game::getUserInput(Entity* player) {
 		/*Shoot*/
 		player->setShot(false); //can only shoot one at a time. for multple maybe change to an array of n size for n shots?
 		
-								//Set projectile to start at player
-		player->setPX(player->getXPosition());
-		player->setPY(player->getYPosition());
+		//Set projectile to start at player
+		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2) - scroll_offset_x;
+		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2) - scroll_offset_y;
+
+		player->setPX(playerCenterX);
+		player->setPY(playerCenterY);
 
 		//Set the velocities
-		double projectileVelocity = 100;
 		player->setPVelX(projectileVelocity * directionXVelNorm);
 		player->setPVelY(projectileVelocity * directionYVelNorm);
 
@@ -1023,7 +1044,8 @@ bool Game::checkHitPlayer(Entity* player, Enemy* enemy)
 
 bool Game::checkHitEnemy(Entity* player, Enemy* enemy)
 {
-	return (player->getPX() > enemy->getXPosition() &&
+	return (
+		player->getPX() > enemy->getXPosition() &&
 		player->getPX() < enemy->getXPosition() + enemy->getCurrFrame().getWidth() &&
 		player->getPY() < enemy->getYPosition() &&
 		player->getPY() < enemy->getYPosition() + enemy->getCurrFrame().getHeight());
