@@ -67,68 +67,6 @@ void Block::initMetadata() {
 
 	//connections represent anything that crosses the boundary of a block that is not the wall/floor/edge
 
-
-	/* For now idk if we need this lol what a waste of my time
-	//switch on type to set metadata (that we know of by type)
-	switch (this->type) {
-	case BlockType::Empty:
-		// not connected
-		this->connnectedRx = false;
-		this->connnectedRy = false;
-		this->connectedLx = false;
-		this->connectedLy = false;
-
-		// none
-		this->x = -1;
-		this->y = -1;
-		break;
-	case BlockType::Middle:
-		this->connnectedRx = false;
-		this->connnectedRy = false;
-		this->connectedLx = false;
-		this->connectedLy = false;
-
-		this->x = -1;
-		this->y = -1;
-		break;
-	case BlockType::Floor:
-		this->connnectedRx = false;
-		this->connnectedRy = false;
-		this->connectedLx = false;
-		this->connectedLy = false;
-
-		this->x = -1;
-		this->y = -1;
-		break;
-	case BlockType::Ceiling:
-		this->connnectedRx = false;
-		this->connnectedRy = false;
-		this->connectedLx = false;
-		this->connectedLy = false;
-
-		this->x = -1;
-		this->y = -1;
-		break;
-	case BlockType::WallL:
-		this->connnectedRx = false;
-		this->connnectedRy = false;
-		this->connectedLx = false;
-		this->connectedLy = false;
-
-		this->x = -1;
-		this->y = -1;
-		break;
-	case BlockType::WallR:
-		this->connnectedRx = false;
-		this->connnectedRy = false;
-		this->connectedLx = false;
-		this->connectedLy = false;
-
-		this->x = -1;
-		this->y = -1;
-		break;
-	}
-	*/
 }
 
 // based on the x,y coordinate of this block, determine the type
