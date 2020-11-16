@@ -48,6 +48,7 @@ class Game {
 		int getUserInput(Entity* player, std::vector<Entity*> tps);		//Handle input from the user
 		void handleCollision(Entity* player, Tilemap* t);	//Handles collision events of the player
 		bool checkHitPlayer(Entity* player, Enemy* enemy);
+		bool checkHitEnemy(Entity* player, Enemy* enemy);
 		bool checkPlayerCollision(Entity* player, Entity* ent);
 		void generateMap(Tilemap** map, int mapX, int mapY, std::vector<Tile*> tiles, Background* bg);
 };
