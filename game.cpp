@@ -34,10 +34,14 @@ Uint32 lastTick = 0;
 Uint32 curTick;
 double delta_time;
 
-//Animation time
+//Player Animation time
 Uint32 lastAnim = 0;
-Uint32 curAnim;
+Uint32 curAnim = 0;
 int lastAnimFrame = 3;
+
+//Teleporter Anim
+Uint32 telLast = 0;
+Uint32 telAnim = 0;
 
 //Event pointer
 SDL_Event e;
@@ -248,8 +252,11 @@ void Game::runGame() {
 		lastTick = curTick;
 
 		
-		//Anim frame tracker
+		//Player Anim frame tracker
 		curAnim = SDL_GetTicks();
+		
+		//Teleporter animation frame tracker
+		telAnim = SDL_GetTicks();
 
 		//Quit game
 		while (SDL_PollEvent(&e) != 0) {
@@ -467,6 +474,15 @@ void Game::runGame() {
 
 		// if there are any teleporters in this scene, draw them
 		for (auto&& s : tps) {
+			if (telAnim - telLast >= 200.0) {
+				telLast = telAnim;
+				if (s->getFrameIndex() == 0) {
+					s->setCurrFrame(1);
+				}
+				else {
+					s->setCurrFrame(0);
+				}
+			}
 			s->getCurrFrame().draw(gRenderer, s->getXPosition() - scroll_offset_x, s->getYPosition() - scroll_offset_y);
 		}
 
