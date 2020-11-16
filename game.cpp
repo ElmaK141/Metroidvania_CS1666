@@ -538,7 +538,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		}
 	}
 
-	if (SDL_BUTTON(SDL_BUTTON_LEFT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
+	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
 		mouseXinWorld += scroll_offset_x;
 		mouseYinWorld += scroll_offset_y;
 
@@ -560,7 +560,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	}
 
 	/*Shooting*/
-	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld) && player->getShot()) {
+	if (SDL_BUTTON(SDL_BUTTON_LEFT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld) && player->getShot()) {
 		mouseXinWorld += scroll_offset_x;
 		mouseYinWorld += scroll_offset_y;
 
@@ -715,8 +715,8 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
 
 		//Apply grapple force
-		player->setXVel(player->getXVel() + xComp * player->getPhysics()->getGrappleStr());
-		player->setYVel(player->getYVel() + yComp * player->getPhysics()->getGrappleStr());
+		player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+		player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
 	}
 	//movement
 	else if (keystate[SDL_SCANCODE_A]) {
