@@ -520,7 +520,7 @@ void Game::runGame() {
 			}
 
 			// if this room has a powerup but no teleporters, it is a health powerup
-			if (tps.empty()) {
+			if (tps.empty() && !powerups.empty()) {
 				powerups[0]->setFlag(8);
 				powerups[0]->setCurrFrame(2);
 			}
