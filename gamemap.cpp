@@ -42,7 +42,7 @@ Gamemap::Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std
 	// We know of Tiles, Bgs, Size, and Tilemap Array internally
 	if (type == 0) { //type 0, create the Main Room tilemap for this 1x1 map
 		setCurrentPosition(0, 0);
-		struct Node mainRoom = { true, 0, 0, new Tilemap("data/tilemaps/tilemap0.txt", tiles, bgs[0]), 0 };
+		struct Node mainRoom = { true, 0, 0, new Tilemap("data/tilemaps/hub/mainSpawn.txt", tiles, bgs[0]), 0 };
 		map[0][0] = mainRoom;
 	}
 	else if (type == 1 || type == 2) { // types 1 and 2 will generate a full gamemap with proc gen
@@ -50,7 +50,7 @@ Gamemap::Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std
 	}
 	else { // type 4, create the Boss Room tilemap for this 1x1 map
 		setCurrentPosition(0, 0);
-		struct Node bossRoom = { true, 0, 0, new Tilemap("data/tilemaps/tilemap0.txt", tiles, bgs[1]), 0 }; // CHANGE THIS TO BOSS
+		struct Node bossRoom = { true, 0, 0, new Tilemap("data/tilemaps/hub/bossRoom.txt", tiles, bgs[1]), 0 };
 		map[0][0] = bossRoom;
 	}
 
