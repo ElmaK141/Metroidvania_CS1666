@@ -475,7 +475,6 @@ void Game::runGame() {
 		// if there are any teleporters in this scene, draw them
 		for (auto&& s : tps) {
 			if (telAnim - telLast >= 200.0) {
-				telLast = telAnim;
 				if (s->getFrameIndex() == 0) {
 					s->setCurrFrame(1);
 				}
@@ -484,6 +483,9 @@ void Game::runGame() {
 				}
 			}
 			s->getCurrFrame().draw(gRenderer, s->getXPosition() - scroll_offset_x, s->getYPosition() - scroll_offset_y);
+		}
+		if (telAnim - telLast >= 200.0) {
+			telLast = telAnim;
 		}
 
 		// draw the player
