@@ -58,7 +58,12 @@ class Entity{
 		double y;
 		int s;
 		int index;
-		int flag;
+
+		int flag;				// Flag determines what kind of entity this is
+								// 0: Player flag
+								// 1: Enemy flag (eye)
+								// 2-5: Teleporters (Main, Sec1, Sec2, Boss)
+		
 		double xVel;
 		double yVel;
 		bool canJump;

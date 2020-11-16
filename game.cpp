@@ -181,6 +181,7 @@ void Game::runGame() {
 	// Vector to track if there are any teleporters in the scene
 	std::vector<Entity*> tps;
 
+	// order used for different teleporters
 	int order = 0;
 
 	//Find player spawn point, and any teleporters in this room
@@ -488,7 +489,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		//std::cout << "E PRESSED" << std::endl;
 		for (auto&& tp : tps) { // for each teleporter in the scene
 			if (checkPlayerCollision(player, tp)) { // check if the player is touching it
-				std::cout << "Interacted with TP type " << tp->getFlag() << std::endl;
+				//std::cout << "Interacted with TP type " << tp->getFlag() << std::endl;
 
 				// player has pressed E, and they are touching a teleporter. We will now return the flag from this teleporter, so we know which MAP to teleport to
 				// idea is to return here because we will reset the game loop.
@@ -887,17 +888,6 @@ void Game::pauseMenu(int prevGameState)
 			}
 
 		}
-		/*
-		else if (e.type == SDL_KEYDOWN) { //or close menu with escape again
-			switch (e.key.keysym.sym) {
-
-			case SDLK_ESCAPE:
-				gameState = 1;
-				pauseM = false;
-				break;
-			}
-		}
-		*/
 
 		//SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
