@@ -215,15 +215,15 @@ void Game::runGame() {
 				// idea (when ready) is to no longer spawn TP to Sec1/2 after the player returns from that area with the powerup
 				// as well as order, the player would need to have hasDouble and hasGrapple set to false for them to spawn
 				if (order == 0) { // (to boss)
-					std::cout << "spawn tp 5" << std::endl;
+					//std::cout << "spawn tp 5" << std::endl;
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 5, &plp, gRenderer));
 				}
 				else if (order == 1) { // (to Sec2)
-					std::cout << "spawn tp 4" << std::endl;
+					//std::cout << "spawn tp 4" << std::endl;
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 4, &plp, gRenderer));
 				}
 				else { // (to Sec1)
-					std::cout << "spawn tp 3" << std::endl;
+					//std::cout << "spawn tp 3" << std::endl;
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 3, &plp, gRenderer));
 				}
 				order++;
@@ -281,7 +281,7 @@ void Game::runGame() {
 		// if changeMap is not -1, then we interacted with a teleporter
 		if (changeMap != -1) {
 
-			std::cout << "Changing map to " << changeMap - 2 << std::endl;
+			//std::cout << "Changing map to " << changeMap - 2 << std::endl;
 
 			// based on the tp flag (changeMap) we will switch to a different Map
 				// type 2 tp returns us to main room - allMaps[0]
@@ -299,7 +299,7 @@ void Game::runGame() {
 			// now with updated map, clear our teleporters/powerups
 			tps.clear();
 			powerups.clear();
-			std::cout << "Clear all tp" << std::endl;
+			//std::cout << "Clear all tp" << std::endl;
 
 			int order = 0;
 
@@ -323,21 +323,21 @@ void Game::runGame() {
 							// as well as order, the player would need to have hasDouble and hasGrapple set to false for them to spawn
 
 							if (order == 0) { // (to boss)
-								std::cout << "spawn tp 5" << std::endl;
+								//std::cout << "spawn tp 5" << std::endl;
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 5, &plp, gRenderer));
 							}
 							else if (order == 1) { // (to Sec2)
-								std::cout << "spawn tp 4" << std::endl;
+								//std::cout << "spawn tp 4" << std::endl;
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 4, &plp, gRenderer));
 							}
 							else { // (to Sec1)
-								std::cout << "spawn tp 3" << std::endl;
+								//std::cout << "spawn tp 3" << std::endl;
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 3, &plp, gRenderer));
 							}
 							order++;
 						}
 						else if(map->getType() == 1 || map->getType() == 2) {
-							std::cout << "spawn tp 2" << std::endl;
+							//std::cout << "spawn tp 2" << std::endl;
 							tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 2, &plp, gRenderer));
 						}
 					}
