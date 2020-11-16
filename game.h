@@ -22,7 +22,7 @@ class Game {
 		~Game();
 		void gameLoop();
 
-		bool detectCollision(Entity &ent, int** t, double x_vel, double y_vel);
+		bool detectCollision(Entity &ent, int** t, double x_vel, double y_vel, int roomHeight);
 		int checkDoor(int doors, Entity& ent, Tilemap* currRoom);
 	private:
 		SDL_Window* gWindow;
