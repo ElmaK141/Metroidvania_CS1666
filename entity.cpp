@@ -31,7 +31,7 @@ Entity::Entity(std::string spriteData, double xPos, double yPos, int scale, int 
 }
 
 Entity::~Entity(){
-	
+
 }
 
 void Entity::setCurrFrame(int index){
@@ -155,4 +155,24 @@ double Entity::getPVelY() {
 
 double Entity::getPVelX() {
 	return this->pvelx;
+}
+
+// sets the double jump flag true
+void Entity::setDouble() {
+	this->hasDouble = true;
+}
+
+// sets the graple flag true
+void Entity::setGrapple() {
+	this->hasGrapple = true;
+}
+
+// gets the status of hasDouble
+bool Entity::getDouble() {
+	return this->hasDouble;
+}
+
+// gets the status of hadGrapple
+bool Entity::getGrapple() {
+	return this->hasGrapple;
 }

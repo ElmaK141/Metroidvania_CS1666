@@ -19,7 +19,7 @@ class Gamemap
 {
 public:
 	// Public Constructors:
-	Gamemap(int length, int height, std::vector<Tile*> tiles, std::vector<Background*> bgs);
+	Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std::vector<Background*> bgs);
 	// Public Getters and Setters:	
 	void setCurrentPosition(int x, int y);		// update which room the player is in with manual coordinates
 	void updatePosition(int door);				// update which room the player is in relative to the door they went through
@@ -28,6 +28,7 @@ public:
 	bool ifSpawn();								// are we in the spawn room
 	int getCurrX();
 	int getCurrY();
+	int getType();
 	// Public Destructor: 
 	~Gamemap();									// destruction
 private:
@@ -58,6 +59,8 @@ private:
 												// Map dimensions
 	int mapLength;								// number of rooms (x)
 	int mapHeight;								// number of rooms (y)
+
+	int type;									// Room type is for teleporters and tracking which gamemap we are currently using
 
 												// Starting position will be determined by spawn room, and player will start there.
 	int currYPos;								// current Y position of the player in the map

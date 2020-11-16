@@ -40,6 +40,8 @@ class Enemy {
 
 		int getFlag();
 
+		void takeDamage(double x, double y);
+
 		Physics* getPhysics();
 	private:
 		
