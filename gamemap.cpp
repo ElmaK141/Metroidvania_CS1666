@@ -11,11 +11,18 @@
 /////////////////////////
 
 // Default Constructor
-Gamemap::Gamemap(int length, int height, std::vector<Tile*> tiles, std::vector<Background*> bgs)
+Gamemap::Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std::vector<Background*> bgs)
 {
 	// set map size
 	mapLength = length;
 	mapHeight = height;
+
+	// the TYPE will be 0-3
+	// 0 - main room - loads from tilemap
+	// 1 - first section - lxh map with tilemaps generated for no powerups
+	// 2 - second section - lxh map with tilemaps generated for double jump
+	// 3 - boss room - probably loads from tilemap
+	this->type = type;
 
 	// set references to Tiles array and Backgrounds array
 	this->tiles = tiles;
@@ -32,7 +39,19 @@ Gamemap::Gamemap(int length, int height, std::vector<Tile*> tiles, std::vector<B
 
 	//Now we generate the Map - this is where we would define and create each Tilemap/Room
 	// We know of Tiles, Bgs, Size, and Tilemap Array internally
-	generateGamemap();
+	if (type == 0) { //type 0, create the Main Room tilemap for this 1x1 map
+		setCurrentPosition(0, 0);
+		struct Node mainRoom = { true, 0, 0, new Tilemap("data/tilemaps/tilemap0.txt", tiles, bgs[0]), 0 };
+		map[0][0] = mainRoom;
+	}
+	else if (type == 1 || type == 2) { // types 1 and 2 will generate a full gamemap with proc gen
+		generateGamemap();
+	}
+	else { // type 4, create the Boss Room tilemap for this 1x1 map
+		setCurrentPosition(0, 0);
+		struct Node bossRoom = { true, 0, 0, new Tilemap("data/tilemaps/tilemap0.txt", tiles, bgs[1]), 0 }; // CHANGE THIS TO BOSS
+		map[0][0] = bossRoom;
+	}
 
 	/* print debug */
 	std::cout << "Spawn: "  << spawnY << " " << spawnX << std::endl;
@@ -403,4 +422,9 @@ int Gamemap::getCurrX() {
 //
 int Gamemap::getCurrY() {
 	return this->currYPos;
+}
+
+// returns this map type
+int Gamemap::getType() {
+	return this->type;
 }

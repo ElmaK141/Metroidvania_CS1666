@@ -45,6 +45,11 @@ class Entity{
 		double getPVelY();
 		double getPVelX();
 		Physics* getPhysics();
+
+		void setDouble();
+		void setGrapple();
+		bool getDouble();
+		bool getGrapple();
 	private:
 
 		void createSprites();
@@ -63,6 +68,10 @@ class Entity{
 		double py;
 		double pvelx;
 		double pvely;
+
+		// powerup flags - these are unique to the player
+		bool hasDouble;
+		bool hasGrapple;
 
 		Sprite currFrame;
 		SDL_Renderer* context;
