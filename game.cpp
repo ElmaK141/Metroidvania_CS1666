@@ -461,6 +461,8 @@ void Game::runGame() {
 		
 		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y);
 		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y));
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y + SCREEN_HEIGHT);
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x + SCREEN_WIDTH, -rem_bg_y + SCREEN_HEIGHT);
 		currRoom->drawTilemap(gRenderer, rem_tile_x, rem_tile_y);
 
 		// if there are any teleporters in this scene, draw them
@@ -653,11 +655,13 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 
 		if (keystate[SDL_SCANCODE_S]) {
 			//Animation
-			if (player->getFrameIndex() != 0) {
-				player->setPosition(player->getXPosition() - 39, player->getYPosition());
+			if (player->getXVel() == 0) {
+				if (player->getFrameIndex() != 0) {
+					player->setPosition(player->getXPosition() - 39, player->getYPosition());
+				}
+        
+				player->setCurrFrame(0);
 			}
-
-			player->setCurrFrame(0);
 
 		}
 
@@ -748,7 +752,7 @@ void Game::handleCollision(Entity* player, Tilemap* t) {
 		// if collision, just set shoot to true
 		*/
 	}
-	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time);
+	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time, t->getMaxHeight());
 	if (!on_solid) // while in air
 	{
 		if(player->getPhysics()->getMaxY() > player->getYVel())
@@ -967,7 +971,7 @@ void Game::pauseMenu(int prevGameState)
 }
 
 // Detect collision of Entity with Gameworld (edge of screen)
-bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_vel)
+bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_vel, int roomHeight)
 {
 	double pPosY = ent.getYPosition();
 	double pPosX = ent.getXPosition();
@@ -985,7 +989,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	if (y_vel >= 0) {
 		for (int xAdjust = 1; xAdjust < xBlockR - xBlockL; xAdjust++)
 		{	//for every block under the player's width
-			if (yBlockD <= 44)
+			if (yBlockD <= roomHeight-1)
 			{	//if you'd pass a solid block
 				for (int range = pPosY; range <= ent.getYPosition(); range += 16) //for EVERY block that is passed during movement
 				{
@@ -1044,8 +1048,9 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 
 	if (x_vel > 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
-		{	//hit blocks to your right accounting for player height
-			if (yBlockD <= 45 && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3 && tilemap[yBlockD - yAdjust][xBlockR] != 9))
+		{	
+      //hit blocks to your right accounting for player height
+			if (yBlockD <= roomHeight && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3 && tilemap[yBlockD - yAdjust][xBlockR] != 9))
 			{
 				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -1056,8 +1061,9 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 
 	if (x_vel < 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
-		{	//hit blocks to your left accounting for player height
-			if (yBlockD <= 45 && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3 && tilemap[yBlockD - yAdjust][xBlockL] != 9))
+		{	
+      //hit blocks to your left accounting for player height
+			if (yBlockD <= roomHeight && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3 && tilemap[yBlockD - yAdjust][xBlockL] != 9))
 			{
 				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -1268,20 +1274,20 @@ void Game::runDebug() {
 	int scroll_offset_x = 0;
 	int rem_bg_x = 0;
 	int rem_tile_x = 0;
-	int scroll_offset_y = 0;
-	int rem_bg_y = 0;
-	int rem_tile_y = 0;
+	int scroll_offset_y = SCREEN_HEIGHT;
+	int rem_bg_y = SCREEN_HEIGHT;
+	int rem_tile_y = SCREEN_HEIGHT;
 	int lthird = (SCREEN_WIDTH / 3);
 	int rthird = (2 * SCREEN_WIDTH / 3);
-	int tthird = (2 * SCREEN_HEIGHT / 3);
-	int bthird = (SCREEN_HEIGHT / 3);
+	int tthird = (SCREEN_HEIGHT / 3);
+	int bthird = (2 * SCREEN_HEIGHT / 3);
 
 	//Flip variable for flipping player sprite
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
 
 	// determine players starting position (middle of background, on the left side of world)
 	double x_pos = SCREEN_WIDTH / 2;
-	double y_pos = SCREEN_HEIGHT / 2 - 145.0;
+	double y_pos = SCREEN_HEIGHT - 145.0;
 
 	//Define Graphical Objects
 	Background debugBg(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
@@ -1299,7 +1305,7 @@ void Game::runDebug() {
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
-	//Generate Map
+	/*Generate Map
 	Tilemap** map;
 	int mapX = 3;
 	int mapY = 3;
@@ -1312,11 +1318,12 @@ void Game::runDebug() {
 	//Generate tileArrays
 
 	int** tArr0 = map[0][0].getTileMap();
-	int** tArr1 = map[0][1].getTileMap();
+	int** tArr1 = map[0][1].getTileMap();*/
+	Tilemap spawn("data/tilemaps/hub/mainSpawn.txt", tiles, &debugBg);
 
 	//Current room
 	int roomNum = 0;
-	Tilemap* currRoom = &map[0][0];
+	Tilemap* currRoom = &spawn;
 
 	std::vector<Entity*> tps;
 
@@ -1408,7 +1415,9 @@ void Game::runDebug() {
 
 		//Draw Room
 		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y);
-		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y + SCREEN_HEIGHT));
+		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y));
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y + SCREEN_HEIGHT);
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x + SCREEN_WIDTH, -rem_bg_y + SCREEN_HEIGHT);
 
 		//Draw Tilemap
 		currRoom->drawTilemap(gRenderer, rem_tile_x, rem_tile_y);
