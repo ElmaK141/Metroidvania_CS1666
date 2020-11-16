@@ -23,6 +23,10 @@ Entity::Entity(std::string spriteData, double xPos, double yPos, int scale, int 
 		this->xVel = 0.0;
 		this->yVel = 0.0;
 
+		// set initial flags for powerups
+		this->hasDouble = true;
+		this->hasGrapple = true;
+
 		//Can jump initially
 		this->canJump = true;
 		this->canShoot = true;

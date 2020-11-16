@@ -12,7 +12,6 @@
 #include "button.h"
 
 // Double jump to fullfill requirement
-bool canSecond = true; //The ability: change when getting ability
 bool doneSecond = false; // only allow 1 extra jump
 double projectileVelocity = 20;
 
@@ -34,10 +33,14 @@ Uint32 lastTick = 0;
 Uint32 curTick;
 double delta_time;
 
-//Animation time
+//Player Animation time
 Uint32 lastAnim = 0;
-Uint32 curAnim;
+Uint32 curAnim = 0;
 int lastAnimFrame = 3;
+
+//Teleporter Anim
+Uint32 telLast = 0;
+Uint32 telAnim = 0;
 
 //Event pointer
 SDL_Event e;
@@ -183,6 +186,7 @@ void Game::runGame() {
 	// Vector to track if there are any teleporters in the scene
 	std::vector<Entity*> tps;
 
+	// order used for different teleporters
 	int order = 0;
 
 	//Find player spawn point, and any teleporters in this room
@@ -196,25 +200,24 @@ void Game::runGame() {
 				x_pos = j * 16.0;
 				y_pos = i * 16.0;
 			}
-			else if (tileArray[i][j] == 9) { // for every 9 *tp* in this tilemap, we create a sprite for it
-				//std::cout << " Found tp at " << j << " " << i << std::endl;
-				// 9 creates our tps, based on our current MAP TYPE, we know which teleporters we need (internal to entity based on flag)
-				// type 2 tp returns us to main room - allMaps[0]
-				// type 3 tp sends us to first section - allMaps[1]
-				// type 4 tp sends us to second section - allMaps[2]
-				// type 5 tp sends us to the boss - allMaps[3]
+			else if (tileArray[i][j] == 9) { // 9 marks that there is a teleporter
+				// Entity flag in the teleporters determine where they send you
+					// 2 tp to main room, 3 tp to Sec1, 4 tp to Sec2, 5 tp to boss
 				// teleporters decided by how high they are. with boss at highest, then 2nd Section, then 1st section at floor
+					// this only matters / is the case for the main room
+
+				// idea (when ready) is to no longer spawn TP to Sec1/2 after the player returns from that area with the powerup
+				// as well as order, the player would need to have hasDouble and hasGrapple set to false for them to spawn
 				if (order == 0) { // (to boss)
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 5, &plp, gRenderer));
-					order += 1;
 				}
 				else if (order == 1) { // (to Sec2)
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 4, &plp, gRenderer));
-					order += 1;
 				}
 				else { // (to Sec1)
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 3, &plp, gRenderer));
 				}
+				order++;
 			}
 		}
 	}
@@ -248,8 +251,11 @@ void Game::runGame() {
 		lastTick = curTick;
 
 		
-		//Anim frame tracker
+		//Player Anim frame tracker
 		curAnim = SDL_GetTicks();
+		
+		//Teleporter animation frame tracker
+		telAnim = SDL_GetTicks();
 
 		//Quit game
 		while (SDL_PollEvent(&e) != 0) {
@@ -298,17 +304,20 @@ void Game::runGame() {
 						// When we teleport, the only room we can tp to with teleporters is Main Room
 						if (map->getType() == 0) {
 							// teleporters decided by how high they are. with boss at highest, then 2nd Section, then 1st section at floor
+
+							// idea (when ready) is to no longer spawn TP to Sec1/2 after the player returns from that area with the powerup
+							// as well as order, the player would need to have hasDouble and hasGrapple set to false for them to spawn
+
 							if (order == 0) { // (to boss)
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 5, &plp, gRenderer));
-								order += 1;
 							}
 							else if (order == 1) { // (to Sec2)
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 4, &plp, gRenderer));
-								order += 1;
 							}
 							else { // (to Sec1)
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 3, &plp, gRenderer));
 							}
+							order++;
 						}
 					}
 				}
@@ -461,11 +470,24 @@ void Game::runGame() {
 		
 		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y);
 		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y));
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y + SCREEN_HEIGHT);
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x + SCREEN_WIDTH, -rem_bg_y + SCREEN_HEIGHT);
 		currRoom->drawTilemap(gRenderer, rem_tile_x, rem_tile_y);
 
 		// if there are any teleporters in this scene, draw them
 		for (auto&& s : tps) {
+			if (telAnim - telLast >= 200.0) {
+				if (s->getFrameIndex() == 0) {
+					s->setCurrFrame(1);
+				}
+				else {
+					s->setCurrFrame(0);
+				}
+			}
 			s->getCurrFrame().draw(gRenderer, s->getXPosition() - scroll_offset_x, s->getYPosition() - scroll_offset_y);
+		}
+		if (telAnim - telLast >= 200.0) {
+			telLast = telAnim;
 		}
 
 		// draw the player
@@ -529,7 +551,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		//std::cout << "E PRESSED" << std::endl;
 		for (auto&& tp : tps) { // for each teleporter in the scene
 			if (checkPlayerCollision(player, tp)) { // check if the player is touching it
-				std::cout << "Interacted with TP type " << tp->getFlag() << std::endl;
+				//std::cout << "Interacted with TP type " << tp->getFlag() << std::endl;
 
 				// player has pressed E, and they are touching a teleporter. We will now return the flag from this teleporter, so we know which MAP to teleport to
 				// idea is to return here because we will reset the game loop.
@@ -538,12 +560,11 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		}
 	}
 
-	if (SDL_BUTTON(SDL_BUTTON_LEFT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
+	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
 		mouseXinWorld += scroll_offset_x;
 		mouseYinWorld += scroll_offset_y;
-
-
-		if (!player->getPhysics()->isGrappling()) {
+		
+		if(!player->getPhysics()->isGrappling() && player->getGrapple()){
 			//std::cout << "pressed" << std::endl;
 			grappleX = mouseXinWorld;
 			grappleY = mouseYinWorld;
@@ -560,7 +581,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	}
 
 	/*Shooting*/
-	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld) && player->getShot()) {
+	if (SDL_BUTTON(SDL_BUTTON_LEFT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld) && player->getShot()) {
 		mouseXinWorld += scroll_offset_x;
 		mouseYinWorld += scroll_offset_y;
 
@@ -595,7 +616,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	if (player->getPhysics()->inAir()) {
 		//Air control
 		if (keystate[SDL_SCANCODE_SPACE]) {
-			if (player->getJump() && canSecond && !doneSecond)
+			if (player->getJump() && player->getDouble() && !doneSecond)
 			{ /* Double jump */
 				doneSecond = true;
 
@@ -653,11 +674,13 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 
 		if (keystate[SDL_SCANCODE_S]) {
 			//Animation
-			if (player->getFrameIndex() != 0) {
-				player->setPosition(player->getXPosition() - 39, player->getYPosition());
+			if (player->getXVel() == 0) {
+				if (player->getFrameIndex() != 0) {
+					player->setPosition(player->getXPosition() - 39, player->getYPosition());
+				}
+        
+				player->setCurrFrame(0);
 			}
-
-			player->setCurrFrame(0);
 
 		}
 
@@ -715,8 +738,8 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
 
 		//Apply grapple force
-		player->setXVel(player->getXVel() + xComp * player->getPhysics()->getGrappleStr());
-		player->setYVel(player->getYVel() + yComp * player->getPhysics()->getGrappleStr());
+		player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+		player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
 	}
 	//movement
 	else if (keystate[SDL_SCANCODE_A]) {
@@ -748,7 +771,7 @@ void Game::handleCollision(Entity* player, Tilemap* t) {
 		// if collision, just set shoot to true
 		*/
 	}
-	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time);
+	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time, t->getMaxHeight());
 	if (!on_solid) // while in air
 	{
 		if(player->getPhysics()->getMaxY() > player->getYVel())
@@ -940,17 +963,6 @@ void Game::pauseMenu(int prevGameState)
 			}
 
 		}
-		/*
-		else if (e.type == SDL_KEYDOWN) { //or close menu with escape again
-			switch (e.key.keysym.sym) {
-
-			case SDLK_ESCAPE:
-				gameState = 1;
-				pauseM = false;
-				break;
-			}
-		}
-		*/
 
 		//SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
@@ -967,7 +979,7 @@ void Game::pauseMenu(int prevGameState)
 }
 
 // Detect collision of Entity with Gameworld (edge of screen)
-bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_vel)
+bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_vel, int roomHeight)
 {
 	double pPosY = ent.getYPosition();
 	double pPosX = ent.getXPosition();
@@ -985,7 +997,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	if (y_vel >= 0) {
 		for (int xAdjust = 1; xAdjust < xBlockR - xBlockL; xAdjust++)
 		{	//for every block under the player's width
-			if (yBlockD <= 44)
+			if (yBlockD <= roomHeight-1)
 			{	//if you'd pass a solid block
 				for (int range = pPosY; range <= ent.getYPosition(); range += 16) //for EVERY block that is passed during movement
 				{
@@ -1044,8 +1056,9 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 
 	if (x_vel > 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
-		{	//hit blocks to your right accounting for player height
-			if (yBlockD <= 45 && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3 && tilemap[yBlockD - yAdjust][xBlockR] != 9))
+		{	
+      //hit blocks to your right accounting for player height
+			if (yBlockD <= roomHeight && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3 && tilemap[yBlockD - yAdjust][xBlockR] != 9))
 			{
 				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -1056,8 +1069,9 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 
 	if (x_vel < 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
-		{	//hit blocks to your left accounting for player height
-			if (yBlockD <= 45 && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3 && tilemap[yBlockD - yAdjust][xBlockL] != 9))
+		{	
+      //hit blocks to your left accounting for player height
+			if (yBlockD <= roomHeight && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3 && tilemap[yBlockD - yAdjust][xBlockL] != 9))
 			{
 				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -1268,20 +1282,20 @@ void Game::runDebug() {
 	int scroll_offset_x = 0;
 	int rem_bg_x = 0;
 	int rem_tile_x = 0;
-	int scroll_offset_y = 0;
-	int rem_bg_y = 0;
-	int rem_tile_y = 0;
+	int scroll_offset_y = SCREEN_HEIGHT;
+	int rem_bg_y = SCREEN_HEIGHT;
+	int rem_tile_y = SCREEN_HEIGHT;
 	int lthird = (SCREEN_WIDTH / 3);
 	int rthird = (2 * SCREEN_WIDTH / 3);
-	int tthird = (2 * SCREEN_HEIGHT / 3);
-	int bthird = (SCREEN_HEIGHT / 3);
+	int tthird = (SCREEN_HEIGHT / 3);
+	int bthird = (2 * SCREEN_HEIGHT / 3);
 
 	//Flip variable for flipping player sprite
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
 
 	// determine players starting position (middle of background, on the left side of world)
 	double x_pos = SCREEN_WIDTH / 2;
-	double y_pos = SCREEN_HEIGHT / 2 - 145.0;
+	double y_pos = SCREEN_HEIGHT - 145.0;
 
 	//Define Graphical Objects
 	Background debugBg(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
@@ -1299,7 +1313,7 @@ void Game::runDebug() {
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
-	//Generate Map
+	/*Generate Map
 	Tilemap** map;
 	int mapX = 3;
 	int mapY = 3;
@@ -1312,11 +1326,12 @@ void Game::runDebug() {
 	//Generate tileArrays
 
 	int** tArr0 = map[0][0].getTileMap();
-	int** tArr1 = map[0][1].getTileMap();
+	int** tArr1 = map[0][1].getTileMap();*/
+	Tilemap spawn("data/tilemaps/hub/mainSpawn.txt", tiles, &debugBg);
 
 	//Current room
 	int roomNum = 0;
-	Tilemap* currRoom = &map[0][0];
+	Tilemap* currRoom = &spawn;
 
 	std::vector<Entity*> tps;
 
@@ -1408,7 +1423,9 @@ void Game::runDebug() {
 
 		//Draw Room
 		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y);
-		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y + SCREEN_HEIGHT));
+		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y));
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y + SCREEN_HEIGHT);
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x + SCREEN_WIDTH, -rem_bg_y + SCREEN_HEIGHT);
 
 		//Draw Tilemap
 		currRoom->drawTilemap(gRenderer, rem_tile_x, rem_tile_y);
