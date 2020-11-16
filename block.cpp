@@ -29,7 +29,7 @@ constexpr int right = width - 1;
 // Blocks have internal metadata flags - see block.h
 
 // Creates a Block that will be at position col,row in terms of the block Map 2d array
-Block::Block(int row, int col, int numRow, int numCol) {
+Block::Block(int row, int col, int numRow, int numCol, int mapType) {
 	this->row = row;
 	this->col = col;
 
@@ -41,6 +41,8 @@ Block::Block(int row, int col, int numRow, int numCol) {
 
 	// Init the metadata flags and data **DO WE NEED THIS??**
 	initMetadata();
+
+	this->mapType = mapType;
 
 	// the map is a subsection of tile map that represents this block
 	this->map = new int* [height];
@@ -352,11 +354,11 @@ void Block::populateBlock() {
 }
 
 // generate a Middle block - this block has no walls, and is only platforms
+//Type 1 = No Powerup
+//Type 2 = Double Jump Location means make platforms bit easier 
 void Block::populateMiddle() {
-	//generateEmpty();
 
-	// middle blocks (as of right now) consist of pretty much only platforms
-	// this is where we would determine where the platforms would be and which adjacent blocks they may connect to	
+
 	int decide = rand() % 9;
 	if (decide <= 3) {
 		int r = rand() % height;

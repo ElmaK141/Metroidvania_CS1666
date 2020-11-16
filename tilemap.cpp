@@ -36,6 +36,19 @@ Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles, Background* bg)
 
 // Initializes a tile map based on given X and Y dimensions.
 // Does not use a text file, instead tries to create a Tilemap using randomness
+Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg, int mapType) {
+	//Assign attributes
+	this->yMax = yDim;
+	this->xMax = xDim;
+	this->room = room;
+	this->tileArray = tiles;
+	this->bg = bg;
+	this->mapType = mapType;
+
+	//generate tilemap without text file
+	this->generateTilemap();
+}
+
 Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg) {
 	//Assign attributes
 	this->yMax = yDim;
@@ -157,7 +170,7 @@ void Tilemap::generateTilemap() {
 		for (int j = 0; j < w; j++) {
 
 			// create a block in this spot
-			blockMap[i][j] = new Block(i, j, h, w);
+			blockMap[i][j] = new Block(i, j, h, w, mapType);
 
 			// then generate this block
 			// *Generate creates basic walls that outline the room*

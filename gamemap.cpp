@@ -252,7 +252,7 @@ void Gamemap::generateGamemap() {
 			//std::cout << "Before Gen: " << curr->t << " " << curr << std::endl;
 
 			// generate a procgen room with these doors
-			curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()]);
+			curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()],this->type);
 
 			//std::cout << "After Gen: " << curr->t << " " << curr << std::endl;
 		}
