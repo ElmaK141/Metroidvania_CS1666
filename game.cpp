@@ -13,6 +13,7 @@
 
 // Double jump to fullfill requirement
 bool doneSecond = false; // only allow 1 extra jump
+double projectileVelocity = 20;
 
 //size of the Window/Screen and thus the size of the Camera
 int SCREEN_WIDTH;
@@ -32,10 +33,14 @@ Uint32 lastTick = 0;
 Uint32 curTick;
 double delta_time;
 
-//Animation time
+//Player Animation time
 Uint32 lastAnim = 0;
-Uint32 curAnim;
+Uint32 curAnim = 0;
 int lastAnimFrame = 3;
+
+//Teleporter Anim
+Uint32 telLast = 0;
+Uint32 telAnim = 0;
 
 //Event pointer
 SDL_Event e;
@@ -246,8 +251,11 @@ void Game::runGame() {
 		lastTick = curTick;
 
 		
-		//Anim frame tracker
+		//Player Anim frame tracker
 		curAnim = SDL_GetTicks();
+		
+		//Teleporter animation frame tracker
+		telAnim = SDL_GetTicks();
 
 		//Quit game
 		while (SDL_PollEvent(&e) != 0) {
@@ -318,6 +326,46 @@ void Game::runGame() {
 			//end this call by skipping this loop?
 			continue;
 		}
+
+		if (!player.getShot())
+		{/*If a shot has been fired EMIL*/
+
+			double projectileX = player.getPX() + player.getPVelX();
+			double projectileY = player.getPY() + player.getPVelY();
+
+			player.setPX(projectileX);
+			player.setPY(projectileY);
+
+
+			// Draw box
+			SDL_Rect fillRect = { player.getPX(), player.getPY(), 5, 5 };
+			SDL_RenderFillRect(gRenderer, &fillRect);
+			SDL_RenderPresent(gRenderer);
+
+			int tileMapY = (int)(player.getPY() / 16);
+			int tileMapX = (int)(player.getPX() / 16);
+
+			bool checkFlag1 = tileArray[tileMapY][tileMapX] != 0;
+			bool checkFlag3 = tileArray[tileMapY][tileMapX] != 3;
+			bool checkFlag9 = tileArray[tileMapY][tileMapX] != 9;
+
+			if (checkFlag1 && checkFlag3 && checkFlag9) //hit something not air
+			{
+				player.setShot(true);
+			}
+			else
+			{
+				for (int i = 0; i < enemies.size(); i++)
+				{
+					if (checkHitEnemy(&player, enemies[i]))
+					{
+						enemies[i]->takeDamage(player.getPVelX(), player.getPVelY());
+						player.setShot(true);
+					}
+				}
+			}
+		}
+
 
 		//Handle in-air and on-ground collision for current room
 		handleCollision(&player, currRoom);
@@ -422,10 +470,21 @@ void Game::runGame() {
 		
 		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y);
 		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y));
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y + SCREEN_HEIGHT);
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x + SCREEN_WIDTH, -rem_bg_y + SCREEN_HEIGHT);
 		currRoom->drawTilemap(gRenderer, rem_tile_x, rem_tile_y);
 
 		// if there are any teleporters in this scene, draw them
 		for (auto&& s : tps) {
+			if (telAnim - telLast >= 200.0) {
+				telLast = telAnim;
+				if (s->getFrameIndex() == 0) {
+					s->setCurrFrame(1);
+				}
+				else {
+					s->setCurrFrame(0);
+				}
+			}
 			s->getCurrFrame().draw(gRenderer, s->getXPosition() - scroll_offset_x, s->getYPosition() - scroll_offset_y);
 		}
 
@@ -449,7 +508,8 @@ void Game::runGame() {
 		if (!map->ifSpawn()) {
 			for (int i = 0; i < enemies.size(); i++)
 			{
-				enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
+				if (enemies[i]->getHP() > 0) //only draw live enemies
+					enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
 			}
 		}
 
@@ -477,9 +537,9 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	//Pause game and bring up Pause Menu (with esc)
 	if (e.type == SDL_KEYDOWN) { //detect escape keydown
 		switch (e.key.keysym.sym) {
-		
+
 		case SDLK_ESCAPE:
-			if(!player->getPhysics()->inAir())
+			if (!player->getPhysics()->inAir())
 				pauseMenu(gameState);
 			break;
 		}
@@ -497,41 +557,53 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 			}
 		}
 	}
-	
-	if (SDL_BUTTON(SDL_BUTTON_LEFT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
+
+	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
 		mouseXinWorld += scroll_offset_x;
 		mouseYinWorld += scroll_offset_y;
-		
 		
 		if(!player->getPhysics()->isGrappling() && player->getGrapple()){
 			//std::cout << "pressed" << std::endl;
 			grappleX = mouseXinWorld;
 			grappleY = mouseYinWorld;
-			
+
 			player->getPhysics()->setGrappleState(true);
 		}
 	}
-	else{
-		
-		if(player->getPhysics()->isGrappling()){
+	else {
+
+		if (player->getPhysics()->isGrappling()) {
 			//std::cout << "unpressed" << std::endl;
 			player->getPhysics()->setGrappleState(false);
 		}
 	}
 
 	/*Shooting*/
-	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
-
+	if (SDL_BUTTON(SDL_BUTTON_LEFT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld) && player->getShot()) {
 		mouseXinWorld += scroll_offset_x;
 		mouseYinWorld += scroll_offset_y;
 
 		double x_vector = mouseXinWorld - player->getXPosition();
 		double y_vector = mouseYinWorld - player->getYPosition();
-		
+
 		double playerNetVel = sqrt((x_vector * x_vector) + (y_vector * y_vector));
 		double directionXVelNorm = x_vector / playerNetVel;
 		double directionYVelNorm = y_vector / playerNetVel; //direction of shot, opposite of recoil
-		
+
+		/*Shoot*/
+		player->setShot(false); //can only shoot one at a time. for multple maybe change to an array of n size for n shots?
+
+		//Set projectile to start at player
+		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2) - scroll_offset_x;
+		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2) - scroll_offset_y;
+
+		player->setPX(playerCenterX);
+		player->setPY(playerCenterY);
+
+		//Set the velocities
+		player->setPVelX(projectileVelocity * directionXVelNorm);
+		player->setPVelY(projectileVelocity * directionYVelNorm);
+
 		/*Apply recoil*/
 		double recoilForce = 200;
 		player->setXVel(player->getXVel() - (recoilForce * directionXVelNorm));
@@ -539,7 +611,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	}
 
 	//Redone player physics
-	if(player->getPhysics()->inAir()){
+	if (player->getPhysics()->inAir()) {
 		//Air control
 		if (keystate[SDL_SCANCODE_SPACE]) {
 			if (player->getJump() && player->getDouble() && !doneSecond)
@@ -550,33 +622,33 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 				player->setYVel(player->getYVel() - player->getPhysics()->getJumpStrength());
 			}
 		}
-		
+
 		//Apply Drag
-		if(!player->getPhysics()->isGrappling()){
+		if (!player->getPhysics()->isGrappling()) {
 			//Own rules while grappling, do this otherwise
 			double playerNetVel = sqrt((player->getXVel() * player->getXVel()) + (player->getYVel() * player->getYVel()));
 			double playerXVelNorm = player->getXVel() / playerNetVel;
 			double playerYVelNorm = player->getYVel() / playerNetVel;
 			double dragForce = fmin((1 * playerNetVel) * player->getPhysics()->getAirDrag(), playerNetVel);
-			
+
 			player->setXVel(player->getXVel() - (playerXVelNorm * dragForce));
 			player->setYVel(player->getYVel() - (playerYVelNorm * dragForce));
 		}
 	}
-	else{
+	else {
 		//Ground control
-		
+
 		if (keystate[SDL_SCANCODE_SPACE]) {
 			if (player->getJump()) //jump from ground
 			{
 				player->getPhysics()->setAirState(true);
 				doneSecond = false; //jumping from ground resets the double
-				
+
 				player->setJump(false);
 				player->setYVel(player->getYVel() - player->getPhysics()->getJumpStrength());
 			}
 		}
-		
+
 		//Animation
 		if (keystate[SDL_SCANCODE_A]) {
 			if (curAnim - lastAnim >= 200.0) {
@@ -597,17 +669,19 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 				}
 			}
 		}
-		
+
 		if (keystate[SDL_SCANCODE_S]) {
 			//Animation
-			if (player->getFrameIndex() != 0) {
-				player->setPosition(player->getXPosition() - 39, player->getYPosition());
+			if (player->getXVel() == 0) {
+				if (player->getFrameIndex() != 0) {
+					player->setPosition(player->getXPosition() - 39, player->getYPosition());
+				}
+        
+				player->setCurrFrame(0);
 			}
 
-			player->setCurrFrame(0);
-				
 		}
-		
+
 		//Animation
 		if (keystate[SDL_SCANCODE_D]) {
 			if (curAnim - lastAnim >= 200.0 && !player->getPhysics()->inAir()) {
@@ -652,7 +726,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	if (!keystate[SDL_SCANCODE_SPACE]) { //only jump if you've landed and pressed space again
 		player->setJump(true);
 	}
-	
+
 	/*making a and d button else if instead of if takes away the ability to move while grappling. fixes zooming but no additional control while doing it*/
 	if (player->getPhysics()->isGrappling()) {
 		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2);
@@ -662,8 +736,8 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
 
 		//Apply grapple force
-		player->setXVel(player->getXVel() + xComp * player->getPhysics()->getGrappleStr());
-		player->setYVel(player->getYVel() + yComp * player->getPhysics()->getGrappleStr());
+		player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+		player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
 	}
 	//movement
 	else if (keystate[SDL_SCANCODE_A]) {
@@ -672,7 +746,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 			player->setXVel(fmin(player->getXVel() - player->getPhysics()->getAcceleration(), -player->getPhysics()->getMaxX()));
 		}
 	}
-	
+
 	//movement
 	else if (keystate[SDL_SCANCODE_D]) {
 		//Movement
@@ -684,7 +758,6 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	// return -1 if we just handle input normally
 	return -1;
 }
-
 //Handle the Collision
 void Game::handleCollision(Entity* player, Tilemap* t) {
 	if (!player->getShot())
@@ -696,7 +769,7 @@ void Game::handleCollision(Entity* player, Tilemap* t) {
 		// if collision, just set shoot to true
 		*/
 	}
-	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time);
+	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time, t->getMaxHeight());
 	if (!on_solid) // while in air
 	{
 		if(player->getPhysics()->getMaxY() > player->getYVel())
@@ -904,7 +977,7 @@ void Game::pauseMenu(int prevGameState)
 }
 
 // Detect collision of Entity with Gameworld (edge of screen)
-bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_vel)
+bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_vel, int roomHeight)
 {
 	double pPosY = ent.getYPosition();
 	double pPosX = ent.getXPosition();
@@ -922,7 +995,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	if (y_vel >= 0) {
 		for (int xAdjust = 1; xAdjust < xBlockR - xBlockL; xAdjust++)
 		{	//for every block under the player's width
-			if (yBlockD <= 44)
+			if (yBlockD <= roomHeight-1)
 			{	//if you'd pass a solid block
 				for (int range = pPosY; range <= ent.getYPosition(); range += 16) //for EVERY block that is passed during movement
 				{
@@ -981,8 +1054,9 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 
 	if (x_vel > 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
-		{	//hit blocks to your right accounting for player height
-			if (yBlockD <= 45 && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3 && tilemap[yBlockD - yAdjust][xBlockR] != 9))
+		{	
+      //hit blocks to your right accounting for player height
+			if (yBlockD <= roomHeight && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3 && tilemap[yBlockD - yAdjust][xBlockR] != 9))
 			{
 				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -993,8 +1067,9 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 
 	if (x_vel < 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
-		{	//hit blocks to your left accounting for player height
-			if (yBlockD <= 45 && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3 && tilemap[yBlockD - yAdjust][xBlockL] != 9))
+		{	
+      //hit blocks to your left accounting for player height
+			if (yBlockD <= roomHeight && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3 && tilemap[yBlockD - yAdjust][xBlockL] != 9))
 			{
 				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -1018,6 +1093,15 @@ bool Game::checkHitPlayer(Entity* player, Enemy* enemy)
 	}
 
 	return false;
+}
+
+bool Game::checkHitEnemy(Entity* player, Enemy* enemy)
+{
+	return (
+		player->getPX() > enemy->getXPosition() &&
+		player->getPX() < enemy->getXPosition() + enemy->getCurrFrame().getWidth() &&
+		player->getPY() < enemy->getYPosition() &&
+		player->getPY() < enemy->getYPosition() + enemy->getCurrFrame().getHeight());
 }
 
 // check player collision with a generic entity
@@ -1196,20 +1280,20 @@ void Game::runDebug() {
 	int scroll_offset_x = 0;
 	int rem_bg_x = 0;
 	int rem_tile_x = 0;
-	int scroll_offset_y = 0;
-	int rem_bg_y = 0;
-	int rem_tile_y = 0;
+	int scroll_offset_y = SCREEN_HEIGHT;
+	int rem_bg_y = SCREEN_HEIGHT;
+	int rem_tile_y = SCREEN_HEIGHT;
 	int lthird = (SCREEN_WIDTH / 3);
 	int rthird = (2 * SCREEN_WIDTH / 3);
-	int tthird = (2 * SCREEN_HEIGHT / 3);
-	int bthird = (SCREEN_HEIGHT / 3);
+	int tthird = (SCREEN_HEIGHT / 3);
+	int bthird = (2 * SCREEN_HEIGHT / 3);
 
 	//Flip variable for flipping player sprite
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
 
 	// determine players starting position (middle of background, on the left side of world)
 	double x_pos = SCREEN_WIDTH / 2;
-	double y_pos = SCREEN_HEIGHT / 2 - 145.0;
+	double y_pos = SCREEN_HEIGHT - 145.0;
 
 	//Define Graphical Objects
 	Background debugBg(0, 0, 1280, 720, "assets/backgrounds/debugBg.png", gRenderer);
@@ -1227,7 +1311,7 @@ void Game::runDebug() {
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
-	//Generate Map
+	/*Generate Map
 	Tilemap** map;
 	int mapX = 3;
 	int mapY = 3;
@@ -1240,11 +1324,12 @@ void Game::runDebug() {
 	//Generate tileArrays
 
 	int** tArr0 = map[0][0].getTileMap();
-	int** tArr1 = map[0][1].getTileMap();
+	int** tArr1 = map[0][1].getTileMap();*/
+	Tilemap spawn("data/tilemaps/hub/mainSpawn.txt", tiles, &debugBg);
 
 	//Current room
 	int roomNum = 0;
-	Tilemap* currRoom = &map[0][0];
+	Tilemap* currRoom = &spawn;
 
 	std::vector<Entity*> tps;
 
@@ -1336,7 +1421,9 @@ void Game::runDebug() {
 
 		//Draw Room
 		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y);
-		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y + SCREEN_HEIGHT));
+		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y));
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y + SCREEN_HEIGHT);
+		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x + SCREEN_WIDTH, -rem_bg_y + SCREEN_HEIGHT);
 
 		//Draw Tilemap
 		currRoom->drawTilemap(gRenderer, rem_tile_x, rem_tile_y);
