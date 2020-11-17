@@ -399,9 +399,19 @@ void Game::runGame() {
 					{
 						if (checkHitEnemy(&player, enemies[i]))
 						{
-							enemies[i]->takeDamage(player.getPVelX() / projectileVelocity, player.getPVelY() / projectileVelocity);
-							player.setShot(true);
-							break;
+							int randomNumber = rand() % 100;
+							int ignoreChance = 40;
+
+							if (randomNumber > ignoreChance)
+							{
+								enemies[i]->takeDamage(player.getPVelX() / projectileVelocity, player.getPVelY() / projectileVelocity);
+								player.setShot(true);
+								break;
+
+							}
+							else {
+								//Add Guard animation
+							}
 						}
 					}
 				}
@@ -839,12 +849,29 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2);
 		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2);
 
+
 		double xComp = (grappleX - playerCenterX) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
 		double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
 
 		//Apply grapple force
-		player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
-		player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+		int errorSpace = 50;
+		int closeSpace = 5;
+		if (std::abs(grappleX - playerCenterX) > errorSpace || std::abs(grappleY - playerCenterY) > errorSpace)
+		{
+			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+		}
+		else if (std::abs(grappleX - playerCenterX) < closeSpace || std::abs(grappleY - playerCenterY) < closeSpace)
+		{
+			player->setXVel(0);
+			player->setYVel(0);
+		}
+		else
+		{
+			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr())* player->getPhysics()->getDampen()*0.50);
+			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr())* player->getPhysics()->getDampen()*0.50);
+		}
+			
 	}
 	//movement
 	else if (keystate[SDL_SCANCODE_A]) {
