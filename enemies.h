@@ -39,6 +39,14 @@ class Enemy {
 		bool getJump();
 
 		int getFlag();
+		
+		int getState();
+		int getCooldown();
+
+		void setState(int s);
+		void setCooldown(int c);
+
+		bool playerIsNear(double playerX, double playerY);
 
 		void takeDamage(double x, double y);
 
@@ -64,6 +72,9 @@ class Enemy {
 		double xVel;
 		double yVel;
 		bool canJump;
+		int state;
+		int cooldown;
+		int alternate;
 
 		Sprite currFrame;
 		SDL_Renderer* context;

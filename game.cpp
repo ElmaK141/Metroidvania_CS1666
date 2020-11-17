@@ -242,6 +242,7 @@ void Game::runGame() {
 	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
 	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
 	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
+	Enemy boss("data/boss.spr", 800, 600, 3, 0, &plp, gRenderer);
 	enemies.push_back(&eye);
 	enemies.push_back(&eye2);
 	//enemies.push_back(&eye3);
