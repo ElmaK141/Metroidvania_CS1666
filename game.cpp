@@ -13,7 +13,8 @@
 
 // Double jump to fullfill requirement
 bool doneSecond = false; // only allow 1 extra jump
-double projectileVelocity = 20;
+double projectileVelocity = 50;
+int projectileSize = 5;
 
 //size of the Window/Screen and thus the size of the Camera
 int SCREEN_WIDTH;
@@ -370,41 +371,54 @@ void Game::runGame() {
 
 		if (!player.getShot())
 		{/*If a shot has been fired EMIL*/
-
-			double projectileX = player.getPX() + player.getPVelX();
-			double projectileY = player.getPY() + player.getPVelY();
-
-			player.setPX(projectileX);
-			player.setPY(projectileY);
-
-
-			// Draw box
-			SDL_Rect fillRect = { player.getPX(), player.getPY(), 5, 5 };
-			SDL_RenderFillRect(gRenderer, &fillRect);
-			SDL_RenderPresent(gRenderer);
-
-			int tileMapY = (int)(player.getPY() / 16);
-			int tileMapX = (int)(player.getPX() / 16);
-
-			bool checkFlag1 = tileArray[tileMapY][tileMapX] != 0;
-			bool checkFlag3 = tileArray[tileMapY][tileMapX] != 3;
-			bool checkFlag8 = tileArray[tileMapY][tileMapX] != 8;
-			bool checkFlag9 = tileArray[tileMapY][tileMapX] != 9;
-
-			if (checkFlag1 && checkFlag3 && checkFlag8 && checkFlag9) //hit something not air
+			double posX = player.getPX() + player.getPVelX();
+			double posY = player.getPY() + player.getPVelY();
+			
+			if (posX > 0 && posX < currRoom->getMaxWidth() * 16 && posY > 0 && posY < currRoom->getMaxHeight() * 16)
 			{
-				player.setShot(true);
+				player.setPX(posX);
+				player.setPY(posY);
+
+//				player.getCurrFrame().draw(gRenderer,  player.getPX(), player.getPY());
+				
+				int tileMapY = (int)(player.getPY() / 16);
+				int tileMapX = (int)(player.getPX() / 16);
+
+				bool checkFlag1 = tileArray[tileMapY][tileMapX] != 0;
+				bool checkFlag3 = tileArray[tileMapY][tileMapX] != 3;
+				bool checkFlag8 = tileArray[tileMapY][tileMapX] != 8;
+				bool checkFlag9 = tileArray[tileMapY][tileMapX] != 9;
+
+				if (checkFlag1 && checkFlag3 && checkFlag8 && checkFlag9) //hit something not air
+				{
+					player.setShot(true);
+				}
+				else
+				{
+					for (int i = 0; i < enemies.size(); i++)
+					{
+						if (checkHitEnemy(&player, enemies[i]))
+						{
+							int randomNumber = rand() % 100;
+							int ignoreChance = 40;
+
+							if (randomNumber > ignoreChance)
+							{
+								enemies[i]->takeDamage(player.getPVelX() / projectileVelocity, player.getPVelY() / projectileVelocity);
+								player.setShot(true);
+								break;
+
+							}
+							else {
+								//Add Guard animation
+							}
+						}
+					}
+				}
 			}
 			else
 			{
-				for (int i = 0; i < enemies.size(); i++)
-				{
-					if (checkHitEnemy(&player, enemies[i]))
-					{
-						enemies[i]->takeDamage(player.getPVelX(), player.getPVelY());
-						player.setShot(true);
-					}
-				}
+				player.setShot(true);
 			}
 		}
 
@@ -438,6 +452,7 @@ void Game::runGame() {
 		if (!map->ifSpawn()) {
 			for (int i = 0; i < enemies.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
 			{
+				if (enemies[i]->getHP() <= 0) continue;
 				enemies[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
 				if (!hit)
 				{
@@ -562,7 +577,7 @@ void Game::runGame() {
 
 		// if there are any teleporters in this scene, draw them
 		for (auto&& s : tps) {
-			if (telAnim - telLast >= 200.0) {
+			if (telAnim - telLast >= 300.0) {
 				if (s->getFrameIndex() == 0) {
 					s->setCurrFrame(1);
 				}
@@ -570,9 +585,9 @@ void Game::runGame() {
 					s->setCurrFrame(0);
 				}
 			}
-			s->getCurrFrame().draw(gRenderer, s->getXPosition() - scroll_offset_x, s->getYPosition() - scroll_offset_y);
+			s->getCurrFrame().draw(gRenderer, s->getXPosition() - scroll_offset_x, s->getYPosition() - scroll_offset_y + 4);
 		}
-		if (telAnim - telLast >= 200.0) {
+		if (telAnim - telLast >= 300.0) {
 			telLast = telAnim;
 		}
 
@@ -613,6 +628,13 @@ void Game::runGame() {
 		if (playerHP <= 0) {
 			gameState = 4;
 			break;
+		}
+
+		// Draw box
+		if (!player.getShot())
+		{
+			SDL_Rect fillRect = { player.getPX(), player.getPY(), projectileSize, projectileSize };
+			SDL_RenderFillRect(gRenderer, &fillRect);
 		}
 
 		SDL_RenderPresent(gRenderer);
@@ -676,8 +698,13 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		mouseXinWorld += scroll_offset_x;
 		mouseYinWorld += scroll_offset_y;
 
-		double x_vector = mouseXinWorld - player->getXPosition();
-		double y_vector = mouseYinWorld - player->getYPosition();
+		//Set projectile to start at player
+		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2) ;
+		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2) ;
+
+
+		double x_vector = mouseXinWorld - playerCenterX;
+		double y_vector = mouseYinWorld - playerCenterY;
 
 		double playerNetVel = sqrt((x_vector * x_vector) + (y_vector * y_vector));
 		double directionXVelNorm = x_vector / playerNetVel;
@@ -686,12 +713,9 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		/*Shoot*/
 		player->setShot(false); //can only shoot one at a time. for multple maybe change to an array of n size for n shots?
 
-		//Set projectile to start at player
-		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2) - scroll_offset_x;
-		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2) - scroll_offset_y;
-
-		player->setPX(playerCenterX);
-		player->setPY(playerCenterY);
+		
+		player->setPX(playerCenterX - scroll_offset_x);
+		player->setPY(playerCenterY - scroll_offset_y);
 
 		//Set the velocities
 		player->setPVelX(projectileVelocity * directionXVelNorm);
@@ -712,7 +736,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 				doneSecond = true;
 
 				player->setJump(false);
-				player->setYVel(player->getYVel() - player->getPhysics()->getJumpStrength());
+				player->setYVel(-player->getPhysics()->getJumpStrength());
 			}
 		}
 
@@ -825,12 +849,29 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2);
 		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2);
 
+
 		double xComp = (grappleX - playerCenterX) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
 		double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
 
 		//Apply grapple force
-		player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
-		player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+		int errorSpace = 50;
+		int closeSpace = 5;
+		if (std::abs(grappleX - playerCenterX) > errorSpace || std::abs(grappleY - playerCenterY) > errorSpace)
+		{
+			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+		}
+		else if (std::abs(grappleX - playerCenterX) < closeSpace || std::abs(grappleY - playerCenterY) < closeSpace)
+		{
+			player->setXVel(0);
+			player->setYVel(0);
+		}
+		else
+		{
+			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr())* player->getPhysics()->getDampen()*0.50);
+			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr())* player->getPhysics()->getDampen()*0.50);
+		}
+			
 	}
 	//movement
 	else if (keystate[SDL_SCANCODE_A]) {
@@ -853,15 +894,6 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 }
 //Handle the Collision
 void Game::handleCollision(Entity* player, Tilemap* t) {
-	if (!player->getShot())
-	{/*If a shot has been fired*/
-		/*
-		std::cout << player->getPX() << std::endl;
-		player->setPX(player->getPX() + player->getPVel());
-
-		// if collision, just set shoot to true
-		*/
-	}
 	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time, t->getMaxHeight());
 	if (!on_solid) // while in air
 	{
@@ -1191,9 +1223,9 @@ bool Game::checkHitPlayer(Entity* player, Enemy* enemy)
 bool Game::checkHitEnemy(Entity* player, Enemy* enemy)
 {
 	return (
-		player->getPX() > enemy->getXPosition() &&
+		player->getPX() + projectileSize > enemy->getXPosition() &&
 		player->getPX() < enemy->getXPosition() + enemy->getCurrFrame().getWidth() &&
-		player->getPY() < enemy->getYPosition() &&
+		player->getPY() + projectileSize < enemy->getYPosition() &&
 		player->getPY() < enemy->getYPosition() + enemy->getCurrFrame().getHeight());
 }
 
