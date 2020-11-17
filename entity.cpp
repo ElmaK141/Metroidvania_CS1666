@@ -23,6 +23,11 @@ Entity::Entity(std::string spriteData, double xPos, double yPos, int scale, int 
 		this->xVel = 0.0;
 		this->yVel = 0.0;
 
+		// set initial flags for powerups
+		this->hasDouble = false;
+		this->hasGrapple = false;
+		this->bonusHealth = 0;
+
 		//Can jump initially
 		this->canJump = true;
 		this->canShoot = true;
@@ -84,6 +89,10 @@ void Entity::createSprites() {
 
 int Entity::getFlag() {
 	return this->flag;
+}
+
+void Entity::setFlag(int f) {
+	this->flag = f;
 }
 
 Physics* Entity::getPhysics()
@@ -167,6 +176,11 @@ void Entity::setGrapple() {
 	this->hasGrapple = true;
 }
 
+// increases "bonus health" by 1 unit;
+void Entity::increaseHealth() {
+	this->bonusHealth++;
+}
+
 // gets the status of hasDouble
 bool Entity::getDouble() {
 	return this->hasDouble;
@@ -175,4 +189,9 @@ bool Entity::getDouble() {
 // gets the status of hadGrapple
 bool Entity::getGrapple() {
 	return this->hasGrapple;
+}
+
+// gets the status of the player's bonus health powerups
+int Entity::getBonusHealth() {
+	return this->bonusHealth;
 }

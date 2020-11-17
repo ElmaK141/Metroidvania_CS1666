@@ -12,9 +12,9 @@
 #include "button.h"
 
 // Double jump to fullfill requirement
-bool canSecond = true; //The ability: change when getting ability
 bool doneSecond = false; // only allow 1 extra jump
-double projectileVelocity = 20;
+double projectileVelocity = 50;
+int projectileSize = 5;
 
 //size of the Window/Screen and thus the size of the Camera
 int SCREEN_WIDTH;
@@ -184,10 +184,17 @@ void Game::runGame() {
 	double x_pos = SCREEN_WIDTH / 2.0;
 	double y_pos = SCREEN_HEIGHT / 2.0 - 145.0;
 
+	// Vector to track any powerups in the scene
+	std::vector<Entity*> powerups;
+
 	// Vector to track if there are any teleporters in the scene
 	std::vector<Entity*> tps;
 
+	// order used for different teleporters
 	int order = 0;
+
+	// temp
+	int pu = 0;
 
 	//Find player spawn point, and any teleporters in this room
 	for (int i = 0; i < currRoom->getMaxHeight(); i++)
@@ -200,25 +207,27 @@ void Game::runGame() {
 				x_pos = j * 16.0;
 				y_pos = i * 16.0;
 			}
-			else if (tileArray[i][j] == 9) { // for every 9 *tp* in this tilemap, we create a sprite for it
-				//std::cout << " Found tp at " << j << " " << i << std::endl;
-				// 9 creates our tps, based on our current MAP TYPE, we know which teleporters we need (internal to entity based on flag)
-				// type 2 tp returns us to main room - allMaps[0]
-				// type 3 tp sends us to first section - allMaps[1]
-				// type 4 tp sends us to second section - allMaps[2]
-				// type 5 tp sends us to the boss - allMaps[3]
+			else if (tileArray[i][j] == 9) { // 9 marks that there is a teleporter
+				// Entity flag in the teleporters determine where they send you
+					// 2 tp to main room, 3 tp to Sec1, 4 tp to Sec2, 5 tp to boss
 				// teleporters decided by how high they are. with boss at highest, then 2nd Section, then 1st section at floor
+					// this only matters / is the case for the main room
+
+				// idea (when ready) is to no longer spawn TP to Sec1/2 after the player returns from that area with the powerup
+				// as well as order, the player would need to have hasDouble and hasGrapple set to false for them to spawn
 				if (order == 0) { // (to boss)
+					//std::cout << "spawn tp 5" << std::endl;
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 5, &plp, gRenderer));
-					order += 1;
 				}
 				else if (order == 1) { // (to Sec2)
+					//std::cout << "spawn tp 4" << std::endl;
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 4, &plp, gRenderer));
-					order += 1;
 				}
 				else { // (to Sec1)
+					//std::cout << "spawn tp 3" << std::endl;
 					tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 3, &plp, gRenderer));
 				}
+				order++;
 			}
 		}
 	}
@@ -272,6 +281,9 @@ void Game::runGame() {
 		// need to update our map/room and spawning location after teleporting
 		// if changeMap is not -1, then we interacted with a teleporter
 		if (changeMap != -1) {
+
+			//std::cout << "Changing map to " << changeMap - 2 << std::endl;
+
 			// based on the tp flag (changeMap) we will switch to a different Map
 				// type 2 tp returns us to main room - allMaps[0]
 				// type 3 tp sends us to first section - allMaps[1]
@@ -285,8 +297,10 @@ void Game::runGame() {
 			currRoom = map->getCurrentRoom();
 			tileArray = currRoom->getTileMap();
 
-			// now with updated map, clear our teleporters
+			// now with updated map, clear our teleporters/powerups
 			tps.clear();
+			powerups.clear();
+			//std::cout << "Clear all tp" << std::endl;
 
 			int order = 0;
 
@@ -302,20 +316,50 @@ void Game::runGame() {
 						player.setPosition(x_pos, y_pos);
 					}
 					if (tileArray[i][j] == 9) { //tps
-						// When we teleport, the only room we can tp to with teleporters is Main Room
+						// When we teleport, we are either in main room or a spawn room
 						if (map->getType() == 0) {
 							// teleporters decided by how high they are. with boss at highest, then 2nd Section, then 1st section at floor
+
+							// idea (when ready) is to no longer spawn TP to Sec1/2 after the player returns from that area with the powerup
+							// as well as order, the player would need to have hasDouble and hasGrapple set to false for them to spawn
+
 							if (order == 0) { // (to boss)
+								//std::cout << "spawn tp 5" << std::endl;
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 5, &plp, gRenderer));
-								order += 1;
 							}
 							else if (order == 1) { // (to Sec2)
+								//std::cout << "spawn tp 4" << std::endl;
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 4, &plp, gRenderer));
-								order += 1;
 							}
 							else { // (to Sec1)
+								//std::cout << "spawn tp 3" << std::endl;
 								tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 3, &plp, gRenderer));
 							}
+							order++;
+						}
+						else if(map->getType() == 1 || map->getType() == 2) {
+							//std::cout << "spawn tp 2" << std::endl;
+							tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 2, &plp, gRenderer));
+						}
+					}
+					else if (tileArray[i][j] == 8) { //TESTING - POWERUPS SHOULD BE REMOVED FROM SPAWNS ONCE THEY ARE APPEARING IN THE WORLD
+						
+						// THIS CODE LOADS ENTITIES WHEN WE TAKE A TELEPORTER AND CHANGE MAPS
+						// ALL OF THIS REGARDING POWERUPS WILL BE GONE, SINCE THEY WILL ONLY BE SPAWNED BY GOING THROUGH A DOOR
+
+						if (map->getType() == 1) { // if Sec1, spawn DOUBLE JUMP
+
+							// health or upgrade?
+
+							powerups.push_back(new Entity("data/powerups.spr", j * 16.0, (i * 16.0) + 4, 3, 6, &plp, gRenderer));
+							powerups.back()->setCurrFrame(0);
+						}
+						else { // if Sec2, spawn Grapple
+
+							// health or upgrade?
+
+							powerups.push_back(new Entity("data/powerups.spr", j * 16.0, (i * 16.0) + 4, 3, 7, &plp, gRenderer));
+							powerups.back()->setCurrFrame(1);
 						}
 					}
 				}
@@ -327,40 +371,44 @@ void Game::runGame() {
 
 		if (!player.getShot())
 		{/*If a shot has been fired EMIL*/
-
-			double projectileX = player.getPX() + player.getPVelX();
-			double projectileY = player.getPY() + player.getPVelY();
-
-			player.setPX(projectileX);
-			player.setPY(projectileY);
-
-
-			// Draw box
-			SDL_Rect fillRect = { player.getPX(), player.getPY(), 5, 5 };
-			SDL_RenderFillRect(gRenderer, &fillRect);
-			SDL_RenderPresent(gRenderer);
-
-			int tileMapY = (int)(player.getPY() / 16);
-			int tileMapX = (int)(player.getPX() / 16);
-
-			bool checkFlag1 = tileArray[tileMapY][tileMapX] != 0;
-			bool checkFlag3 = tileArray[tileMapY][tileMapX] != 3;
-			bool checkFlag9 = tileArray[tileMapY][tileMapX] != 9;
-
-			if (checkFlag1 && checkFlag3 && checkFlag9) //hit something not air
+			double posX = player.getPX() + player.getPVelX();
+			double posY = player.getPY() + player.getPVelY();
+			
+			if (posX > 0 && posX < currRoom->getMaxWidth() * 16 && posY > 0 && posY < currRoom->getMaxHeight() * 16)
 			{
-				player.setShot(true);
+				player.setPX(posX);
+				player.setPY(posY);
+
+//				player.getCurrFrame().draw(gRenderer,  player.getPX(), player.getPY());
+				
+				int tileMapY = (int)(player.getPY() / 16);
+				int tileMapX = (int)(player.getPX() / 16);
+
+				bool checkFlag1 = tileArray[tileMapY][tileMapX] != 0;
+				bool checkFlag3 = tileArray[tileMapY][tileMapX] != 3;
+				bool checkFlag8 = tileArray[tileMapY][tileMapX] != 8;
+				bool checkFlag9 = tileArray[tileMapY][tileMapX] != 9;
+
+				if (checkFlag1 && checkFlag3 && checkFlag8 && checkFlag9) //hit something not air
+				{
+					player.setShot(true);
+				}
+				else
+				{
+					for (int i = 0; i < enemies.size(); i++)
+					{
+						if (checkHitEnemy(&player, enemies[i]))
+						{
+							enemies[i]->takeDamage(player.getPVelX() / projectileVelocity, player.getPVelY() / projectileVelocity);
+							player.setShot(true);
+							break;
+						}
+					}
+				}
 			}
 			else
 			{
-				for (int i = 0; i < enemies.size(); i++)
-				{
-					if (checkHitEnemy(&player, enemies[i]))
-					{
-						enemies[i]->takeDamage(player.getPVelX(), player.getPVelY());
-						player.setShot(true);
-					}
-				}
+				player.setShot(true);
 			}
 		}
 
@@ -368,10 +416,33 @@ void Game::runGame() {
 		//Handle in-air and on-ground collision for current room
 		handleCollision(&player, currRoom);
 
+		// powerups - check if player collides
+		for (auto&& p : powerups) {
+			if (checkPlayerCollision(&player, p) && p->getFrameIndex() != 3) { // if the player collides with the power up, enable ability, disable powerup
+				if (p->getFlag() == 6){ // Double Jump
+					player.setDouble();
+				}
+				else if (p->getFlag() == 7) { // Grapple
+					player.setGrapple();
+				}
+				else { // Health Up
+					player.increaseHealth();
+					maxHP += 10;
+					playerHP = maxHP;
+				}
+
+				if (p->getFrameIndex() != 3) { //move down sprite so that when disabled it is in correct place
+					p->setPosition(p->getXPosition(), p->getYPosition() + 52);
+				}
+				p->setCurrFrame(3); //set sprite to disabled
+			}
+		}
+
 		// enemies
 		if (!map->ifSpawn()) {
 			for (int i = 0; i < enemies.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
 			{
+				if (enemies[i]->getHP() <= 0) continue;
 				enemies[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
 				if (!hit)
 				{
@@ -422,8 +493,9 @@ void Game::runGame() {
 			currRoom = map->getCurrentRoom();
 			tileArray = currRoom->getTileMap();
 
-			// clear our tps if we had any
+			// clear our tps/powerups if we had any
 			tps.clear();
+			powerups.clear();
 
 			// For updated room, scan for any teleporters that must be spawned
 			for (int i = 0; i < currRoom->getMaxHeight(); i++)
@@ -434,7 +506,28 @@ void Game::runGame() {
 						// when we change rooms this way, we are in a procgen section. TP returns us to main room (2)
 						tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 2, &plp, gRenderer));
 					}
+					else if (tileArray[i][j] == 8) { // if there is a powerup in this room, spawn it
+						// 6 (DJ), 7 (G), 8 (H)
+						// flag determines which type they are what they will do
+
+						// when we go through a door, we can come into powerup room (which is powerup based on map)
+						// if there is no tp in the room, it is a health up, and that gets set after this double for
+						if (map->getType() == 1) { // if Sec1, spawn DOUBLE JUMP
+							powerups.push_back(new Entity("data/powerups.spr", j * 16.0, (i * 16.0) + 4, 3, 6, &plp, gRenderer));
+							powerups.back()->setCurrFrame(0);
+						}
+						else { // if Sec2, spawn Grapple
+							powerups.push_back(new Entity("data/powerups.spr", j * 16.0, (i * 16.0) + 4, 3, 7, &plp, gRenderer));
+							powerups.back()->setCurrFrame(1);
+						}
+					}
 				}
+			}
+
+			// if this room has a powerup but no teleporters, it is a health powerup
+			if (tps.empty() && !powerups.empty()) {
+				powerups[0]->setFlag(8);
+				powerups[0]->setCurrFrame(2);
 			}
 
 			if (newRoom == 8) { //moving up
@@ -488,6 +581,11 @@ void Game::runGame() {
 			telLast = telAnim;
 		}
 
+		// if there are any powerups in this room, draw them
+		for (auto&& p : powerups) {
+			p->getCurrFrame().draw(gRenderer, p->getXPosition() - scroll_offset_x, p->getYPosition() - scroll_offset_y);
+		}
+
 		// draw the player
 		if (player.getXVel() > 0 && flip == SDL_FLIP_HORIZONTAL)
 			flip = SDL_FLIP_NONE;
@@ -522,6 +620,13 @@ void Game::runGame() {
 			break;
 		}
 
+		// Draw box
+		if (!player.getShot())
+		{
+			SDL_Rect fillRect = { player.getPX(), player.getPY(), projectileSize, projectileSize };
+			SDL_RenderFillRect(gRenderer, &fillRect);
+		}
+
 		SDL_RenderPresent(gRenderer);
 	}
 }
@@ -549,7 +654,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		//std::cout << "E PRESSED" << std::endl;
 		for (auto&& tp : tps) { // for each teleporter in the scene
 			if (checkPlayerCollision(player, tp)) { // check if the player is touching it
-				std::cout << "Interacted with TP type " << tp->getFlag() << std::endl;
+				//std::cout << "Interacted with TP type " << tp->getFlag() << std::endl;
 
 				// player has pressed E, and they are touching a teleporter. We will now return the flag from this teleporter, so we know which MAP to teleport to
 				// idea is to return here because we will reset the game loop.
@@ -561,9 +666,8 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
 		mouseXinWorld += scroll_offset_x;
 		mouseYinWorld += scroll_offset_y;
-
-
-		if (!player->getPhysics()->isGrappling()) {
+		
+		if(!player->getPhysics()->isGrappling() && player->getGrapple()){
 			//std::cout << "pressed" << std::endl;
 			grappleX = mouseXinWorld;
 			grappleY = mouseYinWorld;
@@ -584,8 +688,13 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		mouseXinWorld += scroll_offset_x;
 		mouseYinWorld += scroll_offset_y;
 
-		double x_vector = mouseXinWorld - player->getXPosition();
-		double y_vector = mouseYinWorld - player->getYPosition();
+		//Set projectile to start at player
+		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2) ;
+		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2) ;
+
+
+		double x_vector = mouseXinWorld - playerCenterX;
+		double y_vector = mouseYinWorld - playerCenterY;
 
 		double playerNetVel = sqrt((x_vector * x_vector) + (y_vector * y_vector));
 		double directionXVelNorm = x_vector / playerNetVel;
@@ -594,12 +703,9 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		/*Shoot*/
 		player->setShot(false); //can only shoot one at a time. for multple maybe change to an array of n size for n shots?
 
-		//Set projectile to start at player
-		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2) - scroll_offset_x;
-		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2) - scroll_offset_y;
-
-		player->setPX(playerCenterX);
-		player->setPY(playerCenterY);
+		
+		player->setPX(playerCenterX - scroll_offset_x);
+		player->setPY(playerCenterY - scroll_offset_y);
 
 		//Set the velocities
 		player->setPVelX(projectileVelocity * directionXVelNorm);
@@ -615,12 +721,12 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	if (player->getPhysics()->inAir()) {
 		//Air control
 		if (keystate[SDL_SCANCODE_SPACE]) {
-			if (player->getJump() && canSecond && !doneSecond)
+			if (player->getJump() && player->getDouble() && !doneSecond)
 			{ /* Double jump */
 				doneSecond = true;
 
 				player->setJump(false);
-				player->setYVel(player->getYVel() - player->getPhysics()->getJumpStrength());
+				player->setYVel(-player->getPhysics()->getJumpStrength());
 			}
 		}
 
@@ -761,15 +867,6 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 }
 //Handle the Collision
 void Game::handleCollision(Entity* player, Tilemap* t) {
-	if (!player->getShot())
-	{/*If a shot has been fired*/
-		/*
-		std::cout << player->getPX() << std::endl;
-		player->setPX(player->getPX() + player->getPVel());
-
-		// if collision, just set shoot to true
-		*/
-	}
 	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time, t->getMaxHeight());
 	if (!on_solid) // while in air
 	{
@@ -962,17 +1059,6 @@ void Game::pauseMenu(int prevGameState)
 			}
 
 		}
-		/*
-		else if (e.type == SDL_KEYDOWN) { //or close menu with escape again
-			switch (e.key.keysym.sym) {
-
-			case SDLK_ESCAPE:
-				gameState = 1;
-				pauseM = false;
-				break;
-			}
-		}
-		*/
 
 		//SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
@@ -1012,7 +1098,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 				for (int range = pPosY; range <= ent.getYPosition(); range += 16) //for EVERY block that is passed during movement
 				{
 					yBlockD = (int)(((range + pHeight) / 16)) + 1;
-					if (range + pHeight + y_vel > yBlockD * 16 - 1 && (tilemap[yBlockD][xBlockR - xAdjust] != 0 && tilemap[yBlockD][xBlockR - xAdjust] != 3 && tilemap[yBlockD][xBlockR - xAdjust] != 9))
+					if (range + pHeight + y_vel > yBlockD * 16 - 1 && (tilemap[yBlockD][xBlockR - xAdjust] != 0 && tilemap[yBlockD][xBlockR - xAdjust] != 3 && tilemap[yBlockD][xBlockR - xAdjust] != 8 && tilemap[yBlockD][xBlockR - xAdjust] != 9))
 					{	//set position to above the block
 						ent.setPosition(ent.getXPosition(), yBlockD * 16 - pHeight - 1);
 						pPosY = ent.getYPosition();
@@ -1042,7 +1128,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 				for (int range = pPosY; range >= ent.getYPosition(); range -= 16) //for EVERY block that is passed during movement
 				{
 					yBlockU = (int)(range / 16) - 1;
-					if (yBlockU >= 0 && range + y_vel <= yBlockU * 16 + 16 && (tilemap[yBlockU][xBlockR - xAdjust] != 0 && tilemap[yBlockU][xBlockR - xAdjust] != 3 && tilemap[yBlockU][xBlockR - xAdjust] != 9))
+					if (yBlockU >= 0 && range + y_vel <= yBlockU * 16 + 16 && (tilemap[yBlockU][xBlockR - xAdjust] != 0 && tilemap[yBlockU][xBlockR - xAdjust] != 3 && tilemap[yBlockU][xBlockR - xAdjust] != 8 && tilemap[yBlockU][xBlockR - xAdjust] != 9))
 					{
 						ent.setPosition(ent.getXPosition(), yBlockU * 16 + 16);
 						pPosY = ent.getYPosition();
@@ -1068,7 +1154,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	
       //hit blocks to your right accounting for player height
-			if (yBlockD <= roomHeight && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3 && tilemap[yBlockD - yAdjust][xBlockR] != 9))
+			if (yBlockD <= roomHeight && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3 && tilemap[yBlockD - yAdjust][xBlockR] != 8 && tilemap[yBlockD - yAdjust][xBlockR] != 9))
 			{
 				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -1081,7 +1167,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	
       //hit blocks to your left accounting for player height
-			if (yBlockD <= roomHeight && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3 && tilemap[yBlockD - yAdjust][xBlockL] != 9))
+			if (yBlockD <= roomHeight && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3 && tilemap[yBlockD - yAdjust][xBlockL] != 8 && tilemap[yBlockD - yAdjust][xBlockL] != 9))
 			{
 				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -1110,9 +1196,9 @@ bool Game::checkHitPlayer(Entity* player, Enemy* enemy)
 bool Game::checkHitEnemy(Entity* player, Enemy* enemy)
 {
 	return (
-		player->getPX() > enemy->getXPosition() &&
+		player->getPX() + projectileSize > enemy->getXPosition() &&
 		player->getPX() < enemy->getXPosition() + enemy->getCurrFrame().getWidth() &&
-		player->getPY() < enemy->getYPosition() &&
+		player->getPY() + projectileSize < enemy->getYPosition() &&
 		player->getPY() < enemy->getYPosition() + enemy->getCurrFrame().getHeight());
 }
 
