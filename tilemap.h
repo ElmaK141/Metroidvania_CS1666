@@ -20,6 +20,7 @@ class Tilemap
 		// Public Constructors:
 			Tilemap();
 			//Tilemap(std::string filename, std::vector<Tile*> tiles);
+			Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg, int mapType, bool powerUp, bool isHealth);
 			Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg);
 			Tilemap(std::string filename, std::vector<Tile*> tiles, Background* bg);
 		// Public Getters and Setters:			
@@ -44,6 +45,10 @@ class Tilemap
 			std::vector<Tile*> tileArray;// Stores references to every tile type encountered in the tilemap
 			bool start;					// True if is the start of a map
 			bool end;					// True if is the end of a map
+			int mapType;
+			bool powerUp;
+			bool isHealth;
+			bool cDoor;
 };
 
 #endif
