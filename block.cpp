@@ -43,6 +43,8 @@ Block::Block(int row, int col, int numRow, int numCol, int mapType) {
 	initMetadata();
 
 	this->mapType = mapType;
+	this->platform = false;
+	this->middle = false;
 
 	// the map is a subsection of tile map that represents this block
 	this->map = new int* [height];
@@ -112,6 +114,7 @@ void Block::generateBlock() {
 			generateEmpty();
 			break;
 		case BlockType::Middle:
+			this->middle = true;
 			generateMiddle();
 			break;
 		case BlockType::Floor:
@@ -186,7 +189,6 @@ void Block::generateCeiling() {
 				this->map[i][j] = 1;
 			}
 			else {
-				// else empty (for now)
 				this->map[i][j] = 0;
 			}
 
@@ -274,6 +276,7 @@ void Block::populateBlock() {
 	//switch on type
 	switch (this->type) {
 	case BlockType::Middle:
+		this->middle = true;
 		populateMiddle();
 		break;
 	case BlockType::Floor:
@@ -296,19 +299,35 @@ void Block::populateBlock() {
 //Type 2 = Double Jump Location means make platforms bit easier 
 void Block::populateMiddle() {
 
+}
 
+bool Block::isMiddle() {
+	return this->middle;
+}
+
+void Block::addPlatforms() {
 	int decide = rand() % 9;
 	if (decide >= 7) {
+		this->platform = true;
 		int r = rand() % height;
 		for (int i = 0; i < height; i++) {
 			this->map[r][i] = 2;
 		}
 	}
-
 }
 
-void Block::addPlatforms() {
-	this->map[3][4] = 2;
+void Block::placePlatforms(int x, int len) {
+	if (len >= width) {
+		len = width - 1;
+	}
+	for (int i = 0; i < len; i++) {
+		this->map[x][i] = 2;
+	}
+	this->platform = true;
+}
+
+bool Block::hasPlatform() {
+	return this->platform;
 }
 
 // generate a Floor block - this block always has 1s on the floor at least *except if we do doors in the floor*

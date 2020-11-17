@@ -100,11 +100,8 @@ void Gamemap::generateGamemap() {
 
 	// then when we generate the gamemap, we will choose how many rooms in the map will be generated (one of these rooms is the spawn room)
 	int numRooms = rand() % ((mapLength * mapHeight) - (minRooms - 1)) + minRooms;
-	int healthRoom = rand() % numRooms;
+	int healthRoom = rand() % numRooms-1;
 
-	if (healthRoom <= 1) {
-		healthRoom = 2;
-	}
 
 	// create the vector that we will use as our queue
 	std::queue<Node*> q;

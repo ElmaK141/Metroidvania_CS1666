@@ -48,6 +48,7 @@ class Tilemap
 			int mapType;
 			bool powerUp;
 			bool isHealth;
+			bool cDoor;
 };
 
 #endif
