@@ -274,7 +274,8 @@ void Enemy::collide(int** tilemap, double xVel, double yVel)
 
 void Enemy::takeDamage(double xVector, double yVector)
 {
-	setXVel(xVel + xVector);
-	setYVel(yVel + yVector);
-	hp -= 5;
+	int impactForce = 10;
+	setXVel(xVel + xVector * impactForce);
+	setYVel(yVel + yVector * impactForce);
+	hp -= 25;
 }
