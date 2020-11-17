@@ -178,7 +178,7 @@ void Game::runGame() {
 
 	// Define Physics object and Flip flag
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
-	Physics plp(1500, 500, 1000, 250);
+	Physics plp(1565, 500, 1000, 250);
 
 	//Define player Position
 	double x_pos = SCREEN_WIDTH / 2.0;
@@ -245,9 +245,9 @@ void Game::runGame() {
 	Enemy boss("data/boss.spr", 800, 600, 3, 0, &plp, gRenderer);
 	enemies.push_back(&eye);
 	enemies.push_back(&eye2);
-	//enemies.push_back(&eye3);
-	//enemies.push_back(&eye4);
-	//enemies.push_back(&eye5);
+	enemies.push_back(&eye3);
+	enemies.push_back(&eye4);
+	enemies.push_back(&eye5);
 	int hitTick = 0;
 	bool hit = false;
 
