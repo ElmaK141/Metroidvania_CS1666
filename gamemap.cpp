@@ -28,6 +28,7 @@ Gamemap::Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std
 	// set references to Tiles array and Backgrounds array
 	this->tiles = tiles;
 	this->bgs = bgs;
+	this->pAlready = false;
 
 	//Create Map - 2D array of Tilemap Nodes
 	map = new Node * [mapHeight];
@@ -35,6 +36,7 @@ Gamemap::Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std
 		map[i] = new Node[mapLength];
 		for (int j = 0; j < mapLength; j++) {
 			map[i][j].valid = false;
+			map[i][j].power = false;
 		}
 	}
 
@@ -98,10 +100,11 @@ void Gamemap::generateGamemap() {
 
 	// then when we generate the gamemap, we will choose how many rooms in the map will be generated (one of these rooms is the spawn room)
 	int numRooms = rand() % ((mapLength * mapHeight) - (minRooms - 1)) + minRooms;
+	int healthRoom = rand() % numRooms-1;
+
 
 	// create the vector that we will use as our queue
 	std::queue<Node*> q;
-	
 	// create spawn node, add to array, add to queue
 	struct Node spawn = {true, spawnX, spawnY, nullptr, 0};
 	map[spawnY][spawnX] = spawn;
@@ -112,6 +115,8 @@ void Gamemap::generateGamemap() {
 
 	// when we add a node to the array, we count a room. spawn counts as a room, so we count for it
 	numRooms -= 1;
+
+	int count = 0;
 
 	// while the stack is not empty - process next node
 	while (!q.empty()) {
@@ -188,7 +193,7 @@ void Gamemap::generateGamemap() {
 
 			// int for the doors off of this one
 			int rooms = 0;
-
+			count++;
 			// if we are allowed to make a new room, try to
 			if (numRooms > 0) { // we can make a new room (at least one)
 				
@@ -249,12 +254,14 @@ void Gamemap::generateGamemap() {
 			curr->doors += rooms;
 
 			//std::cout << "Generating tilemap for room at: " << curr->y << " " << curr->x << std::endl;
-
-			//std::cout << "Before Gen: " << curr->t << " " << curr << std::endl;
-
-			// generate a procgen room with these doors
-			curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()]);
-
+			if (count == healthRoom) {
+				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, true, true);
+			}else if (q.empty()) {
+				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, true, false);
+			}else {
+				// generate a procgen room with these doors
+				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, false, false);
+			}
 			//std::cout << "After Gen: " << curr->t << " " << curr << std::endl;
 		}
 		// update our node (since we have updated doors and t) - just in case, i was getting some weird issues that this fixed

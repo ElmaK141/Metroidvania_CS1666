@@ -36,6 +36,23 @@ Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles, Background* bg)
 
 // Initializes a tile map based on given X and Y dimensions.
 // Does not use a text file, instead tries to create a Tilemap using randomness
+Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg, 
+	int mapType, bool powerUp, bool isHealth) {
+	//Assign attributes
+	this->yMax = yDim;
+	this->xMax = xDim;
+	this->room = room;
+	this->tileArray = tiles;
+	this->bg = bg;
+	this->mapType = mapType;
+	this->powerUp = powerUp;
+	this->isHealth = isHealth;
+	this->cDoor = false;
+
+	//generate tilemap without text file
+	this->generateTilemap();
+}
+
 Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg) {
 	//Assign attributes
 	this->yMax = yDim;
@@ -157,7 +174,7 @@ void Tilemap::generateTilemap() {
 		for (int j = 0; j < w; j++) {
 
 			// create a block in this spot
-			blockMap[i][j] = new Block(i, j, h, w);
+			blockMap[i][j] = new Block(i, j, h, w, mapType);
 
 			// then generate this block
 			// *Generate creates basic walls that outline the room*
@@ -166,6 +183,7 @@ void Tilemap::generateTilemap() {
 			// set door flags
 			if (i == 0 && j == (w - 1) / 2 && this->room >= 8) { //door on the top
 				blockMap[i][j]->setDoor();
+				this->cDoor = true;
 				this->room -= 8;
 			}
 			if (i == h - 1 && j == (w - 1) / 2 && (this->room >= 4 && this->room < 8)) { //door on the bottom
@@ -231,16 +249,13 @@ void Tilemap::generateTilemap() {
 
 	//number of platforms for this room?
 	int numPlats = rand() % 4 + 5;
-
-	// when populating the room, we decide if we will have a platform in this block, if we can (because of total num and if a platform is nearby)
-		// are there numPlat platforms?
-			//Yes: we cannot have anymore
-			//No: check surrounding to see if this is a valid platform location
-				//Valid: roll for plat
-				//Invalid: cannot put a plat here
-	// some way to randomly make sure plats are offset, not always in same place, and also that we are not rolling under too often and not creating any platforms?
-	// maybe we generate here the location of every platform and then just tell the blocks where they are?
-
+	if (this->cDoor) {
+		blockMap[1][w / 2]->placePlatforms(3, 4);
+		blockMap[2][w / 2 - 2]->placePlatforms(6,5);
+		blockMap[2][w / 2]->placePlatforms(6,5);
+		blockMap[2][w / 2 + 1]->placePlatforms(3,9);
+		blockMap[h-2][w / 2 - 1]->placePlatforms(7,9);
+	}
 
 
 	// Second Pass: Platforms (and Doors? we have doors in first pass rn)
@@ -262,7 +277,7 @@ void Tilemap::generateTilemap() {
 				blockMap[i][j]->checkBlock(blockMap[i + 1][j]);
 			}
 
-			//WHAT DO WE DO WITH CHECK
+			
 			// This way, when generating the block, it accounts for the blocks around it -> knows where the block next to it would like to connect to it (if we decide to connect to it)
 			// maybe we also include a priority for connection (must connect vs can connect)
 
@@ -271,7 +286,11 @@ void Tilemap::generateTilemap() {
 			// this block would be told that the left block wants to connect, and then would know where to place a platform in order to connect across blocks
 
 			// generate block, with info of blocks around it (that have been generated)
-			blockMap[i][j]->populateBlock();
+	
+
+			//blockMap[i][j]->populateBlock();
+
+			
 
 			// After generating the block, we set it 0 - initially generated
 			//blockMap[i][j]->setBlock(0);
@@ -311,6 +330,13 @@ void Tilemap::generateTilemap() {
 		}
 	}
 
+	if (this->powerUp == true && this->isHealth == false) {
+		this->tileMap[43][160] = 9;
+		this->tileMap[40][145] = 8;
+	}
+	else if (this->powerUp == true && this->isHealth == true) {
+		this->tileMap[40][145] = 8;
+	}
 
 	/* DEBUGGING TO SEE TILEMAP RESULT
 	for (int i = 0; i < this->yMax; i++)
