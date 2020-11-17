@@ -36,7 +36,8 @@ Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles, Background* bg)
 
 // Initializes a tile map based on given X and Y dimensions.
 // Does not use a text file, instead tries to create a Tilemap using randomness
-Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg, int mapType) {
+Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg, 
+	int mapType, bool powerUp, bool isHealth) {
 	//Assign attributes
 	this->yMax = yDim;
 	this->xMax = xDim;
@@ -44,6 +45,8 @@ Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Backgro
 	this->tileArray = tiles;
 	this->bg = bg;
 	this->mapType = mapType;
+	this->powerUp = powerUp;
+	this->isHealth = isHealth;
 
 	//generate tilemap without text file
 	this->generateTilemap();
@@ -275,7 +278,7 @@ void Tilemap::generateTilemap() {
 				blockMap[i][j]->checkBlock(blockMap[i + 1][j]);
 			}
 
-			//WHAT DO WE DO WITH CHECK
+			
 			// This way, when generating the block, it accounts for the blocks around it -> knows where the block next to it would like to connect to it (if we decide to connect to it)
 			// maybe we also include a priority for connection (must connect vs can connect)
 
@@ -285,6 +288,8 @@ void Tilemap::generateTilemap() {
 
 			// generate block, with info of blocks around it (that have been generated)
 			blockMap[i][j]->populateBlock();
+
+			
 
 			// After generating the block, we set it 0 - initially generated
 			//blockMap[i][j]->setBlock(0);
@@ -324,6 +329,13 @@ void Tilemap::generateTilemap() {
 		}
 	}
 
+	if (this->powerUp == true && this->isHealth == false) {
+		this->tileMap[40][155] = 9;
+		this->tileMap[40][145] = 8;
+	}
+	else if (this->powerUp == true && this->isHealth == true) {
+		this->tileMap[40][145] = 8;
+	}
 
 	/* DEBUGGING TO SEE TILEMAP RESULT
 	for (int i = 0; i < this->yMax; i++)

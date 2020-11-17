@@ -298,13 +298,17 @@ void Block::populateMiddle() {
 
 
 	int decide = rand() % 9;
-	if (decide <= 3) {
+	if (decide >= 7) {
 		int r = rand() % height;
 		for (int i = 0; i < height; i++) {
 			this->map[r][i] = 2;
 		}
 	}
 
+}
+
+void Block::addPlatforms() {
+	this->map[3][4] = 2;
 }
 
 // generate a Floor block - this block always has 1s on the floor at least *except if we do doors in the floor*

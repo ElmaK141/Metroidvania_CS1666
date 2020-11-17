@@ -6,7 +6,7 @@ class Block
 {
 	public:
 		// Public Constructor:
-		Block(int row, int col, int numRow, int numCol);
+		Block(int row, int col, int numRow, int numCol, int mapType);
 		// Public Functions:
 		void generateBlock();
 		void populateBlock();
@@ -24,6 +24,7 @@ class Block
 		bool isBelow();
 		int getXcon();
 		int getYcon();
+		void addPlatforms();
 	private:
 		// Private Functions:
 		void setType();
@@ -50,6 +51,7 @@ class Block
 		// Row and column position of this block in the blockMap
 		int row;
 		int col;
+		int mapType;
 
 		// Number of rows and columns in the blockMap (for bounds and typing)
 		int numRow;

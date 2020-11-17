@@ -48,6 +48,7 @@ private:
 		int x;									// x and y location (in 2D array of this node)
 		int y;
 		Tilemap* t;								// Pointer to this Node/room's Tilemap
+		bool power;
 		int doors;								// 4-bit int encoding of where the doors are in this room
 	};
 
@@ -68,5 +69,6 @@ private:
 
 	int spawnX;
 	int spawnY;
+	bool pAlready;
 };
 
