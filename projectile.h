@@ -1,19 +1,15 @@
-#ifndef _ENEMIES_H_
-#define _ENEMIES_H_
+#ifndef _PROJECTILE_H_
+#define _PROJECTILE_H_
 #include "sprite.h"
 #include "entity.h"
 #include <vector>
 #include <iostream>
 #include <fstream>
 
-class Enemy {
+class Projectile {
 	public:
-		Enemy(std::string spriteData, double xPos, double yPos, int scale, int f, Physics* phys, SDL_Renderer* context);
-		~Enemy();
-		int getHP()
-		{
-			return hp;
-		}
+		Projectile(std::string spriteData, double xPos, double yPos, int scale, int f, Physics* phys, SDL_Renderer* context);
+		~Projectile();
 		int getDamage()
 		{
 			return damage;
@@ -35,12 +31,8 @@ class Enemy {
 		double getXVel();
 		double getYVel();
 
-		void setJump(bool jump);
-		bool getJump();
 
 		int getFlag();
-
-		void takeDamage(double x, double y);
 
 		Physics* getPhysics();
 	private:
@@ -49,12 +41,9 @@ class Enemy {
 		void createSprites();
 		
 
-		int hp;
 		int maxSpeed;
 		int damage;
 		bool active;
-		double accel;
-		
 
 		double x;
 		double y;
@@ -63,7 +52,6 @@ class Enemy {
 		int flag;
 		double xVel;
 		double yVel;
-		bool canJump;
 
 		Sprite currFrame;
 		SDL_Renderer* context;
@@ -72,4 +60,5 @@ class Enemy {
 		std::vector<Sprite> frames;
 		Physics* physics;
 };
+
 #endif

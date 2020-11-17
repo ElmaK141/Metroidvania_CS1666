@@ -1,6 +1,6 @@
 #ifndef _TILEMAP_H_
 #define _TILEMAP_H_
-#endif
+
 
 #include <string>
 #include <vector>
@@ -19,8 +19,8 @@ class Tilemap
 		public:
 		// Public Constructors:
 			Tilemap();
-			Tilemap(std::string filename, std::vector<Tile*> tiles);
-			Tilemap(int xDim, int yDim, std::vector<Tile*> tiles, Background* bg);
+			//Tilemap(std::string filename, std::vector<Tile*> tiles);
+			Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg);
 			Tilemap(std::string filename, std::vector<Tile*> tiles, Background* bg);
 		// Public Getters and Setters:			
 			int getMaxWidth();
@@ -28,7 +28,7 @@ class Tilemap
 			int** getTileMap();
 			Tile* getTile(int index);
 			Background* getBackground();
-			void drawTilemap(SDL_Renderer* render, int offset);
+			void drawTilemap(SDL_Renderer* render, int offset_x, int offset_y);
 		// Public Destructor: 
 			~Tilemap();
 		private:
@@ -40,6 +40,10 @@ class Tilemap
 			Background* bg;
 			int yMax;					// The height dimension of the tilemap
 			int xMax;					// The width dimension of the tilemap
+			int room;					// Temp way to say which side the door is on for block gen
 			std::vector<Tile*> tileArray;// Stores references to every tile type encountered in the tilemap
+			bool start;					// True if is the start of a map
+			bool end;					// True if is the end of a map
 };
 
+#endif

@@ -32,10 +32,27 @@ class Entity{
 
 		void setJump(bool jump);
 		bool getJump();
-
 		int getFlag();
+		void setFlag(int f);
 
+		bool getShot();
+		void setShot(bool val);
+		void setPX(double px);
+		void setPY(double py);
+		double getPX();
+		double getPY();
+		void setPVelX(double py);
+		void setPVelY(double py);
+		double getPVelY();
+		double getPVelX();
 		Physics* getPhysics();
+
+		void setDouble();
+		void setGrapple();
+		void increaseHealth();
+		bool getDouble();
+		bool getGrapple();
+		int getBonusHealth();
 	private:
 
 		void createSprites();
@@ -44,10 +61,26 @@ class Entity{
 		double y;
 		int s;
 		int index;
-		int flag;
+
+		int flag;				// Flag determines what kind of entity this is
+								// 0: Player flag
+								// 1: Enemy flag (eye)
+								// 2-5: Teleporters (Main, Sec1, Sec2, Boss)
+		
 		double xVel;
 		double yVel;
 		bool canJump;
+		// For projectile
+		bool canShoot;
+		double px;
+		double py;
+		double pvelx;
+		double pvely;
+
+		// powerup flags - these are unique to the player
+		bool hasDouble;
+		bool hasGrapple;
+		int bonusHealth; // bonus health starts at 0, increases to 2(MAX)
 
 		Sprite currFrame;
 		SDL_Renderer* context;

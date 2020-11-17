@@ -271,3 +271,11 @@ void Enemy::collide(int** tilemap, double xVel, double yVel)
 		setCurrFrame(3);
 	
 }
+
+void Enemy::takeDamage(double xVector, double yVector)
+{
+	int impactForce = 10;
+	setXVel(xVel + xVector * impactForce);
+	setYVel(yVel + yVector * impactForce);
+	hp -= 25;
+}
