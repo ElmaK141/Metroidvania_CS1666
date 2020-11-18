@@ -298,22 +298,25 @@ void Block::populateBlock() {
 //Type 1 = No Powerup
 //Type 2 = Double Jump Location means make platforms bit easier 
 void Block::populateMiddle() {
-
 }
 
 bool Block::isMiddle() {
 	return this->middle;
 }
 
-void Block::addPlatforms() {
-	int decide = rand() % 9;
+void Block::addPlatforms(int pLocation) {
+	int decide = rand() % 10;
 	if (decide >= 7) {
 		this->platform = true;
-		int r = rand() % height;
-		for (int i = 0; i < height; i++) {
-			this->map[r][i] = 2;
+		this->platformLocation = pLocation;
+		for (int i = 0; i < width; i++) {
+			this->map[pLocation][i] = 2;
 		}
 	}
+}
+
+int Block::getPlatLocation() {
+	return this->platformLocation;
 }
 
 void Block::placePlatforms(int x, int len) {
@@ -467,4 +470,8 @@ int Block::getXcon() {
 
 int Block::getYcon() {
 	return this->y;
+}
+
+bool Block::isDoor() {
+	return this->door;
 }

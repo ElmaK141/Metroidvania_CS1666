@@ -12,7 +12,7 @@
 /////////////////////////
 
 // Default Constructor
-Gamemap::Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std::vector<Background*> bgs)
+Gamemap::Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std::vector<Background*> bgs, std::vector<Enemy*> enemies)
 {
 	// set map size
 	mapLength = length;
@@ -28,6 +28,7 @@ Gamemap::Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std
 	// set references to Tiles array and Backgrounds array
 	this->tiles = tiles;
 	this->bgs = bgs;
+	this->enemies = enemies;
 	this->pAlready = false;
 
 	//Create Map - 2D array of Tilemap Nodes
@@ -255,12 +256,12 @@ void Gamemap::generateGamemap() {
 
 			//std::cout << "Generating tilemap for room at: " << curr->y << " " << curr->x << std::endl;
 			if (count == healthRoom) {
-				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, true, true);
+				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, true, true,enemies);
 			}else if (q.empty()) {
-				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, true, false);
+				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, true, false,enemies);
 			}else {
 				// generate a procgen room with these doors
-				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, false, false);
+				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, false, false,enemies);
 			}
 			//std::cout << "After Gen: " << curr->t << " " << curr << std::endl;
 		}
