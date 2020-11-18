@@ -51,11 +51,11 @@ Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Backgro
 	this->cDoor = false;
 	
 	if (mapType != 3 && mapType != 0) {
-		int nEnemies = rand() % 5;
+		/*int nEnemies = rand() % 5;
 		for (int i = 0; i < nEnemies; i++) {
 			enemies.pop_back();
 		}
-		this->enemies = enemies;
+		this->enemies = enemies;*/
 	}
 
 	//generate tilemap without text file
