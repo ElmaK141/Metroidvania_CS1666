@@ -177,15 +177,16 @@ void Game::runGame() {
 	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
 	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
 	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
-	Enemy boss("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer);
-	enemies.push_back(&eye);
-	enemies.push_back(&eye2);
-	enemies.push_back(&eye3);
-	enemies.push_back(&eye4);
+	//enemies.push_back(&eye);
+	//enemies.push_back(&eye);
+	//enemies.push_back(&eye2);
+	//enemies.push_back(&eye3);
+	//enemies.push_back(&eye4);
 	enemies.push_back(&eye5);
-	enemies.push_back(&boss);
-	
 
+	Enemy boss("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer);
+	std::vector<Enemy*> bossEnemy;
+	bossEnemy.push_back(&boss);
 	std::vector<Enemy*> blankEnemies;
 
 	// allMaps is a Vector of all of our Gamemaps
@@ -196,10 +197,10 @@ void Game::runGame() {
 	// allMaps lets us change which map we are in
 	std::vector<Gamemap*> allMaps;
 	allMaps.push_back(new Gamemap(1, 1, 0, tiles, backgrounds, blankEnemies));
-	allMaps.push_back(new Gamemap(3, 3, 1, tiles, backgrounds,enemies));
-	allMaps.push_back(new Gamemap(3, 3, 2, tiles, backgrounds,enemies));
-	allMaps.push_back(new Gamemap(1, 1, 3, tiles, backgrounds,blankEnemies));
-	
+	allMaps.push_back(new Gamemap(3, 3, 1, tiles, backgrounds, enemies));
+	allMaps.push_back(new Gamemap(3, 3, 2, tiles, backgrounds, enemies));
+	allMaps.push_back(new Gamemap(1, 1, 3, tiles, backgrounds, bossEnemy));
+
 	// Variables for tracking our current MAP and ROOM (and tileArray)
 	// map will be the pointer to our current map
 	Gamemap* map = allMaps[0];
@@ -264,14 +265,15 @@ void Game::runGame() {
 
 	// Define player entity
 	Entity player("data/player.spr", x_pos, y_pos, 3, 0, &plp, gRenderer);		//0 is flag for player entity
-
+	player.setGrapple();
+	gotGrapple = 1;
 	int hitTick = 0;
 	bool hit = false;
 	int eyeSpawnCD = 0;
 
 	//"Load" in the game by pausing to avoid buffering in the gappling hook input
 	SDL_Delay(150);
-	
+
 	std::vector<Enemy*> ce;
 
 	//Run the Game
@@ -281,10 +283,10 @@ void Game::runGame() {
 		delta_time = (curTick - lastTick) / 1000.0;
 		lastTick = curTick;
 
-		
+
 		//Player Anim frame tracker
 		curAnim = SDL_GetTicks();
-		
+
 		//Teleporter animation frame tracker
 		telAnim = SDL_GetTicks();
 
@@ -359,13 +361,13 @@ void Game::runGame() {
 							}
 							order++;
 						}
-						else if(map->getType() == 1 || map->getType() == 2) {
+						else if (map->getType() == 1 || map->getType() == 2) {
 							//std::cout << "spawn tp 2" << std::endl;
 							tps.push_back(new Entity("data/teleporter.spr", j * 16.0, i * 16.0, 3, 2, &plp, gRenderer));
 						}
 					}
 					else if (tileArray[i][j] == 8) { //TESTING - POWERUPS SHOULD BE REMOVED FROM SPAWNS ONCE THEY ARE APPEARING IN THE WORLD
-						
+
 						// THIS CODE LOADS ENTITIES WHEN WE TAKE A TELEPORTER AND CHANGE MAPS
 						// ALL OF THIS REGARDING POWERUPS WILL BE GONE, SINCE THEY WILL ONLY BE SPAWNED BY GOING THROUGH A DOOR
 
@@ -420,9 +422,9 @@ void Game::runGame() {
 					}
 					else
 					{
-						for (int i=0; i<ce.size(); i++)
+						for (int i = 0; i < ce.size(); i++)
 						{
-							if (ce[i]->getHP() > 0 && checkHitEnemy(deltaX, deltaY, ce[i]))
+							if (checkHitEnemy(deltaX, deltaY, ce[i]))
 							{
 								int randomNumber = rand() % 100;
 								int ignoreChance = 30;
@@ -461,10 +463,11 @@ void Game::runGame() {
 		{
 			if (eyeSpawnCD <= 0)
 			{
-				enemies.push_back(new Enemy("data/eye.spr", 2520, 400, 3, 1, &plp, gRenderer));
-				enemies[enemies.size() - 1]->setXVel(-8);
-				enemies[enemies.size() - 1]->setYVel(-10);
-				
+				ce.push_back(new Enemy("data/eye.spr", 2520, 400, 3, 1, &plp, gRenderer));
+				ce.push_back(new Enemy("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer));
+				ce[ce.size() - 1]->setXVel(-8);
+				ce[ce.size() - 1]->setYVel(-10);
+
 				if (boss.getHP() > 100)
 					eyeSpawnCD = 300;
 				else
@@ -476,7 +479,7 @@ void Game::runGame() {
 		// powerups - check if player collides
 		for (auto&& p : powerups) {
 			if (checkPlayerCollision(&player, p) && p->getFrameIndex() != 3) { // if the player collides with the power up, enable ability, disable powerup
-				if (p->getFlag() == 6){ // Double Jump
+				if (p->getFlag() == 6) { // Double Jump
 					player.setDouble();
 					gotDoubleJump = 1;
 				}
@@ -548,12 +551,12 @@ void Game::runGame() {
 
 		// Check if we are going through a door
 		int newRoom = checkDoor(map->getRooms(), player, currRoom);
-		
+
 		// if we are, update our room and position
 		if (newRoom != -1) {
 			// If this is true, then we must update our tilemap, and map position
 			// as well as reset details for room rendering
-			
+
 			// updates our position in map to the new room, update our Tilemap pointer and tileArray
 			map->updatePosition(newRoom);
 			currRoom = map->getCurrentRoom();
@@ -625,7 +628,7 @@ void Game::runGame() {
 		rem_tile_x = scroll_offset_x % (currRoom->getMaxWidth() * 16);
 		rem_bg_y = scroll_offset_y % SCREEN_HEIGHT;
 		rem_tile_y = scroll_offset_y % (currRoom->getMaxHeight() * 16);
-		
+
 		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y);
 		currRoom->getBackground()->getSprite()->draw(gRenderer, (-rem_bg_x + SCREEN_WIDTH), (-rem_bg_y));
 		currRoom->getBackground()->getSprite()->draw(gRenderer, -rem_bg_x, -rem_bg_y + SCREEN_HEIGHT);
@@ -664,7 +667,7 @@ void Game::runGame() {
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset_x, player.getYPosition() - scroll_offset_y);
 		else if (SDL_GetTicks() % 100 > 50 || !hit)
 			player.getCurrFrame().draw(gRenderer, player.getXPosition() - scroll_offset_x, player.getYPosition() - scroll_offset_y, flip);
-		
+
 		// ENEMY INFORMATION WILL HAVE TO BE MOVED INTO TILEMAP, SO THAT THE CURRENT ROOM CAN SPECIFY WHICH ENEMIES NEED TO BE SPAWNED, HOW MANY, AND WHERE. THEN THE GAME LOOP HERE
 		// CAN CHECK FOR COLLISION AGAINST THE LIST OF CURRENT ENEMIES
 		// I WONDER IF WE SHOULD JUST HAVE A SCENE ENTITY LIST AND WE CAN JUST PERFORM COLLISION AGAINST ALL ENTITIES IN THE SCENE
@@ -674,8 +677,8 @@ void Game::runGame() {
 			for (int i = 0; i < ce.size(); i++)
 			{
 				if (ce[i]->getHP() > 0) //only draw live enemies
-					ce[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
-        if (ce[i]->getFlag() == 0 && map->getType() == 3)
+					ce[i]->getCurrFrame().draw(gRenderer, ce[i]->getXPosition() - scroll_offset_x, ce[i]->getYPosition() - scroll_offset_y);
+				if (ce[i]->getFlag() == 0 && map->getType() == 3)
 				{
 					if (ce[i]->getHP() > 0)
 						drawBossHP(ce[i]->getHP());
@@ -730,10 +733,10 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		if (!player->getPhysics()->inAir())
 			questMenu();
 	}
-	
+
 
 	if (keystate[SDL_SCANCODE_E]) {
-		std::cout << "E PRESSED" << std::endl;
+		//std::cout << "E PRESSED" << std::endl;
 		for (auto&& tp : tps) { // for each teleporter in the scene
 			if (checkPlayerCollision(player, tp)) { // check if the player is touching it
 				//std::cout << "Interacted with TP type " << tp->getFlag() << std::endl;
@@ -748,8 +751,8 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	if (SDL_BUTTON(SDL_BUTTON_RIGHT) & SDL_GetMouseState(&mouseXinWorld, &mouseYinWorld)) {
 		mouseXinWorld += scroll_offset_x;
 		mouseYinWorld += scroll_offset_y;
-		
-		if(!player->getPhysics()->isGrappling() && player->getGrapple()){
+
+		if (!player->getPhysics()->isGrappling() && player->getGrapple()) {
 			//std::cout << "pressed" << std::endl;
 			grappleX = mouseXinWorld;
 			grappleY = mouseYinWorld;
@@ -771,8 +774,8 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		mouseYinWorld += scroll_offset_y;
 
 		//Set projectile to start at player
-		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2) ;
-		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2) ;
+		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2);
+		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2);
 
 
 		double x_vector = mouseXinWorld - playerCenterX;
@@ -785,7 +788,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		/*Shoot*/
 		player->setShot(false); //can only shoot one at a time. for multple maybe change to an array of n size for n shots?
 
-		
+
 		player->setPX(playerCenterX - scroll_offset_x);
 		player->setPY(playerCenterY - scroll_offset_y);
 
@@ -865,7 +868,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 				if (player->getFrameIndex() != 0) {
 					player->setPosition(player->getXPosition() - 39, player->getYPosition());
 				}
-        
+
 				player->setCurrFrame(0);
 			}
 
@@ -943,7 +946,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr())* player->getPhysics()->getDampen()*0.50);
 			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr())* player->getPhysics()->getDampen()*0.50);
 		}
-			
+
 	}
 	//movement
 	else if (keystate[SDL_SCANCODE_A]) {
@@ -969,7 +972,7 @@ void Game::handleCollision(Entity* player, Tilemap* t) {
 	bool on_solid = detectCollision(*player, t->getTileMap(), player->getXVel() * delta_time, player->getYVel() * delta_time, t->getMaxHeight());
 	if (!on_solid) // while in air
 	{
-		if(player->getPhysics()->getMaxY() > player->getYVel())
+		if (player->getPhysics()->getMaxY() > player->getYVel())
 			player->setYVel(player->getYVel() + gravity);
 		player->getPhysics()->setAirState(true);
 		//player.setCurrFrame(1);
@@ -986,7 +989,7 @@ void Game::handleCollision(Entity* player, Tilemap* t) {
 }
 
 void Game::loadDeathScreen() {
-	Sprite deadMsg(0,0, 1280, 720, 1, "assets/kennedys.png", gRenderer);
+	Sprite deadMsg(0, 0, 1280, 720, 1, "assets/kennedys.png", gRenderer);
 
 	SDL_RenderClear(gRenderer);
 	SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0);
@@ -1003,7 +1006,7 @@ void Game::loadDeathScreen() {
 		}
 		else if (e.type == SDL_KEYDOWN) {
 			gameState = 0;
-			return; 
+			return;
 		}
 
 		SDL_RenderClear(gRenderer);
@@ -1057,6 +1060,12 @@ void Game::loadMainMenu() {
 	Button startGame(0, 0, 452, 68, 1, "assets/main_menu/startGame.png", gRenderer);
 	Button debug(0, 0, 294, 68, 1, "assets/main_menu/debug.png", gRenderer);
 
+	killedBoss = 0;
+	gotDoubleJump = 0;
+	gotGrapple = 0;
+	gotHealth1 = 0;
+	gotHealth2 = 0;
+
 	//Main Menu Loop
 	while (running) {
 
@@ -1074,7 +1083,7 @@ void Game::loadMainMenu() {
 				//Start Game
 				if ((mouseX > startGame.getSprite()->getX()) && (mouseX < startGame.getSprite()->getX() + startGame.getSprite()->getWidth()) && (mouseY > startGame.getSprite()->getY()) && (mouseY < startGame.getSprite()->getY() + startGame.getSprite()->getHeight())) {
 					//Set gameState to start into normal game
-					gameState = 1;		
+					gameState = 1;
 					break;
 				}
 				//Debug
@@ -1088,7 +1097,7 @@ void Game::loadMainMenu() {
 		}
 		else if (e.type == SDL_KEYDOWN) {
 			switch (e.key.keysym.sym) {
-		
+
 			case SDLK_d:
 				//Unlock the debug menu button
 				unlockDebug = true;
@@ -1125,11 +1134,11 @@ void Game::pauseMenu(int prevGameState)
 	Button resumeGame(0, 0, 220, 70, 1, "assets/pause_menu/resume.png", gRenderer);
 	Button mainMenu(0, 0, 303, 70, 1, "assets/pause_menu/mainMenu.png", gRenderer);
 
-	SDL_Rect pauseBox = {SCREEN_WIDTH/2 - 163, 190, 325, 300};
+	SDL_Rect pauseBox = { SCREEN_WIDTH / 2 - 163, 190, 325, 300 };
 
 	//Pause menu loop
 	while (running) {
-		
+
 		//Poll to see if we close the game at any time
 		SDL_PollEvent(&e);
 		if (e.type == SDL_QUIT) {
@@ -1164,9 +1173,9 @@ void Game::pauseMenu(int prevGameState)
 		SDL_RenderFillRect(gRenderer, &pauseBox);
 
 		//Draw to screen
-		pauseLabel.draw(gRenderer, SCREEN_WIDTH/2 - 126, 200);
-		resumeGame.getSprite()->draw(gRenderer, SCREEN_WIDTH/2 - 110, 300);
-		mainMenu.getSprite()->draw(gRenderer, SCREEN_WIDTH/2 - 152, 400);
+		pauseLabel.draw(gRenderer, SCREEN_WIDTH / 2 - 126, 200);
+		resumeGame.getSprite()->draw(gRenderer, SCREEN_WIDTH / 2 - 110, 300);
+		mainMenu.getSprite()->draw(gRenderer, SCREEN_WIDTH / 2 - 152, 400);
 
 		SDL_RenderPresent(gRenderer);
 	}
@@ -1196,7 +1205,7 @@ void Game::questMenu()
 	SDL_Rect doneHealth1 = { SCREEN_WIDTH / 2 - 133, 510, 304, 2 };
 	SDL_Rect doneHealth2 = { SCREEN_WIDTH / 2 - 133, 542, 304, 2 };
 
-	
+	//std::cout << gotDoubleJump << std::endl;
 
 	//Quest menu loop
 	while (running) {
@@ -1230,29 +1239,30 @@ void Game::questMenu()
 		resumeGame.getSprite()->draw(gRenderer, SCREEN_WIDTH / 2 - 110, 600);
 
 		questList.draw(gRenderer, SCREEN_WIDTH / 2 - 175, 300);
-		
+
 		//Check off objectives
 		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0x00);
 		if (killedBoss != 0) {
 			SDL_RenderFillRect(gRenderer, &doneKaren);
 		}
-		
+
 		if (gotDoubleJump != 0) {
 			SDL_RenderFillRect(gRenderer, &doneDoubleJump);
 		}
-		
+
 		if (gotGrapple != 0) {
+			//std::cout << "in method" << std::endl;
 			SDL_RenderFillRect(gRenderer, &doneGrapple);
 		}
-		
+
 		if (gotHealth1 != 0) {
 			SDL_RenderFillRect(gRenderer, &doneHealth1);
 		}
-		
+
 		if (gotHealth2 != 0) {
 			SDL_RenderFillRect(gRenderer, &doneHealth2);
 		}
-		
+
 		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);
 
 		SDL_RenderPresent(gRenderer);
@@ -1279,12 +1289,12 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 	if (y_vel >= 0) {
 		for (int xAdjust = 1; xAdjust < xBlockR - xBlockL; xAdjust++)
 		{	//for every block under the player's width
-			if (yBlockD <= roomHeight-1)
+			if (yBlockD <= roomHeight - 1)
 			{	//if you'd pass a solid block
 				for (int range = pPosY; range <= ent.getYPosition(); range += 16) //for EVERY block that is passed during movement
 				{
 					yBlockD = (int)(((range + pHeight) / 16)) + 1;
-					if (yBlockD <= roomHeight-1 && range + pHeight + y_vel > yBlockD * 16 - 1 && (tilemap[yBlockD][xBlockR - xAdjust] != 0 && tilemap[yBlockD][xBlockR - xAdjust] != 3 && tilemap[yBlockD][xBlockR - xAdjust] != 8 && tilemap[yBlockD][xBlockR - xAdjust] != 9))
+					if (yBlockD <= roomHeight - 1 && range + pHeight + y_vel > yBlockD * 16 - 1 && (tilemap[yBlockD][xBlockR - xAdjust] != 0 && tilemap[yBlockD][xBlockR - xAdjust] != 3 && tilemap[yBlockD][xBlockR - xAdjust] != 8 && tilemap[yBlockD][xBlockR - xAdjust] != 9))
 					{	//set position to above the block
 						ent.setPosition(ent.getXPosition(), yBlockD * 16 - pHeight - 1);
 						pPosY = ent.getYPosition();
@@ -1338,8 +1348,8 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 
 	if (x_vel > 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
-		{	
-      //hit blocks to your right accounting for player height
+		{
+			//hit blocks to your right accounting for player height
 			if (yBlockD <= roomHeight && yBlockU >= 0 && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3 && tilemap[yBlockD - yAdjust][xBlockR] != 8 && tilemap[yBlockD - yAdjust][xBlockR] != 9))
 			{
 				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
@@ -1351,8 +1361,8 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 
 	if (x_vel < 0) {
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
-		{	
-      //hit blocks to your left accounting for player height
+		{
+			//hit blocks to your left accounting for player height
 			if (yBlockD <= roomHeight && yBlockU >= 0 && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3 && tilemap[yBlockD - yAdjust][xBlockL] != 8 && tilemap[yBlockD - yAdjust][xBlockL] != 9))
 			{
 				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
@@ -1432,13 +1442,13 @@ int Game::checkDoor(int doors, Entity& ent, Tilemap* currRoom) {
 	if (up && ent.getYPosition() <= 1 && ent.getYVel() < 0) {
 		return 8;
 	}
-	else if(down && ent.getYPosition() >= currRoom->getMaxHeight()*16 - 1 && ent.getYVel() > 0){ // needs testing when we get up/down doors
+	else if (down && ent.getYPosition() >= currRoom->getMaxHeight() * 16 - 1 && ent.getYVel() > 0) { // needs testing when we get up/down doors
 		return 4;
 	}
 	else if (left && ent.getXPosition() <= 0 && ent.getXVel() < 0) {
 		return 2;
 	}
-	else if (right && ent.getXPosition() >= currRoom->getMaxWidth()*16 - ent.getCurrFrame().getWidth() - 1 && ent.getXVel() > 0) {
+	else if (right && ent.getXPosition() >= currRoom->getMaxWidth() * 16 - ent.getCurrFrame().getWidth() - 1 && ent.getXVel() > 0) {
 		return 1;
 	}
 	else {
@@ -1615,7 +1625,7 @@ void Game::runDebug() {
 
 		//Get User Input
 		getUserInput(&player, tps);
-		
+
 		//Check for Collision
 		handleCollision(&player, currRoom);
 
