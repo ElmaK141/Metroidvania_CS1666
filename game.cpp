@@ -270,6 +270,8 @@ void Game::runGame() {
 	int hitTick = 0;
 	bool hit = false;
 	int eyeSpawnCD = 0;
+	bool bossSpawned = 0;
+	int bossIndex = 0;
 
 	//"Load" in the game by pausing to avoid buffering in the gappling hook input
 	SDL_Delay(150);
@@ -427,7 +429,7 @@ void Game::runGame() {
 							if (checkHitEnemy(deltaX, deltaY, ce[i]))
 							{
 								int randomNumber = rand() % 100;
-								int ignoreChance = 30;
+								int ignoreChance = 20;
 
 								if (randomNumber > ignoreChance)
 								{
@@ -436,7 +438,7 @@ void Game::runGame() {
 									break;
 								}
 								else {
-									//Add Guard animation
+
 								}
 							}
 						}
@@ -461,10 +463,24 @@ void Game::runGame() {
 
 		if (map->getType() == 3)
 		{
+			if (!bossSpawned)
+			{
+				ce.push_back(new Enemy("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer));
+				for (int k = 0; k < ce.size(); k++)
+				{
+					if (ce[k]->getFlag() == 0)
+					{
+						bossIndex = k;
+						k = ce.size();
+					}
+				}
+				bossSpawned = true;
+			}
+
 			if (eyeSpawnCD <= 0)
 			{
 				ce.push_back(new Enemy("data/eye.spr", 2520, 400, 3, 1, &plp, gRenderer));
-				ce.push_back(new Enemy("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer));
+				
 				ce[ce.size() - 1]->setXVel(-8);
 				ce[ce.size() - 1]->setYVel(-10);
 
@@ -678,16 +694,16 @@ void Game::runGame() {
 			{
 				if (ce[i]->getHP() > 0) //only draw live enemies
 					ce[i]->getCurrFrame().draw(gRenderer, ce[i]->getXPosition() - scroll_offset_x, ce[i]->getYPosition() - scroll_offset_y);
-				if (ce[i]->getFlag() == 0 && map->getType() == 3)
-				{
-					if (ce[i]->getHP() > 0)
-						drawBossHP(ce[i]->getHP());
-					else
-						displayCredits();
-				}
 			}
 		}
 
+		if (bossSpawned)
+		{
+			if (ce[bossIndex]->getHP() > 0)
+				drawBossHP(ce[bossIndex]->getHP());
+			else
+				displayCredits();
+		}
 		//Draw the player's hp
 		drawHP();
 
@@ -1394,7 +1410,7 @@ bool Game::checkHitEnemy(double x, double y, Enemy* enemy)
 	return (
 		x + projectileSize > enemy->getXPosition() &&
 		x < enemy->getXPosition() + enemy->getCurrFrame().getWidth() &&
-		y + projectileSize < enemy->getYPosition() &&
+		y + projectileSize > enemy->getYPosition() &&
 		y < enemy->getYPosition() + enemy->getCurrFrame().getHeight());
 }
 
