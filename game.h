@@ -45,6 +45,7 @@ class Game {
 		};
 
 		void drawHP();
+		void drawBossHP(int health);
 		void update();
 		void render();
 		SDL_Texture* rollCredits();
