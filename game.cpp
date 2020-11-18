@@ -498,7 +498,7 @@ void Game::runGame() {
 				ce[ce.size() - 1]->setXVel(-20);
 				ce[ce.size() - 1]->setYVel(-30);
 
-				if (ce[bossIndex]->getHP() > 500)
+				if (ce[bossIndex]->getHP() > 200)
 					eyeSpawnCD = 300;
 				else
 					eyeSpawnCD = 100;
