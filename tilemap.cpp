@@ -36,7 +36,7 @@ Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles, Background* bg)
 
 // Initializes a tile map based on given X and Y dimensions.
 // Does not use a text file, instead tries to create a Tilemap using randomness
-Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg, 
+Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg,
 	int mapType, bool powerUp, bool isHealth, std::vector<Enemy*> enemies) {
 	//Assign attributes
 	this->yMax = yDim;
@@ -48,7 +48,7 @@ Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Backgro
 	this->powerUp = powerUp;
 	this->isHealth = isHealth;
 	this->cDoor = false;
-	
+
 	if (mapType != 3 && mapType != 0) {
 		int numEnemies = rand() % enemies.size();
 		for (int i = 0; i < numEnemies; i++) {
@@ -75,7 +75,7 @@ Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Backgro
 
 // Calls draw() for each tile that is on the screen currently (with offset and accounting for tile size)
 void Tilemap::drawTilemap(SDL_Renderer* render, int offset_x, int offset_y) {
-	
+
 	for (int i = 0; i < this->yMax; i++) {
 		for (int j = 0; j < this->xMax; j++) {
 
@@ -173,10 +173,10 @@ void Tilemap::generateTilemap() {
 	int w = this->xMax / blockWidth;
 
 	// I have looked into maybe using std::array for this but eh
-	Block*** blockMap = new Block** [h];
-	for(int i = 0; i < h; i++){
-		blockMap[i] = new Block*[w];
-		
+	Block*** blockMap = new Block * *[h];
+	for (int i = 0; i < h; i++) {
+		blockMap[i] = new Block * [w];
+
 		// iterate over blockMap and create a Block in each spot
 		// FIRST PASS - create and generate walls
 		for (int j = 0; j < w; j++) {
@@ -200,7 +200,7 @@ void Tilemap::generateTilemap() {
 			}
 			if (i == h - 1 && j == 0 && (this->room >= 2 && this->room < 4)) {	//door on the left
 				blockMap[i][j]->setDoor();
-				blockMap[i-1][j]->setDoor();
+				blockMap[i - 1][j]->setDoor();
 				this->room -= 2;
 			}
 			if (i == h - 1 && j == w - 1 && (this->room < 2 && this->room > 0)) {	//door on the right
@@ -208,18 +208,18 @@ void Tilemap::generateTilemap() {
 				blockMap[i - 1][j]->setDoor();
 				this->room -= 1;
 			}
-			
+
 		}
 	}
-	
+
 
 	// First Pass: Generate each block in terms of the tiles it needs by defualt -> from bottom left to top right
-	for (int i = h-1; i > -1; i--) { //reverse, bot to top
+	for (int i = h - 1; i > -1; i--) { //reverse, bot to top
 		for (int j = 0; j < w; j++) { //left to right
 
 			// check around this block on all 4 sides
 			if (j > 0) { // there is a block to the left
-				blockMap[i][j]->checkBlock(blockMap[i][j-1]);
+				blockMap[i][j]->checkBlock(blockMap[i][j - 1]);
 			}
 			if (j < w - 1) { // there is a block to the right
 				blockMap[i][j]->checkBlock(blockMap[i][j + 1]);
@@ -244,7 +244,7 @@ void Tilemap::generateTilemap() {
 
 			// After generating the block, we set it 0 - initially generated
 			blockMap[i][j]->setBlock(0);
-			
+
 			// If a block has 0s and 1s on all sides, it becomes 1 - perma set
 			// not doing this yet
 
@@ -260,10 +260,10 @@ void Tilemap::generateTilemap() {
 	int numPlats = rand() % 4 + 5;
 	if (this->cDoor) {
 		blockMap[1][w / 2]->placePlatforms(3, 5);
-		blockMap[2][w / 2 - 2]->placePlatforms(6,5);
-		blockMap[2][w / 2]->placePlatforms(6,5);
-		blockMap[2][w / 2 + 1]->placePlatforms(3,7);
-		blockMap[h-2][w / 2 - 1]->placePlatforms(7,6);
+		blockMap[2][w / 2 - 2]->placePlatforms(6, 5);
+		blockMap[2][w / 2]->placePlatforms(6, 5);
+		blockMap[2][w / 2 + 1]->placePlatforms(3, 7);
+		blockMap[h - 2][w / 2 - 1]->placePlatforms(7, 6);
 	}
 
 	// Second Pass: Platforms (and Doors? we have doors in first pass rn)
@@ -284,7 +284,7 @@ void Tilemap::generateTilemap() {
 			if (i < h - 1) { // there is a block below
 				blockMap[i][j]->checkBlock(blockMap[i + 1][j]);
 			}
-			
+
 			blockMap[i][j]->populateBlock();
 			if (blockMap[i][j]->hasPlatform() == false && blockMap[i][j]->isMiddle()) {
 				if (!doorCheck(blockMap, i, j)) {
@@ -404,4 +404,3 @@ Tilemap::~Tilemap()
 {
 	delete this->tileMap;
 }
-

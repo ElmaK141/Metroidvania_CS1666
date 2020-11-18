@@ -58,11 +58,11 @@ Gamemap::Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std
 	}
 
 	/* print debug */
-	std::cout << "Spawn: "  << spawnY << " " << spawnX << std::endl;
+	std::cout << "Spawn: " << spawnY << " " << spawnX << std::endl;
 
 	for (int i = 0; i < mapHeight; i++) {
 		for (int j = 0; j < mapLength; j++) {
-			if(map[i][j].valid)
+			if (map[i][j].valid)
 				std::cout << map[i][j].doors << "\t";
 			else
 				std::cout << -1 << "\t";
@@ -101,13 +101,13 @@ void Gamemap::generateGamemap() {
 
 	// then when we generate the gamemap, we will choose how many rooms in the map will be generated (one of these rooms is the spawn room)
 	int numRooms = rand() % ((mapLength * mapHeight) - (minRooms - 1)) + minRooms;
-	int healthRoom = rand() % numRooms-1;
+	int healthRoom = rand() % numRooms - 1;
 
 
 	// create the vector that we will use as our queue
 	std::queue<Node*> q;
 	// create spawn node, add to array, add to queue
-	struct Node spawn = {true, spawnX, spawnY, nullptr, 0};
+	struct Node spawn = { true, spawnX, spawnY, nullptr, 0 };
 	map[spawnY][spawnX] = spawn;
 	q.push(&spawn);
 	// spawn node created (and doors it has) based on where it is
@@ -134,7 +134,7 @@ void Gamemap::generateGamemap() {
 			// create children nodes
 			if (spawnRooms == 3) { // left and right
 				// create both children nodes, one on the right, one on the left
-				
+
 				// Right node
 				map[spawnY][spawnX + 1].valid = true;
 				map[spawnY][spawnX + 1].x = spawnX + 1;
@@ -184,7 +184,7 @@ void Gamemap::generateGamemap() {
 			// generate the spawn room based on template and record doors
 			curr->doors = spawnRooms;
 			curr->t = new Tilemap(getSpawn(spawnX), tiles, bgs[rand() % bgs.size()]);
-			
+
 			//std::cout << "Create spawn " << curr->t << " " << curr << std::endl;
 			//std::cout << "Created spawn at " << spawnY << " " << spawnX << " " << spawnRooms << "\n" << std::endl;
 		}
@@ -197,7 +197,7 @@ void Gamemap::generateGamemap() {
 			count++;
 			// if we are allowed to make a new room, try to
 			if (numRooms > 0) { // we can make a new room (at least one)
-				
+
 				//std::cout << numRooms << " remaining rooms\n";
 
 				// how many should we try to make? anywhere from 1 to 3
@@ -210,7 +210,7 @@ void Gamemap::generateGamemap() {
 					// direction is random - 0-3, converted to 4-bit
 					int dir = randToDir(rand() % 4);
 					int tries = 4;
-					
+
 					while (!isValid(curr->x, curr->y, dir) && tries > 0) {
 						//std::cout << dir << "\n" << std::endl;
 						dir = randToDir(rand() % 4);
@@ -230,7 +230,7 @@ void Gamemap::generateGamemap() {
 						//std::cout << "Start: " << startY << " " << startX << "\n";
 
 						int from = parentDir(dir);
-					
+
 						// set fields of this node we are setting 
 						map[startY + yAdj][startX + xAdj].valid = true;
 						map[startY + yAdj][startX + xAdj].x = startX + xAdj;
@@ -239,7 +239,7 @@ void Gamemap::generateGamemap() {
 						map[startY + yAdj][startX + xAdj].doors = from;
 
 						//std::cout << "New Node1 " << map[startY + yAdj][startX + xAdj].t << " " << &map[startY + yAdj][startX + xAdj] << std::endl;
-						
+
 						// add this node to the queue
 						q.push(&map[startY + yAdj][startX + xAdj]);
 						numRooms -= 1;
@@ -256,12 +256,14 @@ void Gamemap::generateGamemap() {
 
 			//std::cout << "Generating tilemap for room at: " << curr->y << " " << curr->x << std::endl;
 			if (count == healthRoom) {
-				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, true, true,enemies);
-			}else if (q.empty()) {
-				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, true, false,enemies);
-			}else {
+				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, true, true, enemies);
+			}
+			else if (q.empty()) {
+				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, true, false, enemies);
+			}
+			else {
 				// generate a procgen room with these doors
-				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, false, false,enemies);
+				curr->t = new Tilemap(210, 45, curr->doors, tiles, bgs[rand() % bgs.size()], this->type, false, false, enemies);
 			}
 			//std::cout << "After Gen: " << curr->t << " " << curr << std::endl;
 		}
@@ -318,7 +320,7 @@ std::string Gamemap::getSpawn(int x) {
 }
 
 // gets the "rooms" value for the spawn room
-int Gamemap::getSpawnRooms(int x){
+int Gamemap::getSpawnRooms(int x) {
 	int r;
 	if (x > 0 && x < mapLength - 1) { // if not on either edge, door on both sides
 		r = 3;
@@ -355,7 +357,7 @@ bool Gamemap::isValid(int x, int y, int dir) {
 	//std::cout << x << " " << y << " " << dir << " " << std::endl;
 
 	// if a node is already there OR if it goes out of bounds - invalid
-	
+
 	if (dir == 1 && x != mapLength - 1) { // if right is valid
 		if (map[y][x + 1].valid == false) //check node
 			ret = true;
@@ -368,7 +370,7 @@ bool Gamemap::isValid(int x, int y, int dir) {
 		if (map[y + 1][x].valid == false) //check node
 			ret = true;
 	}
-	else if(dir == 8 && y != 0) { // if up is valid
+	else if (dir == 8 && y != 0) { // if up is valid
 		if (map[y - 1][x].valid == false) //check node
 			ret = true;
 	}
@@ -378,7 +380,7 @@ bool Gamemap::isValid(int x, int y, int dir) {
 }
 
 // converts the dir value into x adjustment
-int Gamemap::xFromDir(int dir){
+int Gamemap::xFromDir(int dir) {
 	if (dir == 1)
 		return 1;
 	else if (dir == 2)
@@ -414,7 +416,7 @@ int Gamemap::parentDir(int dir) {
 }
 
 // True if current room is spawn room
-bool Gamemap::ifSpawn(){
+bool Gamemap::ifSpawn() {
 	if (currXPos == spawnX && currYPos == spawnY) {
 		return true;
 	}
