@@ -43,6 +43,19 @@ Enemy::Enemy(std::string spriteData, double xPos, double yPos, int scale, int f,
 		this->maxSpeed = 50;
 		this->active = true;
 	}
+	// Chaser
+	else if (this->flag == 2)
+	{
+		this->xVel = 0.0;
+		this->yVel = 0.0;
+		this->accel = 5;
+		this->damage = 5;
+		this->canJump = false;
+
+		this->hp = 65;
+		this->maxSpeed = 15;
+		this->active = true;
+	}
 }
 
 Enemy::~Enemy() {
@@ -150,7 +163,7 @@ bool Enemy::getJump() {
 	return this->canJump;
 }
 
-void Enemy::update(int** tilemap, double delta_time, double playerX, double playerY)
+void Enemy::update(Tilemap* t, double delta_time, double playerX, double playerY)
 {
 	//get velocities
 	double xVel = getXVel();
@@ -181,7 +194,7 @@ void Enemy::update(int** tilemap, double delta_time, double playerX, double play
 		setXVel(xVel);
 		setYVel(yVel);
 
-		collide(tilemap, xVel, yVel);
+		collide(t->getTileMap(), xVel, yVel);
 	}
 	else if (this->flag == 0) //bossman
 	{
@@ -219,6 +232,236 @@ void Enemy::update(int** tilemap, double delta_time, double playerX, double play
 			}
 		}
 	}
+	// Chaser
+	else if (this->flag == 2)
+	{
+		if (!(this->hasBrain))
+		{
+			makeBrainway(t);
+			this->hasBrain = true;
+		}
+
+		if (this->getHP() > 25)
+		{
+			if (playerX + 7 < this->x)
+			{
+				xVel -= accel * delta_time;
+				setCurrFrame(0);
+			}
+			else if (playerX + 7 > this->x)
+			{
+				xVel += accel * delta_time;
+				setCurrFrame(1);
+			}
+		}
+		else
+		{
+			if (playerX + 7 < this->x)
+			{
+				xVel += accel * delta_time;
+				setCurrFrame(3);
+			}
+			else if (playerX + 7 > this->x)
+			{
+				xVel -= accel * delta_time;
+				setCurrFrame(2);
+			}
+		}
+
+		if (!canJump)
+			yVel += (accel * 2) * delta_time;
+
+		if (xVel > this->maxSpeed)
+			xVel = maxSpeed;
+		else if (xVel < -this->maxSpeed)
+			xVel = -maxSpeed;
+
+		if (yVel > this->maxSpeed)
+			yVel = maxSpeed;
+		else if (yVel < -this->maxSpeed)
+			yVel = -maxSpeed;
+
+		setXVel(xVel);
+		setYVel(yVel);
+
+		this->canJump = collide(t->getTileMap(), xVel, yVel);
+		double ePosY = getYPosition();
+		double ePosX = getXPosition();
+		int eHeight = getCurrFrame().getHeight();
+
+		int alignedX = ePosX / 16;
+		int alignedY = (ePosY + eHeight) / 16;
+
+		if (xVel > 0 && (brainway[alignedY][alignedX] == 5))
+		{
+			if (canJump)
+			{
+				this->canJump = false;
+				this->setYVel(this->getYVel() - ((this->getPhysics()->getJumpStrength()) * 0.010));
+			}
+		}
+		else if (xVel < 0 && (brainway[alignedY][alignedX] == 7))
+		{
+			if (canJump)
+			{
+				this->canJump = false;
+				this->setYVel(this->getYVel() - ((this->getPhysics()->getJumpStrength()) * 0.010));
+			}
+		}
+		else if (brainway[alignedY][alignedX] == 9)
+		{
+			if (canJump)
+			{
+				this->canJump = false;
+				this->setYVel(this->getYVel() - ((this->getPhysics()->getJumpStrength()) * 0.010));
+			}
+		}
+	}
+}
+
+void Enemy::makeBrainway(Tilemap* t)
+{
+	// Just like with our old tilemap implementation we must
+	// first assign some starting values
+	int xMax = t->getMaxWidth();
+	int yMax = t->getMaxHeight();
+	int** currentMap = t->getTileMap();
+
+	// We also need to initialize our tilemap
+	this->brainway = new int* [yMax];
+	for (int i = 0; i < yMax; i++)
+		this->brainway[i] = new int[xMax];
+
+	// Now we copy over the values from the passed
+	// tilemap so that we can work with it on our end
+	for (int i = 0; i < yMax; i++)
+	{
+		for (int j = 0; j < xMax; j++)
+		{
+			// Get input and 
+			// add to the array
+			// Note: we simplify the numbers we store
+			// in this tilemap to be only 0's 1's or 2's
+			if (currentMap[i][j] != 0 && currentMap[i][j] != 1 && currentMap[i][j] != 2)
+				this->brainway[i][j] = 0;
+			else
+			{
+				this->brainway[i][j] = currentMap[i][j];
+			}
+		}
+	}
+
+	// Declare our query variable
+	int query = -1;
+	// Now that we have our tilemap representation stored within an int array we can begin 
+	// to read it and parse where we need to create our nodes.
+	for (int i = 0; i < yMax; i++)
+	{
+		for (int j = 0; j < xMax; j++)
+		{
+			query = -1;
+			// First we check to see if we are at a piece of
+			// walkable terrain
+			if (this->brainway[i][j] == 1 || this->brainway[i][j] == 2)
+			{
+				query = checkTile(i, j, xMax);	// We pass our xMax to avoid testing out of bounds
+			}
+
+			// Next we evaluate the result of our query and generate a corresponding node
+			if (query == 1)
+				this->brainway[i - 1][j] = 5;
+			else if (query == 2)
+				this->brainway[i - 1][j] = 7;
+		}
+	}
+
+	// We lastly do a pass from the top down to place additional jumpnodes
+	// wherever there is a jumpnode above to compliment the design of our maps
+	for (int i = 0; i < yMax; i++)
+	{
+		for (int j = 0; j < xMax; j++)
+		{
+			if (this->brainway[i][j] == 5)
+			{
+				// Iterate downwards until we hit our first
+				// collidable, and place a jumpnode there
+				for (int y = i; y < yMax; y++)
+				{
+					if (this->brainway[y][j - 1] == 1 || this->brainway[y][j - 1] == 2)
+					{
+						this->brainway[y - 1][j - 1] = 9;
+						break;
+					}
+					else if (this->brainway[y][j - 1] == 5 || this->brainway[y][j - 1] == 7)
+					{
+						this->brainway[y][j - 1] = 9;
+						break;
+					}
+				}
+			}
+
+			if (this->brainway[i][j] == 7)
+			{
+				for (int y = i; y < yMax; y++)
+				{
+					if (this->brainway[y][j + 1] == 1 || this->brainway[y][j + 1] == 2)
+					{
+						this->brainway[y - 1][j + 1] = 9;
+					}
+					else if (this->brainway[y][j + 1] == 5 || this->brainway[y][j + 1] == 7)
+					{
+						this->brainway[y][j + 1] = 9;
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+int Enemy::checkTile(int y, int x, int xMax)
+{
+	// Our return types follow the following key:
+// -1 : Block above is solid, no room for a node
+//  0 : There are no key features on either side
+//  1 : There is a wall to the left
+//  2 : There is a wall to the right
+//  3 : There are walls on both sides
+
+// Before each one of our checks we need to ensure we remain within
+// our bounds, otherwise we will experience some issues
+	int result = 0;
+
+	// First check above
+	if (int(y - 1) < 0)
+		return -1;
+	else
+		if ((this->brainway[y - 1][x] == 1) || (this->brainway[y - 1][x] == 2))
+			return -1;
+
+	// Next check the left
+	if (!(int(x - 1) < 0))
+	{
+		// NOTE: we shouldn't have to catch
+		// going out of bounds above since we already checked
+		if (this->brainway[y][x - 1] == 0)
+			result = 1;
+	}
+
+	// Now check the right
+	// Note: we include additional checks based on the value of result to include more information in our result
+
+	if (!(int(x + 1) >= xMax))
+	{
+		// NOTE: we shouldn't have to catch
+		// going out of bounds above since we already checked
+		// Yes this is ugly
+		if (this->brainway[y][x + 1] == 0)
+			result = 2;
+
+	}
+	// Return our findings
+	return result;
 }
 
 bool Enemy::playerIsNear(double playerX, double playerY)
@@ -230,7 +473,7 @@ bool Enemy::playerIsNear(double playerX, double playerY)
 		return true;
 }
 
-void Enemy::collide(int** tilemap, double xVel, double yVel)
+bool Enemy::collide(int** tilemap, double xVel, double yVel)
 {
 	double ePosY = getYPosition();
 	double ePosX = getXPosition();
@@ -340,15 +583,21 @@ void Enemy::collide(int** tilemap, double xVel, double yVel)
 			}
 		}
 	}
-	if(xVel < 0 && yVel < 0)
-		setCurrFrame(0);
-	else if (xVel < 0 && yVel >= 0)
-		setCurrFrame(1);
-	else if (xVel >= 0 && yVel >= 0)
-		setCurrFrame(2);
-	else if (xVel >= 0 && yVel < 0)
-		setCurrFrame(3);
-	
+	if (this->flag == 1)
+	{
+		if (xVel < 0 && yVel < 0)
+			setCurrFrame(0);
+		else if (xVel < 0 && yVel >= 0)
+			setCurrFrame(1);
+		else if (xVel >= 0 && yVel >= 0)
+			setCurrFrame(2);
+		else if (xVel >= 0 && yVel < 0)
+			setCurrFrame(3);
+	}
+	else if (this->flag == 2)
+	{
+		return land;
+	}
 }
 
 void Enemy::takeDamage(double xVector, double yVector)

@@ -181,12 +181,12 @@ void Game::runGame() {
 	std::vector<Enemy*> enemies;
 	Enemy eye("data/eye.spr", 30, 30, 3, 1, &plp, gRenderer);
 	Enemy eye2("data/eye.spr", 100, 40, 3, 1, &plp, gRenderer);
-	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
+	Enemy chaser("data/chaser.spr", 500, 600, 2, 2, &plp, gRenderer);
 	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
 	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
 	enemies.push_back(&eye);
 	enemies.push_back(&eye2);
-	enemies.push_back(&eye3);
+	enemies.push_back(&chaser);
 	enemies.push_back(&eye4);
 	enemies.push_back(&eye5);
 
@@ -541,7 +541,7 @@ void Game::runGame() {
 			{
 				if (ce[i]->getFlag() == 0 && map->getType() != 3) continue;
 				if (ce[i]->getHP() <= 0) continue;
-				ce[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
+				ce[i]->update(currRoom, delta_time, player.getXPosition(), player.getYPosition());
 
 				if (!hit)
 				{

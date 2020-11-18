@@ -1,14 +1,14 @@
 #ifndef _TILEMAP_H_
 #define _TILEMAP_H_
 
-
+class Enemy;
 #include <string>
 #include <vector>
 #include "tile.h"
 #include "sprite.h"
 #include "background.h"
 #include "block.h"
-#include "enemies.h"
+
 
 // Tilemap object used to store relevant
 // flags pertinent to sprites drawn the screen
