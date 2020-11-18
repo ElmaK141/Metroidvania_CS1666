@@ -7,6 +7,7 @@
 #include "tilemap.h"
 #include "sprite.h"
 #include "background.h"
+#include "enemies.h"
 
 /* The Gamemap class is a wrapper object that keeps track of the entire world map
 * It does this by tracking and containing all of the tilemaps (rooms) that exist
@@ -19,7 +20,7 @@ class Gamemap
 {
 public:
 	// Public Constructors:
-	Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std::vector<Background*> bgs);
+	Gamemap(int length, int height, int type, std::vector<Tile*> tiles, std::vector<Background*> bgs, std::vector<Enemy*> enemies);
 	// Public Getters and Setters:	
 	void setCurrentPosition(int x, int y);		// update which room the player is in with manual coordinates
 	void updatePosition(int door);				// update which room the player is in relative to the door they went through
@@ -56,7 +57,7 @@ private:
 	
 	std::vector<Tile*> tiles;					// tiles we have for the tilemaps
 	std::vector<Background*> bgs;				// backgrounds we have for tilemaps
-
+	std::vector<Enemy*> enemies;
 												// Map dimensions
 	int mapLength;								// number of rooms (x)
 	int mapHeight;								// number of rooms (y)

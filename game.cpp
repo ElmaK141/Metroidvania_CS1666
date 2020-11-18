@@ -157,6 +157,25 @@ void Game::runGame() {
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
+
+
+	Physics plp(1565, 500, 1000, 250);
+
+	std::vector<Enemy*> enemies;
+	Enemy eye("data/eye.spr", 30, 30, 3, 1, &plp, gRenderer);
+	Enemy eye2("data/eye.spr", 100, 40, 3, 1, &plp, gRenderer);
+	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
+	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
+	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
+	enemies.push_back(&eye);
+	enemies.push_back(&eye2);
+	enemies.push_back(&eye3);
+	enemies.push_back(&eye4);
+	enemies.push_back(&eye5);
+	
+
+	std::vector<Enemy*> blankEnemies;
+
 	// allMaps is a Vector of all of our Gamemaps
 		// Main Room - 1x1 premade room. Type 0
 		// First Section - nxn proc gen map/rooms. Type 1 - generate for no powerups
@@ -164,10 +183,10 @@ void Game::runGame() {
 		// Boss Room - whatever ai wants - rn 1x1 premade using mainroom. Type 3
 	// allMaps lets us change which map we are in
 	std::vector<Gamemap*> allMaps;
-	allMaps.push_back(new Gamemap(1, 1, 0, tiles, backgrounds));
-	allMaps.push_back(new Gamemap(3, 3, 1, tiles, backgrounds));
-	allMaps.push_back(new Gamemap(3, 3, 2, tiles, backgrounds));
-	allMaps.push_back(new Gamemap(1, 1, 3, tiles, backgrounds));
+	allMaps.push_back(new Gamemap(1, 1, 0, tiles, backgrounds, blankEnemies));
+	allMaps.push_back(new Gamemap(3, 3, 1, tiles, backgrounds,enemies));
+	allMaps.push_back(new Gamemap(3, 3, 2, tiles, backgrounds,enemies));
+	allMaps.push_back(new Gamemap(1, 1, 3, tiles, backgrounds,blankEnemies));
 	
 	// Variables for tracking our current MAP and ROOM (and tileArray)
 	// map will be the pointer to our current map
@@ -178,7 +197,6 @@ void Game::runGame() {
 
 	// Define Physics object and Flip flag
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
-	Physics plp(1565, 500, 1000, 250);
 
 	//Define player Position
 	double x_pos = SCREEN_WIDTH / 2.0;
@@ -235,24 +253,15 @@ void Game::runGame() {
 	// Define player entity
 	Entity player("data/player.spr", x_pos, y_pos, 3, 0, &plp, gRenderer);		//0 is flag for player entity
 
-	// Define enemies
-	std::vector<Enemy*> enemies;
-	Enemy eye("data/eye.spr", 30, 30, 3, 1, &plp, gRenderer);
-	Enemy eye2("data/eye.spr", 100, 40, 3, 1, &plp, gRenderer);
-	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
-	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
-	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
-	enemies.push_back(&eye);
-	enemies.push_back(&eye2);
-	enemies.push_back(&eye3);
-	enemies.push_back(&eye4);
-	enemies.push_back(&eye5);
+
 	int hitTick = 0;
 	bool hit = false;
 
 	//"Load" in the game by pausing to avoid buffering in the gappling hook input
 	SDL_Delay(150);
 	
+	std::vector<Enemy*> ce;
+
 	//Run the Game
 	while (running && gameState == 1) {
 		//Delta time calculation
@@ -295,6 +304,7 @@ void Game::runGame() {
 			// update the map, current room, tilearray
 			map = allMaps[newMap];
 			currRoom = map->getCurrentRoom();
+			ce = currRoom->getEnemies();
 			tileArray = currRoom->getTileMap();
 
 			// now with updated map, clear our teleporters/powerups
@@ -395,16 +405,16 @@ void Game::runGame() {
 				}
 				else
 				{
-					for (int i = 0; i < enemies.size(); i++)
+					for (int i = 0; i < ce.size(); i++)
 					{
-						if (checkHitEnemy(&player, enemies[i]))
+						if (checkHitEnemy(&player, ce[i]))
 						{
 							int randomNumber = rand() % 100;
 							int ignoreChance = 40;
 
 							if (randomNumber > ignoreChance)
 							{
-								enemies[i]->takeDamage(player.getPVelX() / projectileVelocity, player.getPVelY() / projectileVelocity);
+								ce[i]->takeDamage(player.getPVelX() / projectileVelocity, player.getPVelY() / projectileVelocity);
 								player.setShot(true);
 								break;
 
@@ -450,13 +460,13 @@ void Game::runGame() {
 
 		// enemies
 		if (!map->ifSpawn()) {
-			for (int i = 0; i < enemies.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
+			for (int i = 0; i < ce.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
 			{
-				if (enemies[i]->getHP() <= 0) continue;
-				enemies[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
+				if (ce[i]->getHP() <= 0) continue;
+				ce[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
 				if (!hit)
 				{
-					hit = checkHitPlayer(&player, enemies[i]);
+					hit = checkHitPlayer(&player, ce[i]);
 					if (hit)
 						hitTick = SDL_GetTicks();
 				}
@@ -501,6 +511,7 @@ void Game::runGame() {
 			// updates our position in map to the new room, update our Tilemap pointer and tileArray
 			map->updatePosition(newRoom);
 			currRoom = map->getCurrentRoom();
+			ce = currRoom->getEnemies();
 			tileArray = currRoom->getTileMap();
 
 			// clear our tps/powerups if we had any
@@ -614,10 +625,10 @@ void Game::runGame() {
 
 		// Draw Enemies
 		if (!map->ifSpawn()) {
-			for (int i = 0; i < enemies.size(); i++)
+			for (int i = 0; i < ce.size(); i++)
 			{
-				if (enemies[i]->getHP() > 0) //only draw live enemies
-					enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
+				if (ce[i]->getHP() > 0) //only draw live enemies
+					ce[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
 			}
 		}
 

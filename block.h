@@ -1,6 +1,6 @@
 #ifndef _BLOCK_H_
 #define _BLOCK_H_
-#endif
+
 
 class Block
 {
@@ -24,9 +24,11 @@ class Block
 		bool isBelow();
 		int getXcon();
 		int getYcon();
+		int getPlatLocation();
 		bool isMiddle();
+		bool isDoor();
 		bool hasPlatform();
-		void addPlatforms();
+		void addPlatforms(int pLocation);
 		void placePlatforms(int x, int len);
 	private:
 		// Private Functions:
@@ -96,4 +98,9 @@ class Block
 
 		bool platform;
 		bool middle;
+
+		int platformLocation;
+
 };
+
+#endif
