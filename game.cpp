@@ -424,10 +424,10 @@ void Game::runGame() {
 					{
 						for (int i = 0; i < ce.size(); i++)
 						{
-							if (checkHitEnemy(deltaX, deltaY, ce[i]))
+							if (ce[i]->getHP() > 0 && checkHitEnemy(deltaX, deltaY, ce[i]))
 							{
 								int randomNumber = rand() % 100;
-								int ignoreChance = 30;
+								int ignoreChance = 10;
 
 								if (randomNumber > ignoreChance)
 								{
