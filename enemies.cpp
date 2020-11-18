@@ -245,11 +245,15 @@ void Enemy::update(Tilemap* t, double delta_time, double playerX, double playerY
 		{
 			if (playerX + 7 < this->x)
 			{
+				if (xVel > 0)
+					xVel = 1.5;
 				xVel -= accel * delta_time;
 				setCurrFrame(0);
 			}
 			else if (playerX + 7 > this->x)
 			{
+				if (xVel < 0)
+					xVel = -1.5;
 				xVel += accel * delta_time;
 				setCurrFrame(1);
 			}
@@ -258,11 +262,15 @@ void Enemy::update(Tilemap* t, double delta_time, double playerX, double playerY
 		{
 			if (playerX + 7 < this->x)
 			{
+				if (xVel < 0)
+					xVel = -1.5;
 				xVel += accel * delta_time;
 				setCurrFrame(3);
 			}
 			else if (playerX + 7 > this->x)
 			{
+				if (xVel > 0)
+					xVel = 1.5;
 				xVel -= accel * delta_time;
 				setCurrFrame(2);
 			}
