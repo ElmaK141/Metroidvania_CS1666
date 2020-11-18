@@ -42,7 +42,7 @@ private:
 	int xFromDir(int dir);						// X adjustment from Dir
 	int yFromDir(int dir);						// Y adjustment from Dir
 	int parentDir(int dir);						// Where the room has a door based on the room that created it
-	
+
 	// Private Variables:
 	struct Node {								// Node is a wrapper for all of our Tilemaps
 		bool valid;								// Has this node been created
@@ -54,11 +54,11 @@ private:
 	};
 
 	Node** map;									// 2D array of Nodes makes up the map (stores tilemaps and door info)
-	
+
 	std::vector<Tile*> tiles;					// tiles we have for the tilemaps
 	std::vector<Background*> bgs;				// backgrounds we have for tilemaps
 	std::vector<Enemy*> enemies;
-												// Map dimensions
+	// Map dimensions
 	int mapLength;								// number of rooms (x)
 	int mapHeight;								// number of rooms (y)
 
@@ -72,4 +72,3 @@ private:
 	int spawnY;
 	bool pAlready;
 };
-
