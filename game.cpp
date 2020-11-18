@@ -464,7 +464,7 @@ void Game::runGame() {
 		{
 			if (!bossSpawned)
 			{
-				ce.push_back(new Enemy("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer));
+				ce.push_back(new Enemy("data/boss.spr", 2420, 380, 3, 0, &plp, gRenderer));
 				for (int k = 0; k < ce.size(); k++)
 				{
 					if (ce[k]->getFlag() == 0)
@@ -478,7 +478,7 @@ void Game::runGame() {
 
 			if (eyeSpawnCD <= 0)
 			{
-				ce.push_back(new Enemy("data/eye.spr", 2520, 400, 3, 1, &plp, gRenderer));
+				ce.push_back(new Enemy("data/eye.spr", 2460, 420, 3, 1, &plp, gRenderer));
 				
 				ce[ce.size() - 1]->setXVel(-20);
 				ce[ce.size() - 1]->setYVel(-30);
