@@ -381,25 +381,20 @@ void Game::runGame() {
 
 		if (!player.getShot())
 		{/*If a shot has been fired EMIL*/
-			//the distance actual traveled
 			double xNorm = player.getPVelX() / projectileVelocity;
 			double yNorm = player.getPVelY() / projectileVelocity;
-			//scroll_offset_x
-			
-
 
 			for (int j = 0; j < projectileVelocity; j++)
 			{/*proj velocity is the hyp length so we go for each pixel on it*/
 				double deltaX = scroll_offset_x + player.getPX() + xNorm * j;
 				double deltaY = scroll_offset_y + player.getPY() + yNorm * j;
-				
 
-				//scroll_offset_x
-				if (deltaX >0 && deltaX < SCREEN_WIDTH + scroll_offset_x && deltaY>0 && deltaY < SCREEN_HEIGHT + scroll_offset_y)
+
+				if (deltaX > 0 && deltaX < SCREEN_WIDTH + scroll_offset_x && deltaY>0 && deltaY < SCREEN_HEIGHT + scroll_offset_y)
 				{/*inside screen*/
 					int tileMapX = (int)(deltaX / 16);
 					int tileMapY = (int)(deltaY / 16);
-					
+
 
 					bool checkFlag0 = tileArray[tileMapY][tileMapX] == 0; // Air
 					bool checkFlag3 = tileArray[tileMapY][tileMapX] == 3; // Spawn
@@ -412,7 +407,9 @@ void Game::runGame() {
 						break;
 					}
 					else
-          {
+					{
+						for (int i=0; i<ce.size(); i++)
+						{
 							if (checkHitEnemy(deltaX, deltaY, ce[i]))
 							{
 								int randomNumber = rand() % 100;
