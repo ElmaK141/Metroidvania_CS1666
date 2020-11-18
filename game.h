@@ -21,7 +21,7 @@ class Game {
 		//Game(const Game &obj);
 		~Game();
 		void gameLoop();
-
+		void displayCredits();
 		bool detectCollision(Entity &ent, int** t, double x_vel, double y_vel, int roomHeight);
 		int checkDoor(int doors, Entity& ent, Tilemap* currRoom);
 	private:
@@ -32,10 +32,20 @@ class Game {
 		int maxHP;
 		int playerHP;
 		bool running;
-		std::vector<std::string> creditFiles = { "assets/credit_pics/AdamBuchinskyCredits.png","credit_pics/GiovanniMeiserbeegyosh.png","credit_pics/juliancredits.png","assets/credit_pics/NoahVienneau.jpg","assets/credit_pics/emk113_credit_image.png"
+		std::vector<std::string> creditFiles = {
+			"assets/credit_pics/AdamBuchinskyCredits.png",
+			"assets/credit_pics/GiovanniMeiserbeegyosh.png",
+			"assets/credit_pics/JoelValentinoCredits.png",
+			"assets/credit_pics/JordanBendercredits.png",
+			//"assets/credit_pics/KristoferE.png",
+			"assets/credit_pics/NoahVienneau.jpg",
+			"assets/credit_pics/emk113credits.png",
+			"assets/credit_pics/hicksCredits.png",
+			"assets/credit_pics/juliancredits.png",
+		};
 
-													,"assets/credit_pics/hicksCredits.png","assets/credit_pics/JoelValentinoCredits.png","assets/credit_pics/JordanBendercredits.png", "assets/credit_pics/KristoferE.png"};
 		void drawHP();
+		void drawBossHP(int health);
 		void update();
 		void render();
 		SDL_Texture* rollCredits();
@@ -48,8 +58,8 @@ class Game {
 		int getUserInput(Entity* player, std::vector<Entity*> tps);		//Handle input from the user
 		void handleCollision(Entity* player, Tilemap* t);	//Handles collision events of the player
 		bool checkHitPlayer(Entity* player, Enemy* enemy);
-		bool checkHitEnemy(Entity* player, Enemy* enemy);
+		bool checkHitEnemy(double x, double y, Enemy* enemy);
 		bool checkPlayerCollision(Entity* player, Entity* ent);
-		void generateMap(Tilemap** map, int mapX, int mapY, std::vector<Tile*> tiles, Background* bg);
+		void questMenu();	//Brings up the quest menu
 };
 #endif

@@ -16,8 +16,11 @@ Enemy::Enemy(std::string spriteData, double xPos, double yPos, int scale, int f,
 	this->physics = phys;
 	this->accel = 0;
 	this->damage = 0;
+	this->state = 0;
+	this->cooldown = 0;
+	this->alternate = 0;
 
-	//Player
+	//Eye
 	if (this->flag == 1) {
 		//Initialize Velocity
 		this->xVel = 0.0;
@@ -26,6 +29,17 @@ Enemy::Enemy(std::string spriteData, double xPos, double yPos, int scale, int f,
 		this->damage = 7;
 
 		this->hp = 35;
+		this->maxSpeed = 50;
+		this->active = true;
+	}
+	else if (this->flag == 0) { //bossman
+		//Initialize Velocity
+		this->xVel = 0.0;
+		this->yVel = 0.0;
+		this->accel = 5;
+		this->damage = 12;
+
+		this->hp = 250;
 		this->maxSpeed = 50;
 		this->active = true;
 	}
@@ -67,6 +81,26 @@ void Enemy::movePosition(double xf, double yf) {
 void Enemy::setPosition(double xPos, double yPos) {
 	this->x = xPos;
 	this->y = yPos;
+}
+
+int Enemy::getState()
+{
+	return this->state;
+}
+
+int Enemy::getCooldown()
+{
+	return this->cooldown;
+}
+
+void Enemy::setState(int s)
+{
+	this->state = s;
+}
+
+void Enemy::setCooldown(int c)
+{
+	this->cooldown = c;
 }
 
 void Enemy::createSprites() {
@@ -149,6 +183,51 @@ void Enemy::update(int** tilemap, double delta_time, double playerX, double play
 
 		collide(tilemap, xVel, yVel);
 	}
+	else if (this->flag == 0) //bossman
+	{
+		if (this->alternate < 2)
+		{
+			setCurrFrame(0);
+			this->alternate++;
+		}
+		else if (alternate < 4)
+		{
+			setCurrFrame(1);
+			this->alternate++;
+		}
+		else
+		{
+			this->alternate = 0;
+		}
+		if (getCooldown() > 0)
+			setCooldown(fmax(0, getCooldown() - delta_time));
+		if (getState() == 3 && getCooldown() <= 200)
+		{
+			setPosition(getXPosition() + 96, getYPosition());
+			this->state = 0;
+		}
+		if ((getCooldown() == 0 && playerIsNear(playerX, playerY)) || getCooldown() > 200)
+		{
+			this->alternate = 0;
+			this->state = 3;
+			
+			setCurrFrame(3);
+			if (getCooldown() == 0)
+			{
+				this->setPosition(getXPosition() - 96, getYPosition());
+				setCooldown(250);
+			}
+		}
+	}
+}
+
+bool Enemy::playerIsNear(double playerX, double playerY)
+{
+	if (getXPosition() < playerX + 140 &&
+		getXPosition() + getCurrFrame().getWidth() > playerX &&
+		getYPosition() < playerY - 10 &&
+		getYPosition() + getCurrFrame().getHeight() > playerY)
+		return true;
 }
 
 void Enemy::collide(int** tilemap, double xVel, double yVel)
@@ -156,7 +235,7 @@ void Enemy::collide(int** tilemap, double xVel, double yVel)
 	double ePosY = getYPosition();
 	double ePosX = getXPosition();
 	int eHeight = getCurrFrame().getHeight();
-	int eWidth = getCurrFrame().getWidth();		//get player height, width, & positions
+	int eWidth = getCurrFrame().getWidth();		//get enemy height, width, & positions
 
 	int yBlockD = (int)((ePosY + eHeight) / 16) + 1;
 	int yBlockU = (int)(ePosY / 16) - 1;
