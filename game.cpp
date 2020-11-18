@@ -98,6 +98,8 @@ Game::~Game()
 
 void Game::gameLoop()
 {
+	displayCredits();
+
 	//Load into the start screen of the game
 	loadStartScreen();
 
@@ -1397,6 +1399,19 @@ void Game::update()
 
 void Game::render()
 {
+}
+
+void Game::displayCredits()
+{
+	//Roll credits
+	for (int credit_image = 0; credit_image < creditFiles.size(); credit_image++) {
+		SDL_RenderClear(gRenderer);
+		SDL_Texture* temp = rollCredits();
+		SDL_RenderCopy(gRenderer, temp, NULL, NULL);
+		SDL_RenderPresent(gRenderer);
+		SDL_Delay(1000);
+	}
+
 }
 
 SDL_Texture* Game::rollCredits()
