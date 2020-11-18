@@ -102,7 +102,7 @@ void Gamemap::generateGamemap() {
 	// then when we generate the gamemap, we will choose how many rooms in the map will be generated (one of these rooms is the spawn room)
 	int numRooms = rand() % ((mapLength * mapHeight) - (minRooms - 1)) + minRooms;
 	int healthRoom = rand() % numRooms-1;
-
+	
 
 	// create the vector that we will use as our queue
 	std::queue<Node*> q;
@@ -124,8 +124,6 @@ void Gamemap::generateGamemap() {
 		// get the current node, and remove it from the queue
 		Node* curr = q.front();
 		q.pop();
-
-		//std::cout << "Curr at pop " << curr->t << " " << curr << std::endl;
 
 		// If this is the Spawn room, we are predefined for our children nodes
 		if (curr->x == spawnX && curr->y == spawnY) {

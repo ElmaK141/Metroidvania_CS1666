@@ -26,7 +26,7 @@ Enemy::Enemy(std::string spriteData, double xPos, double yPos, int scale, int f,
 		this->xVel = 0.0;
 		this->yVel = 0.0;
 		this->accel = 5;
-		this->damage = 7;
+		this->damage = 6;
 
 		this->hp = 35;
 		this->maxSpeed = 50;
@@ -37,9 +37,9 @@ Enemy::Enemy(std::string spriteData, double xPos, double yPos, int scale, int f,
 		this->xVel = 0.0;
 		this->yVel = 0.0;
 		this->accel = 5;
-		this->damage = 12;
+		this->damage = 23;
 
-		this->hp = 250;
+		this->hp = 420;
 		this->maxSpeed = 50;
 		this->active = true;
 	}
@@ -356,5 +356,5 @@ void Enemy::takeDamage(double xVector, double yVector)
 	int impactForce = 10;
 	setXVel(xVel + xVector * impactForce);
 	setYVel(yVel + yVector * impactForce);
-	hp -= 25;
+	hp -= 10;
 }
