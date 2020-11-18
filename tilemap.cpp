@@ -211,6 +211,24 @@ void Tilemap::generateTilemap() {
 			
 		}
 	}
+
+	//Check for side doors
+	if (this->room > 0) {
+		for (int i = 0; i < h; i++) {
+			for (int j = 0; j < w; j++) {
+				if (i == h - 1 && j == 0 && (this->room >= 2 && this->room < 4)) {	//door on the left
+					blockMap[i][j]->setDoor();
+					blockMap[i - 1][j]->setDoor();
+					this->room -= 2;
+				}
+				if (i == h - 1 && j == w - 1 && (this->room < 2 && this->room > 0)) {	//door on the right
+					blockMap[i][j]->setDoor();
+					blockMap[i - 1][j]->setDoor();
+					this->room -= 1;
+				}
+			}
+		}
+	}
 	
 
 	// First Pass: Generate each block in terms of the tiles it needs by defualt -> from bottom left to top right
