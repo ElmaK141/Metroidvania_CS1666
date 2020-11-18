@@ -59,6 +59,6 @@ class Game {
 		bool checkHitPlayer(Entity* player, Enemy* enemy);
 		bool checkHitEnemy(double x, double y, Enemy* enemy);
 		bool checkPlayerCollision(Entity* player, Entity* ent);
-		void generateMap(Tilemap** map, int mapX, int mapY, std::vector<Tile*> tiles, Background* bg);
+		void questMenu();	//Brings up the quest menu
 };
 #endif
