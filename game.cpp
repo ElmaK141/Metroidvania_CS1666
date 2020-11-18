@@ -51,8 +51,16 @@ int scroll_offset_x;
 int scroll_offset_y;
 
 //Game State Tracker
-//0 = main menu, 1 = game, 2 = pause menu, 3 = debug
+//0 = main menu, 1 = game, 2 = pause menu, 3 = debug, 4 = quest menu, 5 = map
 int gameState;
+
+
+//Progress Indicators
+int killedBoss = 0;
+int gotDoubleJump = 0;
+int gotGrapple = 0;
+int gotHealth1 = 0;
+int gotHealth2 = 0;
 
 //Constructor
 Game::Game(int width, int height)
@@ -421,14 +429,21 @@ void Game::runGame() {
 			if (checkPlayerCollision(&player, p) && p->getFrameIndex() != 3) { // if the player collides with the power up, enable ability, disable powerup
 				if (p->getFlag() == 6){ // Double Jump
 					player.setDouble();
+					gotDoubleJump = 1;
 				}
 				else if (p->getFlag() == 7) { // Grapple
 					player.setGrapple();
+					gotGrapple = 1;
 				}
 				else { // Health Up
 					player.increaseHealth();
 					maxHP += 10;
 					playerHP = maxHP;
+
+					if (gotHealth1 == 0)
+						gotHealth1 = 1;
+					else
+						gotHealth2 = 1;
 				}
 
 				if (p->getFrameIndex() != 3) { //move down sprite so that when disabled it is in correct place
@@ -650,8 +665,16 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		}
 	}
 
+
+	if (keystate[SDL_SCANCODE_J]) {
+		//std::cout << "J PRESSED" << std::endl;
+		if (!player->getPhysics()->inAir())
+			questMenu();
+	}
+	
+
 	if (keystate[SDL_SCANCODE_E]) {
-		//std::cout << "E PRESSED" << std::endl;
+		std::cout << "E PRESSED" << std::endl;
 		for (auto&& tp : tps) { // for each teleporter in the scene
 			if (checkPlayerCollision(player, tp)) { // check if the player is touching it
 				//std::cout << "Interacted with TP type " << tp->getFlag() << std::endl;
@@ -1074,6 +1097,93 @@ void Game::pauseMenu(int prevGameState)
 
 }
 
+//Pauses Main game loop and brings up Pause menu
+void Game::questMenu()
+{
+	//Mouse Coordinate Variables
+	int mouseX = 0, mouseY = 0;
+
+	// gamestate is in quest menu (4)
+	gameState = 4;
+
+	//Quest menu sprites
+	Sprite questLabel(0, 0, 256, 75, 1, "assets/quest_menu/quests.png", gRenderer);
+	Sprite questList(0, 0, 352, 256, 1, "assets/quest_menu/questListTest.png", gRenderer);
+	Button resumeGame(0, 0, 220, 70, 1, "assets/quest_menu/resume.png", gRenderer);
+
+	SDL_Rect questBox = { SCREEN_WIDTH / 2 - 200, 190, 400, 500 };
+
+	//Check off objectives
+	SDL_Rect doneKaren = { SCREEN_WIDTH / 2 - 131, 355, 160, 2 };
+	SDL_Rect doneDoubleJump = { SCREEN_WIDTH / 2 - 120, 398, 235, 2 };
+	SDL_Rect doneGrapple = { SCREEN_WIDTH / 2 - 120, 429, 266, 2 };
+	SDL_Rect doneHealth1 = { SCREEN_WIDTH / 2 - 133, 510, 304, 2 };
+	SDL_Rect doneHealth2 = { SCREEN_WIDTH / 2 - 133, 542, 304, 2 };
+
+	
+
+	//Quest menu loop
+	while (running) {
+
+		//Poll to see if we close the game at any time
+		SDL_PollEvent(&e);
+		if (e.type == SDL_QUIT) {
+			running = false;
+			return;
+		}
+		else if (e.type == SDL_MOUSEBUTTONDOWN) {
+			if (e.button.button == SDL_BUTTON_LEFT) { //if they click on a button
+				//Get mouse positon
+				mouseX = e.button.x;
+				mouseY = e.button.y;
+
+				//Resume Game
+				if ((mouseX > resumeGame.getSprite()->getX()) && (mouseX < resumeGame.getSprite()->getX() + resumeGame.getSprite()->getWidth()) && (mouseY > resumeGame.getSprite()->getY()) && (mouseY < resumeGame.getSprite()->getY() + resumeGame.getSprite()->getHeight())) {
+					gameState = 1;
+					break;
+				}
+			}
+		}
+
+		//SDL_RenderClear(gRenderer);
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);	//black background
+		SDL_RenderFillRect(gRenderer, &questBox);
+
+		//Draw to screen
+		questLabel.draw(gRenderer, SCREEN_WIDTH / 2 - 126, 200);
+		resumeGame.getSprite()->draw(gRenderer, SCREEN_WIDTH / 2 - 110, 600);
+
+		questList.draw(gRenderer, SCREEN_WIDTH / 2 - 175, 300);
+		
+		//Check off objectives
+		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0x00);
+		if (killedBoss != 0) {
+			SDL_RenderFillRect(gRenderer, &doneKaren);
+		}
+		
+		if (gotDoubleJump != 0) {
+			SDL_RenderFillRect(gRenderer, &doneDoubleJump);
+		}
+		
+		if (gotGrapple != 0) {
+			SDL_RenderFillRect(gRenderer, &doneGrapple);
+		}
+		
+		if (gotHealth1 != 0) {
+			SDL_RenderFillRect(gRenderer, &doneHealth1);
+		}
+		
+		if (gotHealth2 != 0) {
+			SDL_RenderFillRect(gRenderer, &doneHealth2);
+		}
+		
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);
+
+		SDL_RenderPresent(gRenderer);
+	}
+
+}
+
 // Detect collision of Entity with Gameworld (edge of screen)
 bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_vel, int roomHeight)
 {
@@ -1098,7 +1208,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 				for (int range = pPosY; range <= ent.getYPosition(); range += 16) //for EVERY block that is passed during movement
 				{
 					yBlockD = (int)(((range + pHeight) / 16)) + 1;
-					if (range + pHeight + y_vel > yBlockD * 16 - 1 && (tilemap[yBlockD][xBlockR - xAdjust] != 0 && tilemap[yBlockD][xBlockR - xAdjust] != 3 && tilemap[yBlockD][xBlockR - xAdjust] != 8 && tilemap[yBlockD][xBlockR - xAdjust] != 9))
+					if (yBlockD <= roomHeight-1 && range + pHeight + y_vel > yBlockD * 16 - 1 && (tilemap[yBlockD][xBlockR - xAdjust] != 0 && tilemap[yBlockD][xBlockR - xAdjust] != 3 && tilemap[yBlockD][xBlockR - xAdjust] != 8 && tilemap[yBlockD][xBlockR - xAdjust] != 9))
 					{	//set position to above the block
 						ent.setPosition(ent.getXPosition(), yBlockD * 16 - pHeight - 1);
 						pPosY = ent.getYPosition();
@@ -1154,7 +1264,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	
       //hit blocks to your right accounting for player height
-			if (yBlockD <= roomHeight && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3 && tilemap[yBlockD - yAdjust][xBlockR] != 8 && tilemap[yBlockD - yAdjust][xBlockR] != 9))
+			if (yBlockD <= roomHeight && yBlockU >= 0 && pPosX + pWidth + x_vel >= xBlockR * 16 - 1 && (tilemap[yBlockD - yAdjust][xBlockR] != 0 && tilemap[yBlockD - yAdjust][xBlockR] != 3 && tilemap[yBlockD - yAdjust][xBlockR] != 8 && tilemap[yBlockD - yAdjust][xBlockR] != 9))
 			{
 				ent.setPosition(xBlockR * 16 - pWidth - 1, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -1167,7 +1277,7 @@ bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_ve
 		for (int yAdjust = 1; yAdjust < yBlockD - yBlockU; yAdjust++)
 		{	
       //hit blocks to your left accounting for player height
-			if (yBlockD <= roomHeight && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3 && tilemap[yBlockD - yAdjust][xBlockL] != 8 && tilemap[yBlockD - yAdjust][xBlockL] != 9))
+			if (yBlockD <= roomHeight && yBlockU >= 0 && pPosX + x_vel <= xBlockL * 16 + 16 && (tilemap[yBlockD - yAdjust][xBlockL] != 0 && tilemap[yBlockD - yAdjust][xBlockL] != 3 && tilemap[yBlockD - yAdjust][xBlockL] != 8 && tilemap[yBlockD - yAdjust][xBlockL] != 9))
 			{
 				ent.setPosition(xBlockL * 16 + 16, ent.getYPosition());
 				pPosX = ent.getXPosition();
@@ -1287,61 +1397,6 @@ void Game::drawHP()
 
 	//Reset Render color to white
 	SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-}
-
-void Game::generateMap(Tilemap** map, int mapX, int mapY, std::vector<Tile*> tiles, Background* bg) {
-	srand(time(NULL));
-	//Decide what size rooms to generate/initialize the tilemaps
-	for (int i = 0; i < mapY; i++) {
-		for (int j = 0; j < mapX; j++) {
-			int roomSize = rand() % 3;		//For now, equal probability for small, medium, or large room
-			
-			//std::cout << roomSize << std::endl;
-
-			//TODO: Make rooms with different proportions.
-
-			switch (roomSize) {
-				case 0:		//small room
-					map[i][j] = *(new Tilemap(90, 45, 0, tiles, bg));
-					break;
-				case 1:		//medium room
-					map[i][j] = *(new Tilemap(210, 45, 0, tiles, bg));
-					break;
-				case 2:		//large room
-					map[i][j] = *(new Tilemap(420, 45, 0, tiles, bg));
-					break;
-;			}
-		}
-	}
-
-	//Create starting and ending rooms
-	srand(time(NULL));
-	int start = rand() % mapX;
-	int end = rand() % mapX;
-	//map[0][start].setStart();
-	//map[mapY - 1][end].setEnd();
-
-	/*for (int i = 0; i < mapY; i++) {
-		for (int j = 0; j < mapX; j++) {
-			if (map[i][j].isStart())
-				std::cout << "1 ";
-			else if (map[i][j].isEnd())
-				std::cout << "2 ";
-			else
-				std::cout << "0 ";
-		}
-		std::cout << std::endl;
-	}*/
-
-	//TODO: Generate a path from the start to the end
-	/*bool path = false;
-	while (!path) {
-		for (int i = 0; i < mapY; i++) {
-			for (int j = 0; j < mapX; j++) {
-
-			}
-		}
-	}*/
 }
 
 void Game::update()

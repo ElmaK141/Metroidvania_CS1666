@@ -177,9 +177,10 @@ void Tilemap::generateTilemap() {
 				blockMap[i-1][j]->setDoor();
 				this->room -= 2;
 			}
-			if (i == h - 1 && j == w - 1 && this->room < 2) {	//door on the right
+			if (i == h - 1 && j == w - 1 && (this->room < 2 && this->room > 0)) {	//door on the right
 				blockMap[i][j]->setDoor();
 				blockMap[i - 1][j]->setDoor();
+				this->room -= 1;
 			}
 			
 		}
