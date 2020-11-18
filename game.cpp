@@ -13,7 +13,7 @@
 
 // Double jump to fullfill requirement
 bool doneSecond = false; // only allow 1 extra jump
-double projectileVelocity = 50;
+double projectileVelocity = 25;
 int projectileSize = 5;
 
 //size of the Window/Screen and thus the size of the Camera
@@ -106,6 +106,8 @@ Game::~Game()
 
 void Game::gameLoop()
 {
+	displayCredits();
+
 	//Load into the start screen of the game
 	loadStartScreen();
 
@@ -165,6 +167,25 @@ void Game::runGame() {
 	tiles.push_back(&groundTile);
 	tiles.push_back(&platformTile);
 
+
+
+	Physics plp(1565, 500, 1000, 250);
+
+	std::vector<Enemy*> enemies;
+	Enemy eye("data/eye.spr", 30, 30, 3, 1, &plp, gRenderer);
+	Enemy eye2("data/eye.spr", 100, 40, 3, 1, &plp, gRenderer);
+	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
+	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
+	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
+	enemies.push_back(&eye);
+	enemies.push_back(&eye2);
+	enemies.push_back(&eye3);
+	enemies.push_back(&eye4);
+	enemies.push_back(&eye5);
+	
+
+	std::vector<Enemy*> blankEnemies;
+
 	// allMaps is a Vector of all of our Gamemaps
 		// Main Room - 1x1 premade room. Type 0
 		// First Section - nxn proc gen map/rooms. Type 1 - generate for no powerups
@@ -172,10 +193,10 @@ void Game::runGame() {
 		// Boss Room - whatever ai wants - rn 1x1 premade using mainroom. Type 3
 	// allMaps lets us change which map we are in
 	std::vector<Gamemap*> allMaps;
-	allMaps.push_back(new Gamemap(1, 1, 0, tiles, backgrounds));
-	allMaps.push_back(new Gamemap(3, 3, 1, tiles, backgrounds));
-	allMaps.push_back(new Gamemap(3, 3, 2, tiles, backgrounds));
-	allMaps.push_back(new Gamemap(1, 1, 3, tiles, backgrounds));
+	allMaps.push_back(new Gamemap(1, 1, 0, tiles, backgrounds, blankEnemies));
+	allMaps.push_back(new Gamemap(3, 3, 1, tiles, backgrounds,enemies));
+	allMaps.push_back(new Gamemap(3, 3, 2, tiles, backgrounds,enemies));
+	allMaps.push_back(new Gamemap(1, 1, 3, tiles, backgrounds,blankEnemies));
 	
 	// Variables for tracking our current MAP and ROOM (and tileArray)
 	// map will be the pointer to our current map
@@ -186,7 +207,6 @@ void Game::runGame() {
 
 	// Define Physics object and Flip flag
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
-	Physics plp(1500, 500, 1000, 250);
 
 	//Define player Position
 	double x_pos = SCREEN_WIDTH / 2.0;
@@ -243,24 +263,15 @@ void Game::runGame() {
 	// Define player entity
 	Entity player("data/player.spr", x_pos, y_pos, 3, 0, &plp, gRenderer);		//0 is flag for player entity
 
-	// Define enemies
-	std::vector<Enemy*> enemies;
-	Enemy eye("data/eye.spr", 30, 30, 3, 1, &plp, gRenderer);
-	Enemy eye2("data/eye.spr", 100, 40, 3, 1, &plp, gRenderer);
-	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
-	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
-	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
-	enemies.push_back(&eye);
-	enemies.push_back(&eye2);
-	//enemies.push_back(&eye3);
-	//enemies.push_back(&eye4);
-	//enemies.push_back(&eye5);
+
 	int hitTick = 0;
 	bool hit = false;
 
 	//"Load" in the game by pausing to avoid buffering in the gappling hook input
 	SDL_Delay(150);
 	
+	std::vector<Enemy*> ce;
+
 	//Run the Game
 	while (running && gameState == 1) {
 		//Delta time calculation
@@ -303,6 +314,7 @@ void Game::runGame() {
 			// update the map, current room, tilearray
 			map = allMaps[newMap];
 			currRoom = map->getCurrentRoom();
+			ce = currRoom->getEnemies();
 			tileArray = currRoom->getTileMap();
 
 			// now with updated map, clear our teleporters/powerups
@@ -379,44 +391,63 @@ void Game::runGame() {
 
 		if (!player.getShot())
 		{/*If a shot has been fired EMIL*/
-			double posX = player.getPX() + player.getPVelX();
-			double posY = player.getPY() + player.getPVelY();
-			
-			if (posX > 0 && posX < currRoom->getMaxWidth() * 16 && posY > 0 && posY < currRoom->getMaxHeight() * 16)
-			{
-				player.setPX(posX);
-				player.setPY(posY);
+			double xNorm = player.getPVelX() / projectileVelocity;
+			double yNorm = player.getPVelY() / projectileVelocity;
 
-//				player.getCurrFrame().draw(gRenderer,  player.getPX(), player.getPY());
-				
-				int tileMapY = (int)(player.getPY() / 16);
-				int tileMapX = (int)(player.getPX() / 16);
+			for (int j = 0; j < projectileVelocity; j++)
+			{/*proj velocity is the hyp length so we go for each pixel on it*/
+				double deltaX = scroll_offset_x + player.getPX() + xNorm * j;
+				double deltaY = scroll_offset_y + player.getPY() + yNorm * j;
 
-				bool checkFlag1 = tileArray[tileMapY][tileMapX] != 0;
-				bool checkFlag3 = tileArray[tileMapY][tileMapX] != 3;
-				bool checkFlag8 = tileArray[tileMapY][tileMapX] != 8;
-				bool checkFlag9 = tileArray[tileMapY][tileMapX] != 9;
 
-				if (checkFlag1 && checkFlag3 && checkFlag8 && checkFlag9) //hit something not air
-				{
-					player.setShot(true);
-				}
-				else
-				{
-					for (int i = 0; i < enemies.size(); i++)
+				if (deltaX > 0 && deltaX < SCREEN_WIDTH + scroll_offset_x && deltaY>0 && deltaY < SCREEN_HEIGHT + scroll_offset_y)
+				{/*inside screen*/
+					int tileMapX = (int)(deltaX / 16);
+					int tileMapY = (int)(deltaY / 16);
+
+
+					bool checkFlag0 = tileArray[tileMapY][tileMapX] == 0; // Air
+					bool checkFlag3 = tileArray[tileMapY][tileMapX] == 3; // Spawn
+					bool checkFlag8 = tileArray[tileMapY][tileMapX] == 8; // PowerSpawns
+					bool checkFlag9 = tileArray[tileMapY][tileMapX] == 9; // Teleport
+
+					if (!(checkFlag0 || checkFlag3 || checkFlag8 || checkFlag9))
+					{ /*Collision with something not air*/
+						player.setShot(true);
+						break;
+					}
+					else
 					{
-						if (checkHitEnemy(&player, enemies[i]))
+						for (int i=0; i<ce.size(); i++)
 						{
-							enemies[i]->takeDamage(player.getPVelX() / projectileVelocity, player.getPVelY() / projectileVelocity);
-							player.setShot(true);
-							break;
+							if (checkHitEnemy(deltaX, deltaY, ce[i]))
+							{
+								int randomNumber = rand() % 100;
+								int ignoreChance = 30;
+
+								if (randomNumber > ignoreChance)
+								{
+									ce[i]->takeDamage(player.getPVelX() / projectileVelocity, player.getPVelY() / projectileVelocity);
+									player.setShot(true);
+									break;
+								}
+								else {
+									//Add Guard animation
+								}
+							}
 						}
 					}
 				}
+				else
+				{
+					player.setShot(true);
+					break;
+				}
 			}
-			else
+			if (!player.getShot())
 			{
-				player.setShot(true);
+				player.setPX(player.getPX() + player.getPVelX());
+				player.setPY(player.getPY() + player.getPVelY());
 			}
 		}
 
@@ -455,13 +486,13 @@ void Game::runGame() {
 
 		// enemies
 		if (!map->ifSpawn()) {
-			for (int i = 0; i < enemies.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
+			for (int i = 0; i < ce.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
 			{
-				if (enemies[i]->getHP() <= 0) continue;
-				enemies[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
+				if (ce[i]->getHP() <= 0) continue;
+				ce[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
 				if (!hit)
 				{
-					hit = checkHitPlayer(&player, enemies[i]);
+					hit = checkHitPlayer(&player, ce[i]);
 					if (hit)
 						hitTick = SDL_GetTicks();
 				}
@@ -506,6 +537,7 @@ void Game::runGame() {
 			// updates our position in map to the new room, update our Tilemap pointer and tileArray
 			map->updatePosition(newRoom);
 			currRoom = map->getCurrentRoom();
+			ce = currRoom->getEnemies();
 			tileArray = currRoom->getTileMap();
 
 			// clear our tps/powerups if we had any
@@ -619,10 +651,10 @@ void Game::runGame() {
 
 		// Draw Enemies
 		if (!map->ifSpawn()) {
-			for (int i = 0; i < enemies.size(); i++)
+			for (int i = 0; i < ce.size(); i++)
 			{
-				if (enemies[i]->getHP() > 0) //only draw live enemies
-					enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
+				if (ce[i]->getHP() > 0) //only draw live enemies
+					ce[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
 			}
 		}
 
@@ -862,12 +894,29 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		double playerCenterX = player->getXPosition() + (player->getCurrFrame().getWidth() / 2);
 		double playerCenterY = player->getYPosition() + (player->getCurrFrame().getHeight() / 2);
 
+
 		double xComp = (grappleX - playerCenterX) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
 		double yComp = (grappleY - playerCenterY) / sqrt((grappleX - playerCenterX) * (grappleX - playerCenterX) + (grappleY - playerCenterY) * (grappleY - playerCenterY));
 
 		//Apply grapple force
-		player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
-		player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+		int errorSpace = 50;
+		int closeSpace = 5;
+		if (std::abs(grappleX - playerCenterX) > errorSpace || std::abs(grappleY - playerCenterY) > errorSpace)
+		{
+			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen());
+		}
+		else if (std::abs(grappleX - playerCenterX) < closeSpace || std::abs(grappleY - playerCenterY) < closeSpace)
+		{
+			player->setXVel(0);
+			player->setYVel(0);
+		}
+		else
+		{
+			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr())* player->getPhysics()->getDampen()*0.50);
+			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr())* player->getPhysics()->getDampen()*0.50);
+		}
+			
 	}
 	//movement
 	else if (keystate[SDL_SCANCODE_A]) {
@@ -1303,13 +1352,13 @@ bool Game::checkHitPlayer(Entity* player, Enemy* enemy)
 	return false;
 }
 
-bool Game::checkHitEnemy(Entity* player, Enemy* enemy)
+bool Game::checkHitEnemy(double x, double y, Enemy* enemy)
 {
 	return (
-		player->getPX() + projectileSize > enemy->getXPosition() &&
-		player->getPX() < enemy->getXPosition() + enemy->getCurrFrame().getWidth() &&
-		player->getPY() + projectileSize < enemy->getYPosition() &&
-		player->getPY() < enemy->getYPosition() + enemy->getCurrFrame().getHeight());
+		x + projectileSize > enemy->getXPosition() &&
+		x < enemy->getXPosition() + enemy->getCurrFrame().getWidth() &&
+		y + projectileSize < enemy->getYPosition() &&
+		y < enemy->getYPosition() + enemy->getCurrFrame().getHeight());
 }
 
 // check player collision with a generic entity
@@ -1405,6 +1454,19 @@ void Game::update()
 
 void Game::render()
 {
+}
+
+void Game::displayCredits()
+{
+	//Roll credits
+	for (int credit_image = 0; credit_image < creditFiles.size(); credit_image++) {
+		SDL_RenderClear(gRenderer);
+		SDL_Texture* temp = rollCredits();
+		SDL_RenderCopy(gRenderer, temp, NULL, NULL);
+		SDL_RenderPresent(gRenderer);
+		SDL_Delay(1000);
+	}
+
 }
 
 SDL_Texture* Game::rollCredits()

@@ -1,12 +1,12 @@
 #ifndef _BLOCK_H_
 #define _BLOCK_H_
-#endif
+
 
 class Block
 {
 	public:
 		// Public Constructor:
-		Block(int row, int col, int numRow, int numCol);
+		Block(int row, int col, int numRow, int numCol, int mapType);
 		// Public Functions:
 		void generateBlock();
 		void populateBlock();
@@ -24,6 +24,12 @@ class Block
 		bool isBelow();
 		int getXcon();
 		int getYcon();
+		int getPlatLocation();
+		bool isMiddle();
+		bool isDoor();
+		bool hasPlatform();
+		void addPlatforms(int pLocation);
+		void placePlatforms(int x, int len);
 	private:
 		// Private Functions:
 		void setType();
@@ -50,6 +56,7 @@ class Block
 		// Row and column position of this block in the blockMap
 		int row;
 		int col;
+		int mapType;
 
 		// Number of rows and columns in the blockMap (for bounds and typing)
 		int numRow;
@@ -86,9 +93,14 @@ class Block
 		int x;
 		int y;
 
-		// Is this block a corner or a door?
 		bool corner;
 		bool door;
 
-		// has platform bool?
+		bool platform;
+		bool middle;
+
+		int platformLocation;
+
 };
+
+#endif
