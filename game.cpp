@@ -106,7 +106,7 @@ Game::~Game()
 
 void Game::gameLoop()
 {
-	displayCredits();
+	//displayCredits();
 
 	//Load into the start screen of the game
 	loadStartScreen();
@@ -422,7 +422,7 @@ void Game::runGame() {
 					{
 						for (int i=0; i<ce.size(); i++)
 						{
-							if (checkHitEnemy(deltaX, deltaY, ce[i]))
+							if (ce[i]->getHP() > 0 && checkHitEnemy(deltaX, deltaY, ce[i]))
 							{
 								int randomNumber = rand() % 100;
 								int ignoreChance = 30;
@@ -506,7 +506,7 @@ void Game::runGame() {
 		if (!map->ifSpawn() || map->getType() == 3) {
 			for (int i = 0; i < ce.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
 			{
-        if (ce[i]->getFlag() == 0 && map->getType() != 3) continue;
+				if (ce[i]->getFlag() == 0 && map->getType() != 3) continue;
 				if (ce[i]->getHP() <= 0) continue;
 				ce[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
 
