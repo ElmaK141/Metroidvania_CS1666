@@ -628,7 +628,7 @@ void Game::runGame() {
 			for (int i = 0; i < ce.size(); i++)
 			{
 				if (ce[i]->getHP() > 0) //only draw live enemies
-					ce[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
+					ce[i]->getCurrFrame().draw(gRenderer, ce[i]->getXPosition() - scroll_offset_x, ce[i]->getYPosition() - scroll_offset_y);
 			}
 		}
 

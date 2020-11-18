@@ -2,6 +2,7 @@
 #include "block.h"
 #include <iostream>
 #include <fstream>
+#include <string>
 
 // See tilemap.h for higher level context
 /////////////////////////
@@ -36,7 +37,7 @@ Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles, Background* bg)
 
 // Initializes a tile map based on given X and Y dimensions.
 // Does not use a text file, instead tries to create a Tilemap using randomness
-Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg, 
+Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg,
 	int mapType, bool powerUp, bool isHealth, std::vector<Enemy*> enemies) {
 	//Assign attributes
 	this->yMax = yDim;
@@ -50,8 +51,8 @@ Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Backgro
 	this->cDoor = false;
 	
 	if (mapType != 3 && mapType != 0) {
-		int numEnemies = rand() % enemies.size();
-		for (int i = 0; i < numEnemies; i++) {
+		int nEnemies = rand() % 5;
+		for (int i = 0; i < nEnemies; i++) {
 			enemies.pop_back();
 		}
 		this->enemies = enemies;
@@ -260,7 +261,7 @@ void Tilemap::generateTilemap() {
 	if (this->cDoor) {
 		blockMap[1][w / 2]->placePlatforms(3, 5);
 		blockMap[2][w / 2 - 2]->placePlatforms(6,5);
-		blockMap[2][w / 2]->placePlatforms(6,5);
+		blockMap[2][w / 2]->placePlatforms(6,8);
 		blockMap[2][w / 2 + 1]->placePlatforms(3,7);
 		blockMap[h-2][w / 2 - 1]->placePlatforms(7,6);
 	}
@@ -288,7 +289,15 @@ void Tilemap::generateTilemap() {
 			if (blockMap[i][j]->hasPlatform() == false && blockMap[i][j]->isMiddle()) {
 				if (!doorCheck(blockMap, i, j)) {
 					int pLocation = rand() % 8;
-					blockMap[i][j]->addPlatforms(pLocation);
+					if (blockMap[i - 1][j]->hasPlatform()) {
+						pLocation = blockMap[i-1][j]->getPlatLocation();
+					}
+					else if (blockMap[i + 1][j]->hasPlatform()) {
+						pLocation = blockMap[i + 1][j]->getPlatLocation();
+					}
+					else {
+						blockMap[i][j]->addPlatforms(pLocation);
+					}
 				}
 			}
 		}
