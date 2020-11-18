@@ -242,14 +242,17 @@ void Game::runGame() {
 	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
 	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
 	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
-	Enemy boss("data/boss.spr", 800, 600, 3, 0, &plp, gRenderer);
+	Enemy boss("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer);
 	enemies.push_back(&eye);
 	enemies.push_back(&eye2);
 	enemies.push_back(&eye3);
 	enemies.push_back(&eye4);
 	enemies.push_back(&eye5);
+	enemies.push_back(&boss);
+	
 	int hitTick = 0;
 	bool hit = false;
+	int eyeSpawnCD = 0;
 
 	//"Load" in the game by pausing to avoid buffering in the gappling hook input
 	SDL_Delay(150);
@@ -427,6 +430,22 @@ void Game::runGame() {
 		//Handle in-air and on-ground collision for current room
 		handleCollision(&player, currRoom);
 
+		if (map->getType() == 3)
+		{
+			if (eyeSpawnCD <= 0)
+			{
+				enemies.push_back(new Enemy("data/eye.spr", 2520, 400, 3, 1, &plp, gRenderer));
+				enemies[enemies.size() - 1]->setXVel(-8);
+				enemies[enemies.size() - 1]->setYVel(-10);
+				
+				if (boss.getHP() > 100)
+					eyeSpawnCD = 300;
+				else
+					eyeSpawnCD = 100;
+			}
+			else
+				eyeSpawnCD -= delta_time;
+		}
 		// powerups - check if player collides
 		for (auto&& p : powerups) {
 			if (checkPlayerCollision(&player, p) && p->getFrameIndex() != 3) { // if the player collides with the power up, enable ability, disable powerup
@@ -450,11 +469,14 @@ void Game::runGame() {
 		}
 
 		// enemies
-		if (!map->ifSpawn()) {
+
+		if (!map->ifSpawn() || map->getType() == 3) {
 			for (int i = 0; i < enemies.size(); i++) //handle enemies; update, check for hits, give player iframes if hit
 			{
+				if (enemies[i]->getFlag() == 0 && map->getType() != 3) continue;
 				if (enemies[i]->getHP() <= 0) continue;
 				enemies[i]->update(tileArray, delta_time, player.getXPosition(), player.getYPosition());
+				
 				if (!hit)
 				{
 					hit = checkHitPlayer(&player, enemies[i]);
@@ -614,11 +636,18 @@ void Game::runGame() {
 		// I WONDER IF WE SHOULD JUST HAVE A SCENE ENTITY LIST AND WE CAN JUST PERFORM COLLISION AGAINST ALL ENTITIES IN THE SCENE
 
 		// Draw Enemies
-		if (!map->ifSpawn()) {
+		if (!map->ifSpawn() || map->getType() == 3) {
 			for (int i = 0; i < enemies.size(); i++)
 			{
 				if (enemies[i]->getHP() > 0) //only draw live enemies
 					enemies[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
+				if (enemies[i]->getFlag() == 0 && map->getType() == 3)
+				{
+					if (enemies[i]->getHP() > 0)
+						drawBossHP(enemies[i]->getHP());
+					else
+						rollCredits();
+				}
 			}
 		}
 
@@ -1310,6 +1339,23 @@ void Game::drawHP()
 
 		healthLine->x = 94 + 4 * playerHP;
 		healthLine->h = 4;
+		SDL_RenderFillRect(gRenderer, healthLine);
+	}
+
+	//Reset Render color to white
+	SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+}
+
+void Game::drawBossHP(int health)
+{
+	SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0xFF);
+	SDL_Rect* healthLine = new SDL_Rect;
+	healthLine->y = 650;
+	healthLine->w = 13;
+	healthLine->h = 18;
+	for (int h = 0; h < health - 1; h++)
+	{
+		healthLine->x = 144 + 4 * h;
 		SDL_RenderFillRect(gRenderer, healthLine);
 	}
 

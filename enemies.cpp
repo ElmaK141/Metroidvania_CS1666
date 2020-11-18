@@ -39,7 +39,7 @@ Enemy::Enemy(std::string spriteData, double xPos, double yPos, int scale, int f,
 		this->accel = 5;
 		this->damage = 12;
 
-		this->hp = 1250;
+		this->hp = 250;
 		this->maxSpeed = 50;
 		this->active = true;
 	}
@@ -199,19 +199,31 @@ void Enemy::update(int** tilemap, double delta_time, double playerX, double play
 		{
 			this->alternate = 0;
 		}
-
-		if ((getCooldown() == 0 && playerIsNear(playerX, playerY)) || getCooldown() > 8000)
+		if (getCooldown() > 0)
+			setCooldown(fmax(0, getCooldown() - delta_time));
+		if (getState() == 3 && getCooldown() <= 200)
 		{
-			setCurrFrame(4);
-			if(getCooldown() == 0)
-				setCooldown(10000);
+			setPosition(getXPosition() + 96, getYPosition());
+			this->state = 0;
+		}
+		if ((getCooldown() == 0 && playerIsNear(playerX, playerY)) || getCooldown() > 200)
+		{
+			this->alternate = 0;
+			this->state = 3;
+			
+			setCurrFrame(3);
+			if (getCooldown() == 0)
+			{
+				this->setPosition(getXPosition() - 96, getYPosition());
+				setCooldown(250);
+			}
 		}
 	}
 }
 
 bool Enemy::playerIsNear(double playerX, double playerY)
 {
-	if (getXPosition() < playerX + 90 &&
+	if (getXPosition() < playerX + 140 &&
 		getXPosition() + getCurrFrame().getWidth() > playerX &&
 		getYPosition() < playerY - 10 &&
 		getYPosition() + getCurrFrame().getHeight() > playerY)

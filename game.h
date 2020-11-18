@@ -36,6 +36,7 @@ class Game {
 
 													,"assets/credit_pics/hicksCredits.png","assets/credit_pics/JoelValentinoCredits.png","assets/credit_pics/JordanBendercredits.png", "assets/credit_pics/KristoferE.png"};
 		void drawHP();
+		void drawBossHP(int health);
 		void update();
 		void render();
 		SDL_Texture* rollCredits();
