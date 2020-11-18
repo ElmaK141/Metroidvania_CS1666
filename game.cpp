@@ -15,6 +15,7 @@
 bool doneSecond = false; // only allow 1 extra jump
 double projectileVelocity = 25;
 int projectileSize = 5;
+bool wonGame = false;
 
 //size of the Window/Screen and thus the size of the Camera
 int SCREEN_WIDTH;
@@ -130,6 +131,9 @@ void Game::gameLoop()
 			runDebug();
 		}
 	}
+	if (wonGame)
+		displayCredits();
+
 }
 
 //Run the main game code
@@ -714,7 +718,10 @@ void Game::runGame() {
 			if (ce[bossIndex]->getHP() > 0)
 				drawBossHP(ce[bossIndex]->getHP());
 			else
+			{
 				running = false;
+				wonGame = true;
+			}
 		}
 		
 		//Player is Dead
@@ -737,9 +744,6 @@ void Game::runGame() {
 
 		SDL_RenderPresent(gRenderer);
 	}
-
-	displayCredits();
-
 }
 
 //Handle the user input
