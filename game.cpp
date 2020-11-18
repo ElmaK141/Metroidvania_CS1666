@@ -281,6 +281,7 @@ void Game::runGame() {
 
 	std::vector<Enemy*> ce;
 
+	//Gio sucks
 	//Run the Game
 	while (running && gameState == 1) {
 		//Delta time calculation
