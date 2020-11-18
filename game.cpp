@@ -177,15 +177,16 @@ void Game::runGame() {
 	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
 	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
 	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
-	Enemy boss("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer);
-	enemies.push_back(&eye);
-	enemies.push_back(&eye2);
-	enemies.push_back(&eye3);
-	enemies.push_back(&eye4);
+	//enemies.push_back(&eye);
+	//enemies.push_back(&eye);
+	//enemies.push_back(&eye2);
+	//enemies.push_back(&eye3);
+	//enemies.push_back(&eye4);
 	enemies.push_back(&eye5);
-	enemies.push_back(&boss);
 
-
+	Enemy boss("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer);
+	std::vector<Enemy*> bossEnemy;
+	bossEnemy.push_back(&boss);
 	std::vector<Enemy*> blankEnemies;
 
 	// allMaps is a Vector of all of our Gamemaps
@@ -198,7 +199,7 @@ void Game::runGame() {
 	allMaps.push_back(new Gamemap(1, 1, 0, tiles, backgrounds, blankEnemies));
 	allMaps.push_back(new Gamemap(3, 3, 1, tiles, backgrounds, enemies));
 	allMaps.push_back(new Gamemap(3, 3, 2, tiles, backgrounds, enemies));
-	allMaps.push_back(new Gamemap(1, 1, 3, tiles, backgrounds, blankEnemies));
+	allMaps.push_back(new Gamemap(1, 1, 3, tiles, backgrounds, bossEnemy));
 
 	// Variables for tracking our current MAP and ROOM (and tileArray)
 	// map will be the pointer to our current map
@@ -264,7 +265,8 @@ void Game::runGame() {
 
 	// Define player entity
 	Entity player("data/player.spr", x_pos, y_pos, 3, 0, &plp, gRenderer);		//0 is flag for player entity
-
+	player.setGrapple();
+	gotGrapple = 1;
 	int hitTick = 0;
 	bool hit = false;
 	int eyeSpawnCD = 0;
@@ -461,9 +463,10 @@ void Game::runGame() {
 		{
 			if (eyeSpawnCD <= 0)
 			{
-				enemies.push_back(new Enemy("data/eye.spr", 2520, 400, 3, 1, &plp, gRenderer));
-				enemies[enemies.size() - 1]->setXVel(-8);
-				enemies[enemies.size() - 1]->setYVel(-10);
+				ce.push_back(new Enemy("data/eye.spr", 2520, 400, 3, 1, &plp, gRenderer));
+				ce.push_back(new Enemy("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer));
+				ce[ce.size() - 1]->setXVel(-8);
+				ce[ce.size() - 1]->setYVel(-10);
 
 				if (boss.getHP() > 100)
 					eyeSpawnCD = 300;
@@ -674,7 +677,7 @@ void Game::runGame() {
 			for (int i = 0; i < ce.size(); i++)
 			{
 				if (ce[i]->getHP() > 0) //only draw live enemies
-					ce[i]->getCurrFrame().draw(gRenderer, enemies[i]->getXPosition() - scroll_offset_x, enemies[i]->getYPosition() - scroll_offset_y);
+					ce[i]->getCurrFrame().draw(gRenderer, ce[i]->getXPosition() - scroll_offset_x, ce[i]->getYPosition() - scroll_offset_y);
 				if (ce[i]->getFlag() == 0 && map->getType() == 3)
 				{
 					if (ce[i]->getHP() > 0)
@@ -733,7 +736,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 
 
 	if (keystate[SDL_SCANCODE_E]) {
-		std::cout << "E PRESSED" << std::endl;
+		//std::cout << "E PRESSED" << std::endl;
 		for (auto&& tp : tps) { // for each teleporter in the scene
 			if (checkPlayerCollision(player, tp)) { // check if the player is touching it
 				//std::cout << "Interacted with TP type " << tp->getFlag() << std::endl;
@@ -940,8 +943,8 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		}
 		else
 		{
-			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen() * 0.50);
-			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr()) * player->getPhysics()->getDampen() * 0.50);
+			player->setXVel((player->getXVel() + xComp * player->getPhysics()->getGrappleStr())* player->getPhysics()->getDampen()*0.50);
+			player->setYVel((player->getYVel() + yComp * player->getPhysics()->getGrappleStr())* player->getPhysics()->getDampen()*0.50);
 		}
 
 	}
@@ -1056,6 +1059,12 @@ void Game::loadMainMenu() {
 	Sprite mmTitle(0, 0, 796, 125, 1, "assets/main_menu/mainmenuTitle.png", gRenderer);
 	Button startGame(0, 0, 452, 68, 1, "assets/main_menu/startGame.png", gRenderer);
 	Button debug(0, 0, 294, 68, 1, "assets/main_menu/debug.png", gRenderer);
+
+	killedBoss = 0;
+	gotDoubleJump = 0;
+	gotGrapple = 0;
+	gotHealth1 = 0;
+	gotHealth2 = 0;
 
 	//Main Menu Loop
 	while (running) {
@@ -1196,7 +1205,7 @@ void Game::questMenu()
 	SDL_Rect doneHealth1 = { SCREEN_WIDTH / 2 - 133, 510, 304, 2 };
 	SDL_Rect doneHealth2 = { SCREEN_WIDTH / 2 - 133, 542, 304, 2 };
 
-
+	//std::cout << gotDoubleJump << std::endl;
 
 	//Quest menu loop
 	while (running) {
@@ -1242,6 +1251,7 @@ void Game::questMenu()
 		}
 
 		if (gotGrapple != 0) {
+			//std::cout << "in method" << std::endl;
 			SDL_RenderFillRect(gRenderer, &doneGrapple);
 		}
 

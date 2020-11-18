@@ -2,6 +2,7 @@
 #include "block.h"
 #include <iostream>
 #include <fstream>
+#include <string>
 
 // See tilemap.h for higher level context
 /////////////////////////
@@ -50,10 +51,16 @@ Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Backgro
 	this->cDoor = false;
 
 	if (mapType != 3 && mapType != 0) {
-		int numEnemies = rand() % enemies.size();
-		for (int i = 0; i < numEnemies; i++) {
+		/*int nEnemies = rand() % 5;
+		if (nEnemies > 4) {
+			nEnemies = 4;
+		}
+		for (int i = 0; i < nEnemies; i++) {
 			enemies.pop_back();
 		}
+		this->enemies = enemies;*/
+	}
+	else if (mapType == 3) {
 		this->enemies = enemies;
 	}
 
@@ -129,7 +136,7 @@ void Tilemap::generateTilemap(std::string mapPath)
 
 		// Use our read in dimensions to 
 		// initialize our 2d tilemap array
-		this->tileMap = new int* [this->yMax];
+		this->tileMap = new int*[this->yMax];
 		for (int i = 0; i < this->yMax; i++)
 			this->tileMap[i] = new int[this->xMax];
 
@@ -173,9 +180,9 @@ void Tilemap::generateTilemap() {
 	int w = this->xMax / blockWidth;
 
 	// I have looked into maybe using std::array for this but eh
-	Block*** blockMap = new Block * *[h];
+	Block*** blockMap = new Block**[h];
 	for (int i = 0; i < h; i++) {
-		blockMap[i] = new Block * [w];
+		blockMap[i] = new Block*[w];
 
 		// iterate over blockMap and create a Block in each spot
 		// FIRST PASS - create and generate walls
@@ -261,7 +268,7 @@ void Tilemap::generateTilemap() {
 	if (this->cDoor) {
 		blockMap[1][w / 2]->placePlatforms(3, 5);
 		blockMap[2][w / 2 - 2]->placePlatforms(6, 5);
-		blockMap[2][w / 2]->placePlatforms(6, 5);
+		blockMap[2][w / 2]->placePlatforms(6, 8);
 		blockMap[2][w / 2 + 1]->placePlatforms(3, 7);
 		blockMap[h - 2][w / 2 - 1]->placePlatforms(7, 6);
 	}
@@ -289,7 +296,15 @@ void Tilemap::generateTilemap() {
 			if (blockMap[i][j]->hasPlatform() == false && blockMap[i][j]->isMiddle()) {
 				if (!doorCheck(blockMap, i, j)) {
 					int pLocation = rand() % 8;
-					blockMap[i][j]->addPlatforms(pLocation);
+					if (blockMap[i - 1][j]->hasPlatform()) {
+						pLocation = blockMap[i - 1][j]->getPlatLocation();
+					}
+					else if (blockMap[i + 1][j]->hasPlatform()) {
+						pLocation = blockMap[i + 1][j]->getPlatLocation();
+					}
+					else {
+						blockMap[i][j]->addPlatforms(pLocation);
+					}
 				}
 			}
 		}
@@ -298,7 +313,7 @@ void Tilemap::generateTilemap() {
 
 	// Use our dimensions to 
 	// initialize our 2d tilemap array
-	this->tileMap = new int* [this->yMax];
+	this->tileMap = new int*[this->yMax];
 	for (int i = 0; i < this->yMax; i++) {
 		this->tileMap[i] = new int[this->xMax];
 	}
@@ -404,3 +419,4 @@ Tilemap::~Tilemap()
 {
 	delete this->tileMap;
 }
+
