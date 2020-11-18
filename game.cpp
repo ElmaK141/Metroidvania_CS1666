@@ -177,11 +177,13 @@ void Game::runGame() {
 	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
 	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
 	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
+	Enemy boss("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer);
 	enemies.push_back(&eye);
 	enemies.push_back(&eye2);
 	enemies.push_back(&eye3);
 	enemies.push_back(&eye4);
 	enemies.push_back(&eye5);
+	enemies.push_back(&boss);
 	
 
 	std::vector<Enemy*> blankEnemies;
@@ -1182,7 +1184,7 @@ void Game::questMenu()
 
 	//Quest menu sprites
 	Sprite questLabel(0, 0, 256, 75, 1, "assets/quest_menu/quests.png", gRenderer);
-	Sprite questList(0, 0, 352, 256, 1, "assets/quest_menu/questListTest.png", gRenderer);
+	Sprite questList(0, 0, 352, 256, 1, "assets/quest_menu/questList.png", gRenderer);
 	Button resumeGame(0, 0, 220, 70, 1, "assets/quest_menu/resume.png", gRenderer);
 
 	SDL_Rect questBox = { SCREEN_WIDTH / 2 - 200, 190, 400, 500 };
@@ -1490,60 +1492,6 @@ void Game::drawBossHP(int health)
 	SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 }
 
-void Game::generateMap(Tilemap** map, int mapX, int mapY, std::vector<Tile*> tiles, Background* bg) {
-	srand(time(NULL));
-	//Decide what size rooms to generate/initialize the tilemaps
-	for (int i = 0; i < mapY; i++) {
-		for (int j = 0; j < mapX; j++) {
-			int roomSize = rand() % 3;		//For now, equal probability for small, medium, or large room
-			
-			//std::cout << roomSize << std::endl;
-
-			//TODO: Make rooms with different proportions.
-
-			switch (roomSize) {
-				case 0:		//small room
-					map[i][j] = *(new Tilemap(90, 45, 0, tiles, bg));
-					break;
-				case 1:		//medium room
-					map[i][j] = *(new Tilemap(210, 45, 0, tiles, bg));
-					break;
-				case 2:		//large room
-					map[i][j] = *(new Tilemap(420, 45, 0, tiles, bg));
-					break;
-;			}
-		}
-	}
-
-	//Create starting and ending rooms
-	srand(time(NULL));
-	int start = rand() % mapX;
-	int end = rand() % mapX;
-	//map[0][start].setStart();
-	//map[mapY - 1][end].setEnd();
-
-	/*for (int i = 0; i < mapY; i++) {
-		for (int j = 0; j < mapX; j++) {
-			if (map[i][j].isStart())
-				std::cout << "1 ";
-			else if (map[i][j].isEnd())
-				std::cout << "2 ";
-			else
-				std::cout << "0 ";
-		}
-		std::cout << std::endl;
-	}*/
-
-	//TODO: Generate a path from the start to the end
-	/*bool path = false;
-	while (!path) {
-		for (int i = 0; i < mapY; i++) {
-			for (int j = 0; j < mapX; j++) {
-
-			}
-		}
-	}*/
-}
 
 void Game::update()
 {
