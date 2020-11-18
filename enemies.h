@@ -2,6 +2,7 @@
 #define _ENEMIES_H_
 #include "sprite.h"
 #include "entity.h"
+#include "tilemap.h"
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -18,7 +19,7 @@ class Enemy {
 		{
 			return damage;
 		}
-		void update(int** tilemap, double delta_time, double playerX, double playerY);
+		void update(Tilemap* t, double delta_time, double playerX, double playerY);
 
 		void setCurrFrame(int index);
 		Sprite getCurrFrame();
@@ -53,7 +54,9 @@ class Enemy {
 		Physics* getPhysics();
 	private:
 		
-		void collide(int** tilemap, double xVel, double yVel);
+		bool collide(int** tilemap, double xVel, double yVel);
+		void makeBrainway(Tilemap* t);
+		int checkTile(int y, int x, int xMax);
 		void createSprites();
 		
 
@@ -72,6 +75,7 @@ class Enemy {
 		double xVel;
 		double yVel;
 		bool canJump;
+		bool hasBrain;
 		int state;
 		int cooldown;
 		int alternate;
@@ -82,5 +86,6 @@ class Enemy {
 		std::ifstream spriteFile;
 		std::vector<Sprite> frames;
 		Physics* physics;
+		int** brainway;
 };
 #endif
