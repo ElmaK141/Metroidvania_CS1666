@@ -62,6 +62,8 @@ int gotGrapple = 0;
 int gotHealth1 = 0;
 int gotHealth2 = 0;
 
+int currMap = 0;
+
 //Constructor
 Game::Game(int width, int height)
 {
@@ -203,6 +205,7 @@ void Game::runGame() {
 	// Variables for tracking our current MAP and ROOM (and tileArray)
 	// map will be the pointer to our current map
 	Gamemap* map = allMaps[0];
+	currMap = 0;
 	// CurrRoom is the pointer to our current room tilemap
 	Tilemap* currRoom = map->getCurrentRoom();
 	int** tileArray = currRoom->getTileMap();
@@ -297,7 +300,13 @@ void Game::runGame() {
 
 		//Get Input
 		// in order to change maps when interacting with an entity, getUserInput will return info on which map to change to (-1 if none)
-		int changeMap = getUserInput(&player, tps);
+		int changeMap;
+		if (currMap == 1 || currMap == 2) {
+			changeMap = getUserInput(&player, tps, map->getMap());
+		}
+		else {
+			changeMap = getUserInput(&player, tps, NULL);
+		}
 
 		// need to update our map/room and spawning location after teleporting
 		// if changeMap is not -1, then we interacted with a teleporter
@@ -315,6 +324,7 @@ void Game::runGame() {
 
 			// update the map, current room, tilearray
 			map = allMaps[newMap];
+			currMap = newMap;
 			currRoom = map->getCurrentRoom();
 			ce = currRoom->getEnemies();
 			tileArray = currRoom->getTileMap();
@@ -706,7 +716,7 @@ void Game::runGame() {
 }
 
 //Handle the user input
-int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
+int Game::getUserInput(Entity* player, std::vector<Entity*> tps, int** map) {
 	//User input
 	const Uint8* keystate = SDL_GetKeyboardState(nullptr);
 
@@ -729,6 +739,11 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 		//std::cout << "J PRESSED" << std::endl;
 		if (!player->getPhysics()->inAir())
 			questMenu();
+	}
+
+	if (keystate[SDL_SCANCODE_M]) {
+		if ((currMap == 1 || currMap == 2) && !player->getPhysics()->inAir())
+			showMap(map);
 	}
 	
 
@@ -1267,6 +1282,131 @@ void Game::questMenu()
 
 }
 
+//Displays map on screen
+void Game::showMap(int** map)
+{
+	//Mouse Coordinate Variables
+	int mouseX = 0, mouseY = 0;
+
+	// gamestate is in map (5)
+	gameState = 5;
+
+	//Quest menu sprites
+	Button resumeGame(0, 0, 220, 70, 1, "assets/quest_menu/resume.png", gRenderer);
+
+	SDL_Rect mapBox = { SCREEN_WIDTH / 2 - 200, 190, 400, 500 };
+
+	//Define cells
+	Sprite l(0, 0, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite r(16, 0, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite u(32, 0, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite d(48, 0, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite lr(0, 16, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite lu(16, 16, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite ld(32, 16, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite ru(48, 16, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite rd(0, 32, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite ud(16, 32, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite lru(32, 32, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite lrd(48, 32, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite lud(0, 48, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite rud(16, 48, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+	Sprite lrud(32, 48, 16, 16, 3, "assets/game_map/map_tiles.png", gRenderer);
+
+	//Map menu loop
+	while (running) {
+
+		//Poll to see if we close the game at any time
+		SDL_PollEvent(&e);
+		if (e.type == SDL_QUIT) {
+			running = false;
+			return;
+		}
+		else if (e.type == SDL_MOUSEBUTTONDOWN) {
+			if (e.button.button == SDL_BUTTON_LEFT) { //if they click on a button
+				//Get mouse positon
+				mouseX = e.button.x;
+				mouseY = e.button.y;
+
+				//Resume Game
+				if ((mouseX > resumeGame.getSprite()->getX()) && (mouseX < resumeGame.getSprite()->getX() + resumeGame.getSprite()->getWidth()) && (mouseY > resumeGame.getSprite()->getY()) && (mouseY < resumeGame.getSprite()->getY() + resumeGame.getSprite()->getHeight())) {
+					gameState = 1;
+					break;
+				}
+			}
+		}
+
+		//SDL_RenderClear(gRenderer);
+		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0x00);	//white background
+		SDL_RenderFillRect(gRenderer, &mapBox);
+
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);
+
+
+		//Draw to screen
+		resumeGame.getSprite()->draw(gRenderer, SCREEN_WIDTH / 2 - 110, 600);
+
+
+		//Draw the map		
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				if (map[i][j] != -1) {
+					switch (map[i][j]) {
+						case 1:
+							r.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 2:
+							l.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 3:
+							lr.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 4:
+							d.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 5:
+							rd.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 6:
+							ld.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 7:
+							lrd.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 8:
+							u.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 9:
+							ru.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 10:
+							lu.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 11:
+							lru.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 12:
+							ud.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 13:
+							rud.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 14:
+							lud.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+						case 15:
+							lrud.draw(gRenderer, (SCREEN_WIDTH / 2 - 80) + (j * 16 * 3), 240 + (i * 16 * 3));
+							break;
+					}
+				}
+			}
+		}
+
+		SDL_RenderPresent(gRenderer);
+	}
+
+}
+
 // Detect collision of Entity with Gameworld (edge of screen)
 bool Game::detectCollision(Entity& ent, int** tilemap, double x_vel, double y_vel, int roomHeight)
 {
@@ -1621,7 +1761,7 @@ void Game::runDebug() {
 		}
 
 		//Get User Input
-		getUserInput(&player, tps);
+		getUserInput(&player, tps, NULL);
 		
 		//Check for Collision
 		handleCollision(&player, currRoom);

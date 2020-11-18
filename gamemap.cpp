@@ -437,3 +437,25 @@ int Gamemap::getCurrY() {
 int Gamemap::getType() {
 	return this->type;
 }
+
+// Returns the array for the map
+int** Gamemap::getMap() {
+	int** intMap;
+	intMap = new int * [3];
+	for (int i = 0; i < 3; i++) {
+		intMap[i] = new int[3];
+	}
+
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			if (this->map[i][j].valid) {
+				intMap[i][j] = map[i][j].doors;
+			}
+			else {
+				intMap[i][j] = -1;
+			}
+		}
+	}
+
+	return intMap;
+}

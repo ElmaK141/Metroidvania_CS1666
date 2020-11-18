@@ -55,11 +55,12 @@ class Game {
 		void pauseMenu(int prevGameState);		//Pause game and bring up Pause menu
 		void runGame();			//Run the game
 		void runDebug();		//Run debug
-		int getUserInput(Entity* player, std::vector<Entity*> tps);		//Handle input from the user
+		int getUserInput(Entity* player, std::vector<Entity*> tps, int** map);		//Handle input from the user
 		void handleCollision(Entity* player, Tilemap* t);	//Handles collision events of the player
 		bool checkHitPlayer(Entity* player, Enemy* enemy);
 		bool checkHitEnemy(double x, double y, Enemy* enemy);
 		bool checkPlayerCollision(Entity* player, Entity* ent);
 		void questMenu();	//Brings up the quest menu
+		void showMap(int** map);		//Show an in-game map
 };
 #endif

@@ -30,6 +30,7 @@ public:
 	int getCurrX();
 	int getCurrY();
 	int getType();
+	int** getMap();
 	// Public Destructor: 
 	~Gamemap();									// destruction
 private:
