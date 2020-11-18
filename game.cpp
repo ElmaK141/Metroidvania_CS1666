@@ -272,8 +272,6 @@ void Game::runGame() {
 
 	// Define player entity
 	Entity player("data/player.spr", x_pos, y_pos, 3, 0, &plp, gRenderer);		//0 is flag for player entity
-	player.setGrapple();
-	gotGrapple = 1;
 	int hitTick = 0;
 	bool hit = false;
 	int eyeSpawnCD = 0;
