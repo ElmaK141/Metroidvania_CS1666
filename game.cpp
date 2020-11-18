@@ -106,7 +106,7 @@ Game::~Game()
 
 void Game::gameLoop()
 {
-	displayCredits();
+	//displayCredits();
 
 	//Load into the start screen of the game
 	loadStartScreen();
@@ -733,7 +733,7 @@ int Game::getUserInput(Entity* player, std::vector<Entity*> tps) {
 	
 
 	if (keystate[SDL_SCANCODE_E]) {
-		std::cout << "E PRESSED" << std::endl;
+		//std::cout << "E PRESSED" << std::endl;
 		for (auto&& tp : tps) { // for each teleporter in the scene
 			if (checkPlayerCollision(player, tp)) { // check if the player is touching it
 				//std::cout << "Interacted with TP type " << tp->getFlag() << std::endl;
@@ -1057,6 +1057,12 @@ void Game::loadMainMenu() {
 	Button startGame(0, 0, 452, 68, 1, "assets/main_menu/startGame.png", gRenderer);
 	Button debug(0, 0, 294, 68, 1, "assets/main_menu/debug.png", gRenderer);
 
+	killedBoss = 0;
+	gotDoubleJump = 0;
+	gotGrapple = 0;
+	gotHealth1 = 0;
+	gotHealth2 = 0;
+
 	//Main Menu Loop
 	while (running) {
 
@@ -1196,7 +1202,7 @@ void Game::questMenu()
 	SDL_Rect doneHealth1 = { SCREEN_WIDTH / 2 - 133, 510, 304, 2 };
 	SDL_Rect doneHealth2 = { SCREEN_WIDTH / 2 - 133, 542, 304, 2 };
 
-	
+	//std::cout << gotDoubleJump << std::endl;
 
 	//Quest menu loop
 	while (running) {
@@ -1242,6 +1248,7 @@ void Game::questMenu()
 		}
 		
 		if (gotGrapple != 0) {
+			//std::cout << "in method" << std::endl;
 			SDL_RenderFillRect(gRenderer, &doneGrapple);
 		}
 		
