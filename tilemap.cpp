@@ -36,6 +36,31 @@ Tilemap::Tilemap(std::string tilemap, std::vector<Tile*> tiles, Background* bg)
 
 // Initializes a tile map based on given X and Y dimensions.
 // Does not use a text file, instead tries to create a Tilemap using randomness
+Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg, 
+	int mapType, bool powerUp, bool isHealth, std::vector<Enemy*> enemies) {
+	//Assign attributes
+	this->yMax = yDim;
+	this->xMax = xDim;
+	this->room = room;
+	this->tileArray = tiles;
+	this->bg = bg;
+	this->mapType = mapType;
+	this->powerUp = powerUp;
+	this->isHealth = isHealth;
+	this->cDoor = false;
+	
+	if (mapType != 3 && mapType != 0) {
+		int numEnemies = rand() % enemies.size();
+		for (int i = 0; i < numEnemies; i++) {
+			enemies.pop_back();
+		}
+		this->enemies = enemies;
+	}
+
+	//generate tilemap without text file
+	this->generateTilemap();
+}
+
 Tilemap::Tilemap(int xDim, int yDim, int room, std::vector<Tile*> tiles, Background* bg) {
 	//Assign attributes
 	this->yMax = yDim;
@@ -137,7 +162,7 @@ void Tilemap::generateTilemap(std::string mapPath)
 // Initialize and populate tileMap array without use of
 // an external text file.
 void Tilemap::generateTilemap() {
-	
+
 	//using block system
 	// so we have room size: 45x210
 	// we define a block that is: 9x10
@@ -157,7 +182,7 @@ void Tilemap::generateTilemap() {
 		for (int j = 0; j < w; j++) {
 
 			// create a block in this spot
-			blockMap[i][j] = new Block(i, j, h, w);
+			blockMap[i][j] = new Block(i, j, h, w, mapType);
 
 			// then generate this block
 			// *Generate creates basic walls that outline the room*
@@ -166,6 +191,7 @@ void Tilemap::generateTilemap() {
 			// set door flags
 			if (i == 0 && j == (w - 1) / 2 && this->room >= 8) { //door on the top
 				blockMap[i][j]->setDoor();
+				this->cDoor = true;
 				this->room -= 8;
 			}
 			if (i == h - 1 && j == (w - 1) / 2 && (this->room >= 4 && this->room < 8)) { //door on the bottom
@@ -231,17 +257,13 @@ void Tilemap::generateTilemap() {
 
 	//number of platforms for this room?
 	int numPlats = rand() % 4 + 5;
-
-	// when populating the room, we decide if we will have a platform in this block, if we can (because of total num and if a platform is nearby)
-		// are there numPlat platforms?
-			//Yes: we cannot have anymore
-			//No: check surrounding to see if this is a valid platform location
-				//Valid: roll for plat
-				//Invalid: cannot put a plat here
-	// some way to randomly make sure plats are offset, not always in same place, and also that we are not rolling under too often and not creating any platforms?
-	// maybe we generate here the location of every platform and then just tell the blocks where they are?
-
-
+	if (this->cDoor) {
+		blockMap[1][w / 2]->placePlatforms(3, 5);
+		blockMap[2][w / 2 - 2]->placePlatforms(6,5);
+		blockMap[2][w / 2]->placePlatforms(6,5);
+		blockMap[2][w / 2 + 1]->placePlatforms(3,7);
+		blockMap[h-2][w / 2 - 1]->placePlatforms(7,6);
+	}
 
 	// Second Pass: Platforms (and Doors? we have doors in first pass rn)
 	// call it PopulateBlock()? or AddPlatforms()?
@@ -261,24 +283,14 @@ void Tilemap::generateTilemap() {
 			if (i < h - 1) { // there is a block below
 				blockMap[i][j]->checkBlock(blockMap[i + 1][j]);
 			}
-
-			//WHAT DO WE DO WITH CHECK
-			// This way, when generating the block, it accounts for the blocks around it -> knows where the block next to it would like to connect to it (if we decide to connect to it)
-			// maybe we also include a priority for connection (must connect vs can connect)
-
-			// idea is to pass in ptr of blocks that pass a connected check adjacent to this
-			// think there is 3 tiles of platform going out of the right of the block on our left
-			// this block would be told that the left block wants to connect, and then would know where to place a platform in order to connect across blocks
-
-			// generate block, with info of blocks around it (that have been generated)
+			
 			blockMap[i][j]->populateBlock();
-
-			// After generating the block, we set it 0 - initially generated
-			//blockMap[i][j]->setBlock(0);
-
-			// If a block has 0s and 1s on all sides, it becomes 1 - perma set
-			// not doing this yet
-
+			if (blockMap[i][j]->hasPlatform() == false && blockMap[i][j]->isMiddle()) {
+				if (!doorCheck(blockMap, i, j)) {
+					int pLocation = rand() % 8;
+					blockMap[i][j]->addPlatforms(pLocation);
+				}
+			}
 		}
 	}
 
@@ -286,9 +298,9 @@ void Tilemap::generateTilemap() {
 	// Use our dimensions to 
 	// initialize our 2d tilemap array
 	this->tileMap = new int* [this->yMax];
-	for (int i = 0; i < this->yMax; i++)
+	for (int i = 0; i < this->yMax; i++) {
 		this->tileMap[i] = new int[this->xMax];
-
+	}
 	// At this point all blocks should have been generated and set according to all other blocks in the room
 	// now we convert our blockMap into our final tilemap
 	for (int i = 0; i < h; i++) {
@@ -311,36 +323,41 @@ void Tilemap::generateTilemap() {
 		}
 	}
 
-
-	/* DEBUGGING TO SEE TILEMAP RESULT
-	for (int i = 0; i < this->yMax; i++)
-	{
-		for (int j = 0; j < this->xMax; j++)
-		{
-			std::cout << tileMap[i][j] << " ";
-		}
-		std::cout << "\n";
+	if (this->powerUp == true && this->isHealth == false) {
+		this->tileMap[43][160] = 9;
+		this->tileMap[40][145] = 8;
 	}
-	*/
+	else if (this->powerUp == true && this->isHealth == true) {
+		this->tileMap[40][145] = 8;
+	}
+}
 
+bool Tilemap::doorCheck(Block*** blocks, int i, int j) {
 
-
-	// Any block needs:
-	//     Metadata: what blocks CAN be around it
-	//     What defines this block
-	//     Where we get this block definition from?
-
-	// For block index i,j: pick from appropriate pool
-	// check the blocks around it to ensure compatibility (looking at set and other metadata)
-	// if pass: move on (set = 1), if fail: try another from the pool OR (set = -1) and upon setting next block can backtrace
-
-
-	
-
-	// THIS WILL BE CHANGED WHEN BLOCK IS FINISHED OR CLOSER TO
-	// Here we would iterate through blockMap and convert our completed blockMap into a final tilemap
+	if (blocks[i - 1][j - 1]->isDoor()) {
+		return true;
+	}
+	else if (blocks[i + 1][j + 1]->isDoor()) {
+		return true;
+	}
+	else if (blocks[i + 1][j - 1]->isDoor()) {
+		return true;
+	}
+	else if (blocks[i - 1][j + 1]->isDoor()) {
+		return true;
+	}
+	else if (blocks[i - 1][j]->isDoor()) {
+		return true;
+	}
+	else if (blocks[i + 1][j]->isDoor()) {
+		return true;
+	}
+	else {
+		return false;
+	}
 
 }
+
 /////////////////////////
 // Getters and Setters //
 /////////////////////////
@@ -370,6 +387,10 @@ Tile* Tilemap::getTile(int index)
 
 Background* Tilemap::getBackground() {
 	return this->bg;
+}
+
+std::vector<Enemy*> Tilemap::getEnemies() {
+	return this->enemies;
 }
 
 
