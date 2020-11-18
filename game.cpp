@@ -424,12 +424,11 @@ void Game::runGame() {
 					}
 					else
 					{
-						for (int i = 0; i < ce.size(); i++)
+						for (int i = 0; i < ce.size() && !player.getShot(); i++)
 						{
 							if (ce[i]->getHP() > 0 && checkHitEnemy(deltaX, deltaY, ce[i]))
 							{
 								int randomNumber = rand() % 100;
-
 								int ignoreChance = 20;
 
 
@@ -704,7 +703,7 @@ void Game::runGame() {
 			if (ce[bossIndex]->getHP() > 0)
 				drawBossHP(ce[bossIndex]->getHP());
 			else
-				displayCredits();
+				running = false;
 		}
 		//Draw the player's hp
 		drawHP();
@@ -724,6 +723,9 @@ void Game::runGame() {
 
 		SDL_RenderPresent(gRenderer);
 	}
+
+	displayCredits();
+
 }
 
 //Handle the user input
@@ -1537,7 +1539,7 @@ void Game::displayCredits()
 		SDL_Texture* temp = rollCredits();
 		SDL_RenderCopy(gRenderer, temp, NULL, NULL);
 		SDL_RenderPresent(gRenderer);
-		SDL_Delay(1000);
+		SDL_Delay(2000);
 	}
 
 }
