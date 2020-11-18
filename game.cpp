@@ -13,7 +13,7 @@
 
 // Double jump to fullfill requirement
 bool doneSecond = false; // only allow 1 extra jump
-double projectileVelocity = 50;
+double projectileVelocity = 25;
 int projectileSize = 5;
 
 //size of the Window/Screen and thus the size of the Camera
@@ -371,54 +371,68 @@ void Game::runGame() {
 
 		if (!player.getShot())
 		{/*If a shot has been fired EMIL*/
-			double posX = player.getPX() + player.getPVelX();
-			double posY = player.getPY() + player.getPVelY();
+			//the distance actual traveled
+			double xNorm = player.getPVelX() / projectileVelocity;
+			double yNorm = player.getPVelY() / projectileVelocity;
+			//scroll_offset_x
 			
-			if (posX > 0 && posX < currRoom->getMaxWidth() * 16 && posY > 0 && posY < currRoom->getMaxHeight() * 16)
-			{
-				player.setPX(posX);
-				player.setPY(posY);
 
-//				player.getCurrFrame().draw(gRenderer,  player.getPX(), player.getPY());
+
+			for (int j = 0; j < projectileVelocity; j++)
+			{/*proj velocity is the hyp length so we go for each pixel on it*/
+				double deltaX = scroll_offset_x + player.getPX() + xNorm * j;
+				double deltaY = scroll_offset_y + player.getPY() + yNorm * j;
 				
-				int tileMapY = (int)(player.getPY() / 16);
-				int tileMapX = (int)(player.getPX() / 16);
 
-				bool checkFlag1 = tileArray[tileMapY][tileMapX] != 0;
-				bool checkFlag3 = tileArray[tileMapY][tileMapX] != 3;
-				bool checkFlag8 = tileArray[tileMapY][tileMapX] != 8;
-				bool checkFlag9 = tileArray[tileMapY][tileMapX] != 9;
+				//scroll_offset_x
+				if (deltaX >0 && deltaX < SCREEN_WIDTH + scroll_offset_x && deltaY>0 && deltaY < SCREEN_HEIGHT + scroll_offset_y)
+				{/*inside screen*/
+					int tileMapX = (int)(deltaX / 16);
+					int tileMapY = (int)(deltaY / 16);
+					
 
-				if (checkFlag1 && checkFlag3 && checkFlag8 && checkFlag9) //hit something not air
-				{
-					player.setShot(true);
-				}
-				else
-				{
-					for (int i = 0; i < enemies.size(); i++)
+					bool checkFlag0 = tileArray[tileMapY][tileMapX] == 0; // Air
+					bool checkFlag3 = tileArray[tileMapY][tileMapX] == 3; // Spawn
+					bool checkFlag8 = tileArray[tileMapY][tileMapX] == 8; // PowerSpawns
+					bool checkFlag9 = tileArray[tileMapY][tileMapX] == 9; // Teleport
+
+					if (!(checkFlag0 || checkFlag3 || checkFlag8 || checkFlag9))
+					{ /*Collision with something not air*/
+						player.setShot(true);
+						break;
+					}
+					else
 					{
-						if (checkHitEnemy(&player, enemies[i]))
+						for (int i = 0; i < enemies.size(); i++)
 						{
-							int randomNumber = rand() % 100;
-							int ignoreChance = 40;
-
-							if (randomNumber > ignoreChance)
+							if (checkHitEnemy(deltaX, deltaY, enemies[i]))
 							{
-								enemies[i]->takeDamage(player.getPVelX() / projectileVelocity, player.getPVelY() / projectileVelocity);
-								player.setShot(true);
-								break;
+								int randomNumber = rand() % 100;
+								int ignoreChance = 30;
 
-							}
-							else {
-								//Add Guard animation
+								if (randomNumber > ignoreChance)
+								{
+									enemies[i]->takeDamage(player.getPVelX() / projectileVelocity, player.getPVelY() / projectileVelocity);
+									player.setShot(true);
+									break;
+								}
+								else {
+									//Add Guard animation
+								}
 							}
 						}
 					}
 				}
+				else
+				{
+					player.setShot(true);
+					break;
+				}
 			}
-			else
+			if (!player.getShot())
 			{
-				player.setShot(true);
+				player.setPX(player.getPX() + player.getPVelX());
+				player.setPY(player.getPY() + player.getPVelY());
 			}
 		}
 
@@ -1220,13 +1234,13 @@ bool Game::checkHitPlayer(Entity* player, Enemy* enemy)
 	return false;
 }
 
-bool Game::checkHitEnemy(Entity* player, Enemy* enemy)
+bool Game::checkHitEnemy(double x, double y, Enemy* enemy)
 {
 	return (
-		player->getPX() + projectileSize > enemy->getXPosition() &&
-		player->getPX() < enemy->getXPosition() + enemy->getCurrFrame().getWidth() &&
-		player->getPY() + projectileSize < enemy->getYPosition() &&
-		player->getPY() < enemy->getYPosition() + enemy->getCurrFrame().getHeight());
+		x + projectileSize > enemy->getXPosition() &&
+		x < enemy->getXPosition() + enemy->getCurrFrame().getWidth() &&
+		y + projectileSize < enemy->getYPosition() &&
+		y < enemy->getYPosition() + enemy->getCurrFrame().getHeight());
 }
 
 // check player collision with a generic entity
