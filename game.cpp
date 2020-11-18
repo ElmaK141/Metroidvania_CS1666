@@ -121,6 +121,7 @@ void Game::gameLoop()
 			runGame();	//Run Game
 		}
 		else if (gameState == 4) {	//Player has died
+			SDL_Delay(250);
 			loadDeathScreen();
 		}
 		else if (gameState == 3) {	//Run Debug
@@ -177,11 +178,10 @@ void Game::runGame() {
 	Enemy eye3("data/eye.spr", 500, 600, 3, 1, &plp, gRenderer);
 	Enemy eye4("data/eye.spr", 100, 400, 3, 1, &plp, gRenderer);
 	Enemy eye5("data/eye.spr", 600, 10, 3, 1, &plp, gRenderer);
-	//enemies.push_back(&eye);
-	//enemies.push_back(&eye);
-	//enemies.push_back(&eye2);
-	//enemies.push_back(&eye3);
-	//enemies.push_back(&eye4);
+	enemies.push_back(&eye);
+	enemies.push_back(&eye2);
+	enemies.push_back(&eye3);
+	enemies.push_back(&eye4);
 	enemies.push_back(&eye5);
 
 	Enemy boss("data/boss.spr", 2500, 380, 3, 0, &plp, gRenderer);
@@ -265,8 +265,6 @@ void Game::runGame() {
 
 	// Define player entity
 	Entity player("data/player.spr", x_pos, y_pos, 3, 0, &plp, gRenderer);		//0 is flag for player entity
-	player.setGrapple();
-	gotGrapple = 1;
 	int hitTick = 0;
 	bool hit = false;
 	int eyeSpawnCD = 0;
@@ -482,10 +480,10 @@ void Game::runGame() {
 			{
 				ce.push_back(new Enemy("data/eye.spr", 2520, 400, 3, 1, &plp, gRenderer));
 				
-				ce[ce.size() - 1]->setXVel(-8);
-				ce[ce.size() - 1]->setYVel(-10);
+				ce[ce.size() - 1]->setXVel(-20);
+				ce[ce.size() - 1]->setYVel(-30);
 
-				if (boss.getHP() > 100)
+				if (ce[bossIndex]->getHP() > 500)
 					eyeSpawnCD = 300;
 				else
 					eyeSpawnCD = 100;
@@ -705,14 +703,17 @@ void Game::runGame() {
 			else
 				running = false;
 		}
-		//Draw the player's hp
-		drawHP();
-
+		
 		//Player is Dead
 		if (playerHP <= 0) {
+
+			SDL_Delay(500);
 			gameState = 4;
 			break;
 		}
+
+		//Draw the player's hp
+		drawHP();
 
 		// Draw box
 		if (!player.getShot())
@@ -1510,11 +1511,11 @@ void Game::drawBossHP(int health)
 	SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0xFF);
 	SDL_Rect* healthLine = new SDL_Rect;
 	healthLine->y = 650;
-	healthLine->w = 13;
+	healthLine->w = 2;
 	healthLine->h = 18;
-	for (int h = 0; h < health - 1; h++)
+	for (int h = 0; h < health; h++)
 	{
-		healthLine->x = 144 + 4 * h;
+		healthLine->x = 10 + 3 * h;
 		SDL_RenderFillRect(gRenderer, healthLine);
 	}
 
@@ -1541,6 +1542,7 @@ void Game::displayCredits()
 		SDL_RenderPresent(gRenderer);
 		SDL_Delay(2000);
 	}
+	exit(0);
 
 }
 
